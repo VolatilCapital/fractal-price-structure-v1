@@ -1,9 +1,9 @@
-import { Candle } from "../../shared/Candle"
-import { Polarity } from "./Polarity"
-import { PriceMove } from "./PriceMove"
-import { PriceMoveId } from "./PriceMoveId"
-import { PriceRange } from "../../shared/PriceRange"
-import { TimeRange } from "../../shared/TimeRange"
+import { Candle } from "../../shared/Candle.js"
+import { Polarity } from "./Polarity.js"
+import { PriceMove } from "./PriceMove.js"
+import { PriceMoveId } from "./PriceMoveId.js"
+import { PriceRange } from "../../shared/PriceRange.js"
+import { TimeRange } from "../../shared/TimeRange.js"
 
 export class PriceMoveFactory {
   public static fromCandle(candle: Candle): PriceMove {

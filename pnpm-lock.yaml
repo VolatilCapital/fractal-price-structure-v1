@@ -17,6 +17,9 @@ importers:
       luxon:
         specifier: ^3.7.2
         version: 3.7.2
+      trading-core-type:
+        specifier: github:VolatilCapital/trading-core-type
+        version: git+https://git@github.com:VolatilCapital/trading-core-type.git#f0a2277d296285714424f0541d7c0709e9dbe7fd
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -244,6 +247,9 @@ packages:
   big.js@7.0.1:
     resolution: {integrity: sha512-iFgV784tD8kq4ccF1xtNMZnXeZzVuXWWM+ERFzKQjv+A5G9HC8CY3DuV45vgzFFcW+u2tIvmF95+AzWgs6BjCg==}
 
+  bignumber.js@9.3.1:
+    resolution: {integrity: sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==}
+
   call-bind-apply-helpers@1.0.2:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
     engines: {node: '>= 0.4'}
@@ -447,6 +453,10 @@ packages:
     resolution: {integrity: sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA==}
     engines: {node: '>=12'}
 
+  trading-core-type@git+https://git@github.com:VolatilCapital/trading-core-type.git#f0a2277d296285714424f0541d7c0709e9dbe7fd:
+    resolution: {commit: f0a2277d296285714424f0541d7c0709e9dbe7fd, repo: git@github.com:VolatilCapital/trading-core-type.git, type: git}
+    version: 1.0.0
+
   tsx@4.20.6:
     resolution: {integrity: sha512-ytQKuwgmrrkDTFP4LjR0ToE2nqgy886GpvRSpU0JAnrdBYppuY5rLkRUYPU1yCryb24SsKBTL/hlDQAEFVwtZg==}
     engines: {node: '>=18.0.0'}
@@ -601,6 +611,8 @@ snapshots:
       - debug
 
   big.js@7.0.1: {}
+
+  bignumber.js@9.3.1: {}
 
   call-bind-apply-helpers@1.0.2:
     dependencies:
@@ -815,6 +827,10 @@ snapshots:
   strip-ansi@7.1.2:
     dependencies:
       ansi-regex: 6.2.2
+
+  trading-core-type@git+https://git@github.com:VolatilCapital/trading-core-type.git#f0a2277d296285714424f0541d7c0709e9dbe7fd:
+    dependencies:
+      bignumber.js: 9.3.1
 
   tsx@4.20.6:
     dependencies:

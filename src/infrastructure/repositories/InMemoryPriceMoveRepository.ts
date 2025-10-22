@@ -1,6 +1,6 @@
-import { PriceMoveRepository } from "../../domain/structure/PriceMoveRepository"
-import { PriceMove } from "../../domain/price-move/PriceMove"
-import { PriceMoveId } from "../../domain/price-move/PriceMoveId"
+import { PriceMoveRepository } from "../../domain/structure/PriceMoveRepository.js"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
+import { PriceMoveId } from "../../domain/price-move/PriceMoveId.js"
 
 export class InMemoryPriceMoveRepository implements PriceMoveRepository {
   private moves: Map<string, PriceMove> = new Map()

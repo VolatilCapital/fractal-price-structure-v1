@@ -1,5 +1,5 @@
 import { DateTime } from "luxon"
-import { PriceMove } from "../../domain/price-move/PriceMove"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
 import * as fs from "fs"
 import * as path from "path"
 

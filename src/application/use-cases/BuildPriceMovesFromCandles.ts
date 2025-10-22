@@ -1,8 +1,8 @@
 // src/application/use-cases/BuildPriceMovesFromCandles.ts
 
-import { Candle } from "../../shared/Candle"
-import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure"
-import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory"
+import { Candle } from "../../shared/Candle.js"
+import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure.js"
+import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory.js"
 
 /**
  * Cas d’usage : à partir d’un tableau de bougies, génère les PriceMove élémentaires

@@ -1,5 +1,5 @@
-import { PriceMove } from "../../domain/price-move/PriceMove"
-import { FractalPriceMoveBuilder } from "./FractalPriceMoveBuilder"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
+import { FractalPriceMoveBuilder } from "./FractalPriceMoveBuilder.js"
 
 /**
  * Construit récursivement plusieurs couches fractales de PriceMove.

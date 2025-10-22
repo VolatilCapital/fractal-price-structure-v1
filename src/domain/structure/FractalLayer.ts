@@ -1,4 +1,4 @@
-import { PriceMove } from "../price-move/PriceMove"
+import { PriceMove } from "../price-move/PriceMove.js"
 
 /**
  * Une couche fractale est un ensemble de PriceMoves construits au même niveau.

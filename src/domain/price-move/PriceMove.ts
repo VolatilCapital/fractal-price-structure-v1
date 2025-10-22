@@ -1,8 +1,8 @@
-import { Polarity } from "./Polarity"
-import { PriceMoveState } from "./PriceMoveState"
-import { PriceMoveId } from "./PriceMoveId"
-import { PriceRange } from "../../shared/PriceRange"
-import { TimeRange } from "../../shared/TimeRange"
+import { Polarity } from "./Polarity.js"
+import { PriceMoveState } from "./PriceMoveState.js"
+import { PriceMoveId } from "./PriceMoveId.js"
+import { PriceRange } from "../../shared/PriceRange.js"
+import { TimeRange } from "../../shared/TimeRange.js"
 
 export class PriceMove {
   readonly id: PriceMoveId

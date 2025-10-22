@@ -1,7 +1,7 @@
-import { PriceMove } from "../../domain/price-move/PriceMove"
-import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure"
-import { PriceMoveRepository } from "../../domain/structure/PriceMoveRepository"
-import { InMemoryPriceMoveRepository } from "../../infrastructure/repositories/InMemoryPriceMoveRepository"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
+import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure.js"
+import { PriceMoveRepository } from "../../domain/structure/PriceMoveRepository.js"
+import { InMemoryPriceMoveRepository } from "../../infrastructure/repositories/InMemoryPriceMoveRepository.js"
 
 export class FractalPriceMoveBuilder {
     buildFromMoves(moves: PriceMove[]): PriceMove[] {

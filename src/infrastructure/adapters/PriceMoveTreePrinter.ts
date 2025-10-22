@@ -1,5 +1,5 @@
 import { DateTime } from "luxon"
-import { PriceMove } from "../../domain/price-move/PriceMove"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
 
 export class PriceMoveTreePrinter {
     public static print(move: PriceMove, level = 0): void {

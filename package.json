@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "trading-core-type": "github:VolatilCapital/trading-core-type",
     "axios": "^1.12.2",
     "big.js": "^7.0.1",
     "luxon": "^3.7.2",

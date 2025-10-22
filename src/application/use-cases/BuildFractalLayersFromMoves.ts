@@ -1,7 +1,7 @@
-import { PriceMove } from "../../domain/price-move/PriceMove"
-import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure"
-import { PriceMoveId } from "../../domain/price-move/PriceMoveId"
-import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
+import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure.js"
+import { PriceMoveId } from "../../domain/price-move/PriceMoveId.js"
+import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory.js"
 
 export interface FractalLayer {
     level: number

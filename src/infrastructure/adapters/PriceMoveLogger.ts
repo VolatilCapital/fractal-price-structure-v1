@@ -1,4 +1,4 @@
-import { PriceMove } from "../../domain/price-move/PriceMove"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
 
 export class PriceMoveLogger {
   public static logNewMove(move: PriceMove): void {

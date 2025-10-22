@@ -1,5 +1,5 @@
-import { PriceMove } from "../../domain/price-move/PriceMove"
-import { FractalLayer } from "../../domain/structure/FractalLayer"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
+import { FractalLayer } from "../../domain/structure/FractalLayer.js"
 
 
 export function buildRecursiveFractalRoots(roots: PriceMove[], maxLevels: number): FractalLayer[] {

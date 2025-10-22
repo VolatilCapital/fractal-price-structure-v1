@@ -1,4 +1,4 @@
-import { PriceMove } from "./PriceMove"
+import { PriceMove } from "./PriceMove.js"
 
 export class PriceMoveRules {
   public static canExtendWith(current: PriceMove, candidate: PriceMove): boolean {

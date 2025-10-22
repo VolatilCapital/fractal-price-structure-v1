@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync, existsSync } from "fs"
 import { join } from "path"
-import { FractalLayer } from "../../domain/structure/FractalLayer"
+import { FractalLayer } from "../../domain/structure/FractalLayer.js"
 
 export class FractalLayerExporter {
   public static exportLayersToJson(layers: FractalLayer[], baseDir: string): void {

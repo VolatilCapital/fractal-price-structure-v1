@@ -1,5 +1,5 @@
 import axios from "axios"
-import { Candle } from "../../shared/Candle"
+import { Candle } from "../../shared/Candle.js"
 
 export class BinanceCandleApi {
   static async fetchCandles(symbol: string, interval: string, limit = 100): Promise<Candle[]> {

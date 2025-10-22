@@ -1,5 +1,5 @@
-import { PriceMove } from "../price-move/PriceMove"
-import { PriceMoveId } from "../price-move/PriceMoveId"
+import { PriceMove } from "../price-move/PriceMove.js"
+import { PriceMoveId } from "../price-move/PriceMoveId.js"
 
 export interface PriceMoveRepository {
   save(priceMove: PriceMove): void

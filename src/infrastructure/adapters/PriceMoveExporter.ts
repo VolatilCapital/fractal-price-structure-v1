@@ -1,5 +1,5 @@
 // src/infrastructure/adapters/PriceMoveExporter.ts
-import { PriceMove } from "../../domain/price-move/PriceMove"
+import { PriceMove } from "../../domain/price-move/PriceMove.js"
 
 export class PriceMoveExporter {
     public static toJSON(move: PriceMove): any {

@@ -1,9 +1,9 @@
 import fs from "fs/promises"
 import path from "path"
 import { DateTime } from "luxon"
-import { Candle } from "../../domain/candle/Candle"
-import { CandleRepository } from "../../domain/candle/CandleRepository"
-import { BinanceCandleApi } from "../api/BinanceCandleApi"
+import { Candle } from "../../domain/candle/Candle.js"
+import { CandleRepository } from "../../domain/candle/CandleRepository.js"
+import { BinanceCandleApi } from "../api/BinanceCandleApi.js"
 
 export class CachedCandleRepository implements CandleRepository {
     constructor(private cacheDir: string) { }

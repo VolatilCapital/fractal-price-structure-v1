@@ -1,5 +1,5 @@
-import { CandleRepository } from "../../domain/candle/CandleRepository"
-import { Candle } from "../../domain/candle/Candle"
+import { CandleRepository } from "../../domain/candle/CandleRepository.js"
+import { Candle } from "../../domain/candle/Candle.js"
 
 export class FetchCandlesUseCase {
     constructor(private candleRepo: CandleRepository) { }

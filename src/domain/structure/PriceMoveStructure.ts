@@ -1,7 +1,7 @@
-import { PriceMove } from "../price-move/PriceMove"
-import { PriceMoveRepository } from "./PriceMoveRepository"
-import { PriceMoveRules } from "../price-move/PriceMoveRules"
-import { PriceMoveLoggerFile } from "../../infrastructure/adapters/PriceMoveLoggerFile"
+import { PriceMove } from "../price-move/PriceMove.js"
+import { PriceMoveRepository } from "./PriceMoveRepository.js"
+import { PriceMoveRules } from "../price-move/PriceMoveRules.js"
+import { PriceMoveLoggerFile } from "../../infrastructure/adapters/PriceMoveLoggerFile.js"
 
 export class PriceMoveStructure {
   private activeMoves: Set<PriceMove> = new Set()
@@ -9,7 +9,7 @@ export class PriceMoveStructure {
   constructor(
     private readonly repo: PriceMoveRepository,
     private readonly logger: typeof PriceMoveLoggerFile = PriceMoveLoggerFile
-  ) {}
+  ) { }
 
   public add(priceMove: PriceMove): void {
     for (const active of this.activeMoves) {

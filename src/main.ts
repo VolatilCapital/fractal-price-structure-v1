@@ -1,13 +1,13 @@
-import { CachedCandleRepository } from "./infrastructure/repositories/CachedCandleRepository"
-import { InMemoryPriceMoveRepository } from "./infrastructure/repositories/InMemoryPriceMoveRepository"
-import { PriceMoveStructure } from "./domain/structure/PriceMoveStructure"
-import { BuildPriceMovesFromCandles } from "./application/use-cases/BuildPriceMovesFromCandles"
-import { PriceMove } from "./domain/price-move/PriceMove"
-import { PriceMoveLoggerFile } from "./infrastructure/adapters/PriceMoveLoggerFile"
-import { PriceMoveTreeFilePrinter } from "./infrastructure/adapters/PriceMoveTreeFilePrinter"
-import { buildRecursiveFractalRoots } from "./application/use-cases/BuildRecursiveFractal"
-import { FractalLayerExporter } from "./infrastructure/exporters/FractalLayerExporter"
-import { FractalLayer } from "./domain/structure/FractalLayer"
+import { CachedCandleRepository } from "./infrastructure/repositories/CachedCandleRepository.js"
+import { InMemoryPriceMoveRepository } from "./infrastructure/repositories/InMemoryPriceMoveRepository.js"
+import { PriceMoveStructure } from "./domain/structure/PriceMoveStructure.js"
+import { BuildPriceMovesFromCandles } from "./application/use-cases/BuildPriceMovesFromCandles.js"
+import { PriceMove } from "./domain/price-move/PriceMove.js"
+import { PriceMoveLoggerFile } from "./infrastructure/adapters/PriceMoveLoggerFile.js"
+import { PriceMoveTreeFilePrinter } from "./infrastructure/adapters/PriceMoveTreeFilePrinter.js"
+import { buildRecursiveFractalRoots } from "./application/use-cases/BuildRecursiveFractal.js"
+import { FractalLayerExporter } from "./infrastructure/exporters/FractalLayerExporter.js"
+import { FractalLayer } from "./domain/structure/FractalLayer.js"
 
 async function main() {
   try {
