@@ -1,0 +1,41 @@
+import { DateTime } from "luxon"
+import { PriceMove } from "../../domain/price-move/PriceMove"
+import * as fs from "fs"
+import * as path from "path"
+
+export class PriceMoveTreeFilePrinter {
+    private static logDir: string = "./logs"
+    private static logFile: string = "price-move-tree.log"
+    private static buffer: string[] = []
+
+    public static setLogDirectory(dir: string): void {
+        this.logDir = dir
+        fs.mkdirSync(this.logDir, { recursive: true })
+    }
+
+    public static print(move: PriceMove, level = 0): void {
+        const indent = "  ".repeat(level)
+        const status = move.isClosed() ? "🔴" : "🟢"
+
+        const start = DateTime.fromMillis(move.timeRange.start).toFormat("yyyy-MM-dd HH:mm")
+        const end = DateTime.fromMillis(move.timeRange.end).toFormat("yyyy-MM-dd HH:mm")
+
+        const line = `${indent}${status} ${move.id.toString()} | ${move.polarity} | ${move.priceRange.toString()} | ${start} → ${end}`
+        console.log(line)
+        this.buffer.push(line)
+
+        for (const child of move.childMoves) {
+            this.print(child, level + 1)
+        }
+
+        if (level === 0) {
+            this.flushToFile()
+        }
+    }
+
+    private static flushToFile(): void {
+        const fullPath = path.join(this.logDir, this.logFile)
+        fs.writeFileSync(fullPath, this.buffer.join("\n"))
+        this.buffer = []
+    }
+}

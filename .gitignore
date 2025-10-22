@@ -1,0 +1,19 @@
+.idea/
+.vscode/
+node_modules/
+tmp/
+temp/
+cache/
+
+.logs
+.cache
+
+# logs node
+npm-debug.log
+
+build/
+
+
+dist/
+
+

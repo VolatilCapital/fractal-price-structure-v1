@@ -1,0 +1,35 @@
+import fs from "fs/promises"
+import path from "path"
+import { DateTime } from "luxon"
+import { Candle } from "../../domain/candle/Candle"
+import { CandleRepository } from "../../domain/candle/CandleRepository"
+import { BinanceCandleApi } from "../api/BinanceCandleApi"
+
+export class CachedCandleRepository implements CandleRepository {
+    constructor(private cacheDir: string) { }
+
+    async getCandles(symbol: string, interval: string, limit: number): Promise<Candle[]> {
+        const cachePath = path.join(this.cacheDir, `${symbol}-${interval}.json`)
+        const today = DateTime.utc().toISODate()
+
+        try {
+            const content = await fs.readFile(cachePath, "utf-8")
+            const { date, candles } = JSON.parse(content)
+            if (date === today) {
+                return candles
+            }
+        } catch {
+            // Ignore cache miss or read error
+        }
+
+        const candles = await BinanceCandleApi.fetchCandles(symbol, interval, limit)
+        const payload = {
+            date: today,
+            candles,
+        }
+
+        await fs.mkdir(path.dirname(cachePath), { recursive: true })
+        await fs.writeFile(cachePath, JSON.stringify(payload, null, 2), "utf-8")
+        return candles
+    }
+}
