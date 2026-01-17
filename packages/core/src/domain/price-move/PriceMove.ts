@@ -3,6 +3,7 @@ import { PriceMoveState } from "./PriceMoveState.js"
 import type { PriceMoveId } from "./PriceMoveId.js"
 import type { PriceRange } from "../../shared/PriceRange.js"
 import type { TimeRange } from "../../shared/TimeRange.js"
+import { Price } from "../../shared/Price.js"
 
 export class PriceMove {
   readonly id: PriceMoveId
@@ -52,8 +53,8 @@ export class PriceMove {
         : this.priceRange.low
 
     if (
-      (this.polarity === Polarity.Up && priceToTest > borderToBreak) ||
-      (this.polarity === Polarity.Down && priceToTest < borderToBreak)
+      (this.polarity === Polarity.Up && Price.gt(priceToTest, borderToBreak)) ||
+      (this.polarity === Polarity.Down && Price.lt(priceToTest, borderToBreak))
     ) {
       this.priceRange = this.priceRange.extendWith(priceToTest)
       this.timeRange = this.timeRange.extendWith(candidate.timeRange.end)
@@ -62,8 +63,8 @@ export class PriceMove {
     }
 
     const invalidation =
-      (this.polarity === Polarity.Up && candidate.priceRange.low < this.priceRange.low) ||
-      (this.polarity === Polarity.Down && candidate.priceRange.high > this.priceRange.high)
+      (this.polarity === Polarity.Up && Price.lt(candidate.priceRange.low, this.priceRange.low)) ||
+      (this.polarity === Polarity.Down && Price.gt(candidate.priceRange.high, this.priceRange.high))
 
     if (invalidation) {
       this.state = PriceMoveState.Closed

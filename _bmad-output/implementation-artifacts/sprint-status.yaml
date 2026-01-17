@@ -61,32 +61,32 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Candle Ingestion & Structure Building
-  epic-3: backlog
-  3-1-define-candle-data-structure: backlog
-  3-2-implement-single-candle-ingestion: backlog
-  3-3-implement-batch-candle-ingestion: backlog
-  3-4-implement-pricemovestructure-orchestrator: backlog
-  3-5-ensure-deterministic-output: backlog
-  3-6-implement-decimal-precision-for-prices: backlog
+  epic-3: done
+  3-1-define-candle-data-structure: done
+  3-2-implement-single-candle-ingestion: done
+  3-3-implement-batch-candle-ingestion: done
+  3-4-implement-pricemovestructure-orchestrator: done
+  3-5-ensure-deterministic-output: done
+  3-6-implement-decimal-precision-for-prices: done
   epic-3-retrospective: optional
 
   # Epic 4: Structure State Management & Querying
-  epic-4: backlog
-  4-1-implement-move-state-active-closed: backlog
-  4-2-implement-get-active-moves-query: backlog
-  4-3-implement-get-all-moves-query: backlog
-  4-4-implement-structure-consistency-validation: backlog
-  4-5-implement-fractal-layer-iteration: backlog
-  4-6-implement-memory-efficient-move-storage: backlog
+  epic-4: done
+  4-1-implement-move-state-active-closed: done
+  4-2-implement-get-active-moves-query: done
+  4-3-implement-get-all-moves-query: done
+  4-4-implement-structure-consistency-validation: done
+  4-5-implement-fractal-layer-iteration: done
+  4-6-implement-memory-efficient-move-storage: done
   epic-4-retrospective: optional
 
   # Epic 5: Debug & Validation Tooling
-  epic-5: backlog
-  5-1-implement-debug-output-after-each-candle: backlog
-  5-2-implement-active-moves-listing-display: backlog
-  5-3-implement-move-lifecycle-event-logging: backlog
-  5-4-implement-graceful-error-handling: backlog
-  5-5-implement-memory-leak-prevention: backlog
+  epic-5: done
+  5-1-implement-debug-output-after-each-candle: done
+  5-2-implement-active-moves-listing-display: done
+  5-3-implement-move-lifecycle-event-logging: done
+  5-4-implement-graceful-error-handling: done
+  5-5-implement-memory-leak-prevention: done
   epic-5-retrospective: optional
 
   # Epic 6: Clean Public API & Library Packaging

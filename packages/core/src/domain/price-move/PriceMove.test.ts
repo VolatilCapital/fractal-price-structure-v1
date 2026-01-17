@@ -6,7 +6,7 @@ import { PriceMoveState } from "./PriceMoveState.js"
 import { PriceMoveId } from "./PriceMoveId.js"
 import { PriceRange } from "../../shared/PriceRange.js"
 import { TimeRange } from "../../shared/TimeRange.js"
-import type { Candle } from "../../shared/Candle.js"
+import type { Candle } from "../candle/Candle.js"
 
 function createCandle(overrides: Partial<Candle> = {}): Candle {
   return {

@@ -1,5 +1,5 @@
 import axios from "axios"
-import type { Candle } from "../../shared/Candle.js"
+import type { Candle } from "../../domain/candle/Candle.js"
 
 // Binance kline response: [openTime, open, high, low, close, volume, closeTime, ...]
 type BinanceKline = [number, string, string, string, string, string, number, ...unknown[]]

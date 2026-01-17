@@ -1,6 +1,6 @@
 // src/application/use-cases/BuildPriceMovesFromCandles.ts
 
-import type { Candle } from "../../shared/Candle.js"
+import type { Candle } from "../../domain/candle/Candle.js"
 import type { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure.js"
 import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory.js"
 

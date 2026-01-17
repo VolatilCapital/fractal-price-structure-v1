@@ -1,5 +1,6 @@
 import type { PriceMove } from "./PriceMove.js"
 import { Polarity } from "./Polarity.js"
+import { Price } from "../../shared/Price.js"
 
 export class PriceMoveRules {
   public static canExtendWith(current: PriceMove, candidate: PriceMove): boolean {
@@ -17,8 +18,8 @@ export class PriceMoveRules {
     }
 
     if (current.polarity === Polarity.Up) {
-      return candidate.priceRange.low < current.priceRange.low
+      return Price.lt(candidate.priceRange.low, current.priceRange.low)
     }
-    return candidate.priceRange.high > current.priceRange.high
+    return Price.gt(candidate.priceRange.high, current.priceRange.high)
   }
 }
