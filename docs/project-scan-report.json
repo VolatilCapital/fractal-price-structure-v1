@@ -1,0 +1,128 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-01-16T15:30:00Z",
+    "last_updated": "2026-01-16T16:00:00Z",
+    "completed": "2026-01-16T16:00:00Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "exhaustive",
+  "project_root": "/home/didier/Documents/GIT/fractal-price-structure",
+  "output_folder": "/home/didier/Documents/GIT/fractal-price-structure/docs",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:35:00Z",
+      "summary": "Classified as monolith with 1 part, project_type_id: backend"
+    },
+    {
+      "step": "step_2",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:38:00Z",
+      "summary": "Found 2 existing docs: README.md, CLAUDE.md"
+    },
+    {
+      "step": "step_3",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:45:00Z",
+      "summary": "Tech stack: TypeScript 5.9.3, Node.js, axios, luxon"
+    },
+    {
+      "step": "step_4",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:50:00Z",
+      "summary": "Conditional analysis: API scan (Binance), data models (PriceMove, Candle)"
+    },
+    {
+      "step": "step_5",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:52:00Z",
+      "summary": "Source tree documented with 30 files across 4 layers"
+    },
+    {
+      "step": "step_6",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:54:00Z",
+      "summary": "Development guide written, no deployment config found"
+    },
+    {
+      "step": "step_8",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:56:00Z",
+      "summary": "Architecture documentation generated with diagrams"
+    },
+    {
+      "step": "step_9",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:58:00Z",
+      "summary": "Supporting docs: project-overview, data-models"
+    },
+    {
+      "step": "step_10",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:59:00Z",
+      "summary": "Master index generated"
+    },
+    {
+      "step": "step_11",
+      "status": "completed",
+      "timestamp": "2026-01-16T15:59:30Z",
+      "summary": "Validation complete, 6 files generated"
+    },
+    {
+      "step": "step_12",
+      "status": "completed",
+      "timestamp": "2026-01-16T16:00:00Z",
+      "summary": "Workflow complete"
+    }
+  ],
+  "current_step": "completed",
+  "findings": {
+    "project_classification": {
+      "repository_type": "monolith",
+      "parts_count": 1,
+      "primary_tech": "TypeScript/Node.js"
+    },
+    "technology_stack": {
+      "language": "TypeScript 5.9.3",
+      "runtime": "Node.js (ES Modules)",
+      "framework": "None (vanilla Node.js)",
+      "dependencies": ["axios", "luxon", "big.js", "uuid"],
+      "architecture": "Clean/Hexagonal (DDD)"
+    },
+    "files_scanned": 30,
+    "architectural_issues": [
+      "Infrastructure dependency in domain (PriceMoveStructure imports logger)",
+      "Duplicate Candle interface",
+      "Incomplete PriceMoveRules.isInvalidatedBy()",
+      "No test suite"
+    ]
+  },
+  "project_types": [
+    {
+      "part_id": "main",
+      "project_type_id": "backend",
+      "display_name": "Backend / Library"
+    }
+  ],
+  "project_parts": [
+    {
+      "part_id": "main",
+      "root_path": "/home/didier/Documents/GIT/fractal-price-structure",
+      "project_type_id": "backend",
+      "language": "TypeScript",
+      "architecture_pattern": "Clean/Hexagonal (DDD)"
+    }
+  ],
+  "outputs_generated": [
+    "project-scan-report.json",
+    "index.md",
+    "architecture.md",
+    "data-models.md",
+    "development-guide.md",
+    "project-overview.md",
+    "source-tree-analysis.md"
+  ],
+  "resume_instructions": "Workflow completed successfully"
+}

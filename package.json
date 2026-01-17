@@ -1,30 +1,41 @@
 {
   "name": "fractal-price-structure",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "clean": "rimraf dist",
-    "dev": "tsx src/main.ts",
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "biome lint packages/",
+    "lint:fix": "biome lint --write packages/",
+    "format": "biome format packages/",
+    "format:fix": "biome format --write packages/",
+    "check": "biome check packages/",
+    "check:fix": "biome check --write packages/",
+    "clean": "pnpm -r clean",
+    "dev": "pnpm --filter @fractal-price-structure/core dev"
   },
-  "keywords": [],
+  "keywords": [
+    "fractal",
+    "price-structure",
+    "trading",
+    "technical-analysis"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "trading-core-type": "github:VolatilCapital/trading-core-type",
-    "axios": "^1.12.2",
-    "big.js": "^7.0.1",
-    "luxon": "^3.7.2",
-    "uuid": "^11.1.0"
-  },
+  "description": "A TypeScript library for building generation-based fractal price structures from candlestick data",
   "devDependencies": {
-    "@types/big.js": "^6.2.2",
-    "@types/luxon": "^3.7.1",
+    "@biomejs/biome": "^2.3.11",
     "@types/node": "^24.9.1",
+    "@vitest/coverage-v8": "^4.0.17",
     "rimraf": "^6.0.1",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
-  }
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
 }

@@ -1,0 +1,1 @@
+export enum PriceMoveState { Active = "active", Closed = "closed" }

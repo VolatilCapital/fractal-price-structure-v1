@@ -1,0 +1,106 @@
+# generated: 2026-01-17
+# project: fractal-price-structure
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-17
+project: fractal-price-structure
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Foundation & Monorepo Migration
+  epic-1: done
+  1-1-initialize-pnpm-monorepo-structure: done
+  1-2-configure-typescript-with-shared-base-config: done
+  1-3-configure-vitest-testing-framework: done
+  1-4-configure-biome-for-linting-and-formatting: done
+  1-5-migrate-existing-code-to-monorepo: done
+  1-6-fix-architecture-violations-in-domain-layer: done
+  1-7-create-injectable-logger-interface: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Core Fractal Construction Logic
+  epic-2: done
+  2-1-create-pricemove-entity-with-polarity: done
+  2-2-implement-move-extension-logic: done
+  2-3-implement-move-invalidation-logic: done
+  2-4-implement-child-move-attachment: done
+  2-5-implement-generation-tracking: done
+  2-6-implement-parent-child-relationship-management: done
+  2-7-implement-move-origins-tracking: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Candle Ingestion & Structure Building
+  epic-3: backlog
+  3-1-define-candle-data-structure: backlog
+  3-2-implement-single-candle-ingestion: backlog
+  3-3-implement-batch-candle-ingestion: backlog
+  3-4-implement-pricemovestructure-orchestrator: backlog
+  3-5-ensure-deterministic-output: backlog
+  3-6-implement-decimal-precision-for-prices: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Structure State Management & Querying
+  epic-4: backlog
+  4-1-implement-move-state-active-closed: backlog
+  4-2-implement-get-active-moves-query: backlog
+  4-3-implement-get-all-moves-query: backlog
+  4-4-implement-structure-consistency-validation: backlog
+  4-5-implement-fractal-layer-iteration: backlog
+  4-6-implement-memory-efficient-move-storage: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Debug & Validation Tooling
+  epic-5: backlog
+  5-1-implement-debug-output-after-each-candle: backlog
+  5-2-implement-active-moves-listing-display: backlog
+  5-3-implement-move-lifecycle-event-logging: backlog
+  5-4-implement-graceful-error-handling: backlog
+  5-5-implement-memory-leak-prevention: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Clean Public API & Library Packaging
+  epic-6: backlog
+  6-1-define-public-api-surface: backlog
+  6-2-implement-fractalengine-facade: backlog
+  6-3-export-typescript-types-correctly: backlog
+  6-4-configure-esm-module-resolution: backlog
+  6-5-update-claude-md-documentation: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Point-in-Time Queries (Post-MVP)
+  epic-7: backlog
+  7-1-implement-getstack-timestamp-query: backlog
+  7-2-implement-getmove-generation-timestamp-query: backlog
+  7-3-implement-historical-state-reconstruction: backlog
+  epic-7-retrospective: optional

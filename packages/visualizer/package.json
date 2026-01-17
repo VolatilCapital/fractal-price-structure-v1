@@ -1,0 +1,39 @@
+{
+  "name": "@fractal-price-structure/visualizer",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "biome lint src/",
+    "format": "biome format src/",
+    "clean": "rimraf dist"
+  },
+  "keywords": ["fractal", "visualizer", "trading"],
+  "author": "",
+  "license": "ISC",
+  "description": "Visualization tools for fractal price structures (placeholder)",
+  "dependencies": {
+    "@fractal-price-structure/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
