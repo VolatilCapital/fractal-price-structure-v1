@@ -12,7 +12,7 @@ export class PriceMove {
   public polarity: Polarity
   public state: PriceMoveState = PriceMoveState.Active
   /** Generation level: 0 for root moves, parent.generation + 1 for children */
-  public readonly generation: number
+  public generation: number
   /** Timestamp when this move was closed/invalidated (undefined if still active) */
   public closedAt?: number
 
@@ -75,8 +75,12 @@ export class PriceMove {
     }
 
     // Internal child: neither extension nor invalidation
-    this.childMoves.push(candidate)
-    candidate.englobingMove = this
+    // Avoid duplicates and update generation
+    if (!this.childMoves.includes(candidate)) {
+      this.childMoves.push(candidate)
+      candidate.englobingMove = this
+      candidate.generation = this.generation + 1
+    }
     return true
   }
 

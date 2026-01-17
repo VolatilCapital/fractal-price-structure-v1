@@ -99,11 +99,15 @@ export class PriceMoveStructure {
         potentialParent.timeRange.includes(priceMove.timeRange.end) &&
         potentialParent.priceRange.contains(priceMove.priceRange)
       ) {
-        this.logger.debug(
-          `[CHILD] Move ${priceMove.id.toString().slice(0, 8)} attached to parent ${potentialParent.id.toString().slice(0, 8)}`
-        )
-        priceMove.englobingMove = potentialParent
-        potentialParent.childMoves.push(priceMove)
+        // Avoid duplicates
+        if (!potentialParent.childMoves.includes(priceMove)) {
+          this.logger.debug(
+            `[CHILD] Move ${priceMove.id.toString().slice(0, 8)} attached to parent ${potentialParent.id.toString().slice(0, 8)}`
+          )
+          priceMove.englobingMove = potentialParent
+          priceMove.generation = potentialParent.generation + 1
+          potentialParent.childMoves.push(priceMove)
+        }
         break
       }
     }

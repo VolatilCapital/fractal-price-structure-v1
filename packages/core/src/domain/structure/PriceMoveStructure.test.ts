@@ -917,11 +917,29 @@ describe("PriceMoveStructure", () => {
       expect(structure.getLayerCount()).toBe(0)
     })
 
-    it("should return 1 for structure with only root moves", () => {
+    it("should return 1 for structure with single root move", () => {
       structure.addCandle(createCandle({ openTime: 1000, closeTime: 2000 }))
-      structure.addCandle(createCandle({ openTime: 2000, closeTime: 3000 }))
 
       expect(structure.getLayerCount()).toBe(1)
+    })
+
+    it("should return 2 when second move becomes child of first", () => {
+      // First move: large range
+      structure.addCandle(createCandle({
+        openTime: 1000,
+        closeTime: 2000,
+        low: 90,
+        high: 110,
+      }))
+      // Second move: fits within first, becomes child (generation 1)
+      structure.addCandle(createCandle({
+        openTime: 2000,
+        closeTime: 3000,
+        low: 95,
+        high: 105,
+      }))
+
+      expect(structure.getLayerCount()).toBe(2)
     })
 
     it("should return correct count for multi-generation structure", () => {
