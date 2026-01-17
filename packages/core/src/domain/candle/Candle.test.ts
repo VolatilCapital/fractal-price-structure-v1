@@ -308,7 +308,9 @@ describe("CandleFactory", () => {
 
       expect(thrownError).not.toBeNull()
       expect(thrownError).toBeInstanceOf(InvalidCandleError)
-      expect(thrownError!.validationErrors.length).toBeGreaterThan(0)
+      if (thrownError !== null) {
+        expect(thrownError.validationErrors.length).toBeGreaterThan(0)
+      }
     })
   })
 

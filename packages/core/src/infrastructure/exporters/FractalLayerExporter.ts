@@ -1,27 +1,27 @@
-import { writeFileSync, mkdirSync, existsSync } from "fs"
-import { join } from "path"
-import type { FractalLayer } from "../../domain/structure/FractalLayer.js"
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { FractalLayer } from '../../domain/structure/FractalLayer.js';
 
 export class FractalLayerExporter {
   public static exportLayersToJson(layers: FractalLayer[], baseDir: string): void {
-    const exportDir = join(baseDir, "fractal-layers")
+    const exportDir = join(baseDir, 'fractal-layers');
     if (!existsSync(exportDir)) {
-      mkdirSync(exportDir, { recursive: true })
+      mkdirSync(exportDir, { recursive: true });
     }
 
     for (const layer of layers) {
-      const exportData = layer.moves.map(m => ({
+      const exportData = layer.moves.map((m) => ({
         id: m.id.toString(),
         polarity: m.polarity,
         state: m.state,
         priceRange: { low: m.priceRange.low, high: m.priceRange.high },
         timeRange: { start: m.timeRange.start, end: m.timeRange.end },
-        originIds: m.origin.map(o => o.id.toString()),
-        confirmedOriginIds: m.confirmedOrigins.map(o => o.id.toString())
-      }))
+        originIds: m.origin.map((o) => o.id.toString()),
+        confirmedOriginIds: m.confirmedOrigins.map((o) => o.id.toString()),
+      }));
 
-      const filePath = join(exportDir, `layer-${layer.level}.json`)
-      writeFileSync(filePath, JSON.stringify(exportData, null, 2), "utf-8")
+      const filePath = join(exportDir, `layer-${layer.level}.json`);
+      writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
     }
   }
 }

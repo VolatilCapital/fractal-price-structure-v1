@@ -55,7 +55,6 @@ export interface FractalEngineOptions {
 export class FractalEngine {
   private readonly structure: PriceMoveStructure
   private readonly deterministic: boolean
-  private candleIndex = 0
 
   constructor(options: FractalEngineOptions = {}) {
     const repo = new InMemoryPriceMoveRepository()
@@ -259,6 +258,5 @@ export class FractalEngine {
    */
   clear(): void {
     this.structure.clear()
-    this.candleIndex = 0
   }
 }

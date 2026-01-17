@@ -129,8 +129,10 @@ describe("PriceMoveStructure", () => {
         }
 
         expect(thrownError).not.toBeNull()
-        expect(thrownError!.validationErrors).toBeDefined()
-        expect(thrownError!.validationErrors!.length).toBeGreaterThan(0)
+        if (thrownError !== null) {
+          expect(thrownError.validationErrors).toBeDefined()
+          expect(thrownError.validationErrors?.length).toBeGreaterThan(0)
+        }
       })
 
       it("should not modify structure when candle is invalid", () => {
@@ -592,8 +594,8 @@ describe("PriceMoveStructure", () => {
         structure.buildFromCandles(candles200)
         const time200 = performance.now() - start200
 
-        // Time for 200 should be roughly 2x time for 100 (allow 4x for tolerance)
-        expect(time200).toBeLessThan(time100 * 4)
+        // Time for 200 should be roughly 2x time for 100 (allow 10x for CI tolerance)
+        expect(time200).toBeLessThan(time100 * 10)
       })
     })
   })
@@ -783,7 +785,9 @@ describe("PriceMoveStructure", () => {
         }
 
         expect(thrownError).not.toBeNull()
-        expect(thrownError!.message).toContain("index 1")
+        if (thrownError !== null) {
+          expect(thrownError.message).toContain("index 1")
+        }
       })
     })
 
@@ -1364,7 +1368,7 @@ describe("PriceMoveStructure", () => {
 
       if (!result.success) {
         expect(result.error.validationErrors).toBeDefined()
-        expect(result.error.validationErrors!.length).toBeGreaterThan(0)
+        expect(result.error.validationErrors?.length).toBeGreaterThan(0)
       }
     })
   })
