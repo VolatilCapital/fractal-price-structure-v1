@@ -99,8 +99,8 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Point-in-Time Queries (Post-MVP)
-  epic-7: backlog
-  7-1-implement-getstack-timestamp-query: backlog
-  7-2-implement-getmove-generation-timestamp-query: backlog
-  7-3-implement-historical-state-reconstruction: backlog
+  epic-7: done
+  7-1-implement-getstack-timestamp-query: done
+  7-2-implement-getmove-generation-timestamp-query: done
+  7-3-implement-historical-state-reconstruction: done
   epic-7-retrospective: optional

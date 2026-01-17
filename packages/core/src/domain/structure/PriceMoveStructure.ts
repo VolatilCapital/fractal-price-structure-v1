@@ -197,6 +197,38 @@ export class PriceMoveStructure {
   }
 
   /**
+   * Returns all moves that were active at a specific timestamp.
+   * This provides a point-in-time snapshot of the fractal structure.
+   *
+   * A move was active at timestamp T if:
+   * - The move had started (timeRange.start <= T)
+   * - AND the move wasn't closed yet (closedAt is undefined OR closedAt > T)
+   *
+   * @param timestamp - Unix timestamp in milliseconds
+   * @returns Array of moves that were active at the given timestamp, sorted by generation
+   */
+  public getStack(timestamp: number): PriceMove[] {
+    return this.repo
+      .findAll()
+      .filter(move => move.wasActiveAt(timestamp))
+      .sort((a, b) => a.generation - b.generation)
+  }
+
+  /**
+   * Returns the active move at a specific generation level for a given timestamp.
+   * Useful for querying a specific layer of the fractal at a point in time.
+   *
+   * @param generation - The generation level to query (0 = root, 1 = first children, etc.)
+   * @param timestamp - Unix timestamp in milliseconds
+   * @returns The active move at that generation and timestamp, or undefined if none
+   */
+  public getMove(generation: number, timestamp: number): PriceMove | undefined {
+    return this.repo
+      .findAll()
+      .find(move => move.generation === generation && move.wasActiveAt(timestamp))
+  }
+
+  /**
    * Validates the structural integrity of the fractal structure.
    * Checks:
    * - All parent-child relationships are bidirectional

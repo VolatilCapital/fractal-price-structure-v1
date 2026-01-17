@@ -8,7 +8,6 @@ import type {
 import type { FractalLayer } from "./domain/structure/FractalLayer.js"
 import { PriceMoveStructure } from "./domain/structure/PriceMoveStructure.js"
 import { InMemoryPriceMoveRepository } from "./infrastructure/repositories/InMemoryPriceMoveRepository.js"
-import { noopLogger } from "./application/ports/Logger.js"
 
 /**
  * Configuration options for FractalEngine.
@@ -166,6 +165,37 @@ export class FractalEngine {
    */
   validate(): { valid: boolean; errors: string[] } {
     return this.structure.validateStructure()
+  }
+
+  // ============================================
+  // Point-in-Time Queries
+  // ============================================
+
+  /**
+   * Returns all moves that were active at a specific timestamp.
+   * This provides a point-in-time snapshot of the fractal structure.
+   *
+   * A move was active at timestamp T if:
+   * - The move had started (timeRange.start <= T)
+   * - AND the move wasn't closed yet (closedAt is undefined OR closedAt > T)
+   *
+   * @param timestamp - Unix timestamp in milliseconds
+   * @returns Array of moves that were active at the given timestamp, sorted by generation
+   */
+  getStack(timestamp: number): PriceMove[] {
+    return this.structure.getStack(timestamp)
+  }
+
+  /**
+   * Returns the active move at a specific generation level for a given timestamp.
+   * Useful for querying a specific layer of the fractal at a point in time.
+   *
+   * @param generation - The generation level to query (0 = root, 1 = first children, etc.)
+   * @param timestamp - Unix timestamp in milliseconds
+   * @returns The active move at that generation and timestamp, or undefined if none
+   */
+  getMove(generation: number, timestamp: number): PriceMove | undefined {
+    return this.structure.getMove(generation, timestamp)
   }
 
   // ============================================

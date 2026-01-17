@@ -88,6 +88,10 @@ engine.getLayer(level)                      // FractalLayer at specific level
 engine.getLayerCount()                      // number of generations
 engine.validate()                           // { valid: boolean, errors: string[] }
 
+// Point-in-Time Queries (historical analysis)
+engine.getStack(timestamp)                  // PriceMove[] active at timestamp
+engine.getMove(generation, timestamp)       // PriceMove | undefined at gen+time
+
 // Debug
 engine.formatActiveMoves()                  // human-readable string
 engine.logActiveMoves()                     // logs via configured logger
@@ -101,9 +105,23 @@ engine.clear()                              // reset to empty state
 
 ### Key Types
 - `Candle` - Input: { openTime, closeTime, open, high, low, close, volume }
-- `PriceMove` - Output: polarity, priceRange, timeRange, state, generation, childMoves
+- `PriceMove` - Output: polarity, priceRange, timeRange, state, generation, childMoves, closedAt?
 - `FractalLayer` - { level: number, moves: PriceMove[] }
 - `Logger` - { debug, info, warn, error } interface
+
+### Point-in-Time Query Example
+```typescript
+// Build structure from historical candles
+engine.buildFromCandles(candles);
+
+// Query what the structure looked like at a specific moment
+const timestamp = 1704067500000; // Unix ms
+const stackAtTime = engine.getStack(timestamp);
+const gen0MoveAtTime = engine.getMove(0, timestamp);
+
+// A move was active at T if it started before T and wasn't closed yet
+// move.wasActiveAt(timestamp) helper available on PriceMove
+```
 
 ## TypeScript Configuration
 

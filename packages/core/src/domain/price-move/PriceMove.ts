@@ -13,6 +13,8 @@ export class PriceMove {
   public state: PriceMoveState = PriceMoveState.Active
   /** Generation level: 0 for root moves, parent.generation + 1 for children */
   public readonly generation: number
+  /** Timestamp when this move was closed/invalidated (undefined if still active) */
+  public closedAt?: number
 
   public origin: PriceMove[] = []
   public confirmedOrigins: PriceMove[] = []
@@ -68,6 +70,7 @@ export class PriceMove {
 
     if (invalidation) {
       this.state = PriceMoveState.Closed
+      this.closedAt = candidate.timeRange.start
       return false
     }
 
@@ -83,5 +86,23 @@ export class PriceMove {
 
   public isClosed(): boolean {
     return this.state === PriceMoveState.Closed
+  }
+
+  /**
+   * Checks if this move was active at a specific timestamp.
+   * A move was active at timestamp T if:
+   * - The move had started (timeRange.start <= T)
+   * - AND the move wasn't closed yet (closedAt is undefined OR closedAt > T)
+   *
+   * @param timestamp - Unix timestamp in milliseconds
+   * @returns true if the move was active at the given timestamp
+   */
+  public wasActiveAt(timestamp: number): boolean {
+    // Move hadn't started yet
+    if (this.timeRange.start > timestamp) {
+      return false
+    }
+    // Move is still active (never closed) or was closed after the timestamp
+    return this.closedAt === undefined || this.closedAt > timestamp
   }
 }
