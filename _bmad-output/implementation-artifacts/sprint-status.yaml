@@ -90,12 +90,12 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Clean Public API & Library Packaging
-  epic-6: backlog
-  6-1-define-public-api-surface: backlog
-  6-2-implement-fractalengine-facade: backlog
-  6-3-export-typescript-types-correctly: backlog
-  6-4-configure-esm-module-resolution: backlog
-  6-5-update-claude-md-documentation: backlog
+  epic-6: done
+  6-1-define-public-api-surface: done
+  6-2-implement-fractalengine-facade: done
+  6-3-export-typescript-types-correctly: done
+  6-4-configure-esm-module-resolution: done
+  6-5-update-claude-md-documentation: done
   epic-6-retrospective: optional
 
   # Epic 7: Point-in-Time Queries (Post-MVP)

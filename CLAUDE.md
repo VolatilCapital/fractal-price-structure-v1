@@ -4,13 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Fractal Price Structure is a TypeScript tool that generates fractal price structures from candlestick data. It fetches candles from Binance API, converts them into PriceMoves, and builds recursive fractal layers representing nested price movements.
+Fractal Price Structure is a TypeScript monorepo that generates fractal price structures from candlestick data. It converts candles into PriceMoves and builds recursive fractal layers representing nested price movements with generation tracking.
 
-## Commands
+## Quick Start
 
-- `npm run dev` - Run the application (uses tsx for direct TypeScript execution)
-- `npm run build` - Compile TypeScript to JavaScript (outputs to dist/)
-- `npm run clean` - Remove the dist/ directory
+```typescript
+import { FractalEngine, ConsoleLogger } from '@fractal-price-structure/core';
+
+// Create engine with optional logging
+const engine = new FractalEngine({
+  logger: new ConsoleLogger(),
+  deterministic: true  // for reproducible IDs
+});
+
+// Add candles
+engine.buildFromCandles(candles);
+
+// Query the structure
+const activeMoves = engine.getActiveMoves();
+const layers = engine.getLayers();
+const stats = engine.getMemoryStats();
+```
+
+## Commands (pnpm monorepo)
+
+- `pnpm build` - Build all packages
+- `pnpm test` - Run all tests
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm lint` - Run linting
+- `pnpm format` - Format code
+
+## Packages
+
+- `packages/core` - Core library with FractalEngine facade
+- `packages/visualizer` - (future) Visualization tools
 
 ## Architecture
 
@@ -39,6 +66,44 @@ The project follows a clean/hexagonal architecture pattern:
 - Internal children are moves that fit within the parent's price/time range without extending or invalidating
 
 **Fractal Layers**: Built recursively from root PriceMoves (those without an englobingMove), collecting childMoves at each depth level.
+
+## Public API
+
+### FractalEngine (Main Entry Point)
+```typescript
+// Construction
+new FractalEngine({ logger?: Logger, deterministic?: boolean })
+
+// Candle Ingestion
+engine.addCandle(candle)                    // throws on error
+engine.tryAddCandle(candle)                 // returns CandleResult
+engine.buildFromCandles(candles)            // throws on error
+engine.tryBuildFromCandles(candles)         // returns BatchIngestionResult
+
+// Queries
+engine.getActiveMoves()                     // PriceMove[] sorted by generation
+engine.getAllMoves()                        // PriceMove[] including closed
+engine.getLayers()                          // FractalLayer[] by generation
+engine.getLayer(level)                      // FractalLayer at specific level
+engine.getLayerCount()                      // number of generations
+engine.validate()                           // { valid: boolean, errors: string[] }
+
+// Debug
+engine.formatActiveMoves()                  // human-readable string
+engine.logActiveMoves()                     // logs via configured logger
+engine.getMemoryStats()                     // memory usage statistics
+engine.logMemoryStats()                     // logs stats via logger
+
+// Memory Management
+engine.pruneClosedMoves(beforeTimestamp)    // remove old closed moves
+engine.clear()                              // reset to empty state
+```
+
+### Key Types
+- `Candle` - Input: { openTime, closeTime, open, high, low, close, volume }
+- `PriceMove` - Output: polarity, priceRange, timeRange, state, generation, childMoves
+- `FractalLayer` - { level: number, moves: PriceMove[] }
+- `Logger` - { debug, info, warn, error } interface
 
 ## TypeScript Configuration
 

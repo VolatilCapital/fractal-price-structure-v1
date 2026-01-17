@@ -8,6 +8,9 @@
 
 export const VERSION = '1.0.0';
 
+// Main entry point - Facade
+export { FractalEngine, type FractalEngineOptions } from './FractalEngine.js';
+
 // Domain exports
 export { PriceMove } from './domain/price-move/PriceMove.js';
 export { Polarity } from './domain/price-move/Polarity.js';
@@ -20,7 +23,7 @@ export {
   type CandleResult,
   type BatchIngestionResult,
 } from './domain/structure/PriceMoveStructure.js';
-export { FractalLayer } from './domain/structure/FractalLayer.js';
+export type { FractalLayer } from './domain/structure/FractalLayer.js';
 
 // Shared types
 export { PriceRange } from './shared/PriceRange.js';
