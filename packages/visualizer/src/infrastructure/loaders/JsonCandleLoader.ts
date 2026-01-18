@@ -31,7 +31,14 @@ export class JsonCandleLoader implements CandleLoader {
       throw new Error(`Failed to load candles from ${this.url}: ${response.statusText}`)
     }
 
-    const rawCandles: RawCandle[] = await response.json()
+    const json = await response.json()
+
+    // Handle both formats: direct array or wrapped { candles: [...] }
+    const rawCandles: RawCandle[] = Array.isArray(json) ? json : json.candles
+
+    if (!Array.isArray(rawCandles)) {
+      throw new Error('Invalid candle data format: expected array or { candles: [...] }')
+    }
 
     // Convert to Candle format (ensure numbers)
     return rawCandles.map((raw) => ({
