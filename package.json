@@ -13,7 +13,9 @@
     "check": "biome check packages/",
     "check:fix": "biome check --write packages/",
     "clean": "pnpm -r clean",
-    "dev": "pnpm --filter @fractal-price-structure/core dev"
+    "dev": "pnpm --filter @fractal-price-structure/core dev",
+    "visualizer:dev": "pnpm --filter @fractal-price-structure/visualizer dev",
+    "visualizer:build": "pnpm --filter @fractal-price-structure/visualizer build:web"
   },
   "keywords": [
     "fractal",

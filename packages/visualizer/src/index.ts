@@ -86,14 +86,17 @@ function printMove(move: PriceMove, indent = 0): void {
   const prefix = '  '.repeat(indent);
   const color = getPolarityColor(move.polarity);
   const symbol = getPolaritySymbol(move.polarity);
-  const state = move.isActive()
-    ? `${Colors.green}ACTIVE${Colors.reset}`
-    : `${Colors.dim}CLOSED${Colors.reset}`;
+  const state = move.isGrowing()
+    ? `${Colors.green}GROWING${Colors.reset}`
+    : move.isReference()
+      ? `${Colors.yellow}REFERENCE${Colors.reset}`
+      : `${Colors.dim}ARCHIVED${Colors.reset}`;
   const id = move.id.toString().slice(0, 8);
+  const degre = move.degre !== undefined ? ` D${move.degre}` : '';
 
   console.log(
     `${prefix}${color}${symbol}${Colors.reset} ` +
-      `Gen ${Colors.yellow}${move.generation}${Colors.reset} | ` +
+      `R${Colors.yellow}${move.rang}${Colors.reset}${degre} | ` +
       `${color}${move.polarity.padEnd(4)}${Colors.reset} | ` +
       `${formatPrice(move.priceRange.low)} - ${formatPrice(move.priceRange.high)} | ` +
       `${formatTime(move.timeRange.start)} → ${formatTime(move.timeRange.end)} | ` +
@@ -113,7 +116,7 @@ function printMoveTree(move: PriceMove, indent = 0, maxDepth = 5): void {
 
   printMove(move, indent);
 
-  for (const child of move.childMoves) {
+  for (const child of move.subStructures) {
     printMoveTree(child, indent + 1, maxDepth);
   }
 }
@@ -212,7 +215,7 @@ export class DebugVisualizer {
   printTree(maxDepth = 5): void {
     printHeader('MOVE TREE');
     const allMoves = this.engine.getAllMoves();
-    const roots = allMoves.filter((m) => !m.englobingMove);
+    const roots = allMoves.filter((m) => !m.parentStructure);
 
     if (roots.length === 0) {
       console.log(`  ${Colors.dim}No moves${Colors.reset}`);
