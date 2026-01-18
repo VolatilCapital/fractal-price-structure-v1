@@ -86,38 +86,56 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
 
   const marks = []
 
-  // Active moves (full opacity)
-  if (activeMoves.length > 0) {
-    marks.push(
-      Plot.rect(activeMoves, {
-        x1: (d: PriceMove) => d.timeRange.start,
-        x2: (d: PriceMove) => d.timeRange.end,
-        y1: (d: PriceMove) => d.priceRange.low,
-        y2: (d: PriceMove) => d.priceRange.high,
-        fill: (d: PriceMove) => getStateColor(d.state),
-        fillOpacity,
-        stroke: (d: PriceMove) => getStateColor(d.state),
-        strokeWidth,
-      })
-    )
+  // Separate moves by state for proper z-ordering:
+  // Growing moves (larger, englobing) rendered first (underneath)
+  // Reference moves rendered on top to be visible
+  const activeGrowing = activeMoves.filter(m => m.state === PriceMoveState.Growing)
+  const activeReference = activeMoves.filter(m => m.state === PriceMoveState.Reference)
+  const activeArchived = activeMoves.filter(m => m.state === PriceMoveState.Archived)
+
+  const futureGrowing = futureMoves.filter(m => m.state === PriceMoveState.Growing)
+  const futureReference = futureMoves.filter(m => m.state === PriceMoveState.Reference)
+  const futureArchived = futureMoves.filter(m => m.state === PriceMoveState.Archived)
+
+  // Helper to create rect mark
+  const createRectMark = (
+    moves: PriceMove[],
+    opacity: number,
+    strokeOp: number = 1,
+    stroke: number = strokeWidth
+  ) => {
+    if (moves.length === 0) return null
+    return Plot.rect(moves, {
+      x1: (d: PriceMove) => d.timeRange.start,
+      x2: (d: PriceMove) => d.timeRange.end,
+      y1: (d: PriceMove) => d.priceRange.low,
+      y2: (d: PriceMove) => d.priceRange.high,
+      fill: (d: PriceMove) => getStateColor(d.state),
+      fillOpacity: opacity,
+      stroke: (d: PriceMove) => getStateColor(d.state),
+      strokeWidth: stroke,
+      strokeOpacity: strokeOp,
+    })
   }
 
-  // Future moves (reduced opacity)
-  if (futureMoves.length > 0) {
-    marks.push(
-      Plot.rect(futureMoves, {
-        x1: (d: PriceMove) => d.timeRange.start,
-        x2: (d: PriceMove) => d.timeRange.end,
-        y1: (d: PriceMove) => d.priceRange.low,
-        y2: (d: PriceMove) => d.priceRange.high,
-        fill: (d: PriceMove) => getStateColor(d.state),
-        fillOpacity: fillOpacity * 0.3,
-        stroke: (d: PriceMove) => getStateColor(d.state),
-        strokeWidth,
-        strokeOpacity: 0.3,
-      })
-    )
-  }
+  // Active moves - render in order: Growing (bottom), Archived, Reference (top)
+  // Reference moves get thicker stroke (2px) to stand out when nested inside Growing moves
+  const growingMark = createRectMark(activeGrowing, fillOpacity)
+  const archivedMark = createRectMark(activeArchived, fillOpacity)
+  const referenceMark = createRectMark(activeReference, fillOpacity, 1, 2)
+
+  if (growingMark) marks.push(growingMark)
+  if (archivedMark) marks.push(archivedMark)
+  if (referenceMark) marks.push(referenceMark)
+
+  // Future moves - same order with reduced opacity
+  const futureGrowingMark = createRectMark(futureGrowing, fillOpacity * 0.3, 0.3)
+  const futureArchivedMark = createRectMark(futureArchived, fillOpacity * 0.3, 0.3)
+  const futureReferenceMark = createRectMark(futureReference, fillOpacity * 0.3, 0.3, 2)
+
+  if (futureGrowingMark) marks.push(futureGrowingMark)
+  if (futureArchivedMark) marks.push(futureArchivedMark)
+  if (futureReferenceMark) marks.push(futureReferenceMark)
 
   return marks
 }
