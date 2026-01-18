@@ -3,7 +3,7 @@
  * Filter panel component for controlling visibility.
  * Shows degre checkboxes and toggle switches.
  */
-import type { FilterState } from '../../../domain/index.js'
+import type { FilterState, DisplayMode } from '../../../domain/index.js'
 
 const props = defineProps<{
   filterState: FilterState
@@ -14,6 +14,7 @@ const emit = defineEmits<{
   setShowSubStructures: [show: boolean]
   setShowArchived: [show: boolean]
   setShowUndefinedDegre: [show: boolean]
+  setDisplayMode: [mode: DisplayMode]
 }>()
 
 // Available degre levels (0-5 typically)
@@ -37,6 +38,29 @@ function getDegreColor(degre: number): string {
       <v-icon icon="mdi-filter" class="mr-2" />
       Filters
     </h3>
+
+    <!-- Display Mode -->
+    <div class="mb-4">
+      <div class="text-caption text-grey mb-2">Display Mode</div>
+      <v-btn-toggle
+        :model-value="filterState.displayMode"
+        @update:model-value="emit('setDisplayMode', $event as DisplayMode)"
+        mandatory
+        density="compact"
+        color="primary"
+      >
+        <v-btn value="rectangle" size="small">
+          <v-icon icon="mdi-rectangle-outline" class="mr-1" />
+          Rectangle
+        </v-btn>
+        <v-btn value="line" size="small">
+          <v-icon icon="mdi-chart-line" class="mr-1" />
+          Ligne
+        </v-btn>
+      </v-btn-toggle>
+    </div>
+
+    <v-divider class="mb-4" />
 
     <!-- Degre visibility -->
     <div class="mb-4">

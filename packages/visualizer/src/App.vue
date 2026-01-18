@@ -14,7 +14,7 @@ const drawer = ref(true)
 // Composables
 const { candles, engine, events, isLoading, error, load } = useEngine()
 const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo } = usePlayback(candles)
-const { filterState, toggleDegre, setShowSubStructures, setShowArchived, setShowUndefinedDegre } = useFilters()
+const { filterState, toggleDegre, setShowSubStructures, setShowArchived, setShowUndefinedDegre, setDisplayMode } = useFilters()
 
 // Computed
 const cursorTime = computed(() => visualizationState.value.cursorTime)
@@ -105,6 +105,7 @@ onMounted(() => {
         @set-show-sub-structures="setShowSubStructures"
         @set-show-archived="setShowArchived"
         @set-show-undefined-degre="setShowUndefinedDegre"
+        @set-display-mode="setDisplayMode"
       />
     </v-navigation-drawer>
 

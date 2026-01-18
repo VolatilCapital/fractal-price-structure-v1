@@ -15,7 +15,7 @@ export {
   setDirection,
 } from './PlaybackState.js'
 
-export type { FilterState } from './FilterState.js'
+export type { FilterState, DisplayMode } from './FilterState.js'
 export {
   createFilterState,
   toggleDegre,
@@ -23,6 +23,7 @@ export {
   setShowArchived,
   setShowUndefinedDegre,
   setMaxRang,
+  setDisplayMode,
   isMoveVisible,
   serializeFilterState,
   deserializeFilterState,

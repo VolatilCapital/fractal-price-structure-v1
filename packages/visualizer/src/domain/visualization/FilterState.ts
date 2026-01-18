@@ -3,7 +3,12 @@
  * Pure TypeScript - no Vue imports.
  */
 
+/** Display mode for price moves */
+export type DisplayMode = 'rectangle' | 'line'
+
 export interface FilterState {
+  /** Display mode: rectangle (boxes) or line (diagonals) */
+  displayMode: DisplayMode
   /** Set of visible degre levels (e.g., Set([0, 1, 2])) */
   visibleDegres: Set<number>
   /** Whether to show sub-structures within moves */
@@ -18,6 +23,7 @@ export interface FilterState {
 
 export function createFilterState(): FilterState {
   return {
+    displayMode: 'rectangle',
     visibleDegres: new Set([0, 1, 2, 3, 4, 5]),
     showSubStructures: true,
     showArchived: false,
@@ -50,6 +56,10 @@ export function setShowUndefinedDegre(state: FilterState, show: boolean): Filter
 
 export function setMaxRang(state: FilterState, maxRang: number | undefined): FilterState {
   return { ...state, maxRang }
+}
+
+export function setDisplayMode(state: FilterState, displayMode: DisplayMode): FilterState {
+  return { ...state, displayMode }
 }
 
 /**
@@ -88,6 +98,7 @@ export function isMoveVisible(
  */
 export function serializeFilterState(state: FilterState): string {
   return JSON.stringify({
+    displayMode: state.displayMode,
     visibleDegres: Array.from(state.visibleDegres),
     showSubStructures: state.showSubStructures,
     showArchived: state.showArchived,
@@ -103,6 +114,7 @@ export function deserializeFilterState(json: string): FilterState | null {
   try {
     const parsed = JSON.parse(json)
     return {
+      displayMode: parsed.displayMode ?? 'rectangle',
       visibleDegres: new Set(parsed.visibleDegres ?? [0, 1, 2, 3, 4, 5]),
       showSubStructures: parsed.showSubStructures ?? true,
       showArchived: parsed.showArchived ?? false,

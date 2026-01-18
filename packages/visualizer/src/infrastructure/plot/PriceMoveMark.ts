@@ -1,9 +1,11 @@
 /**
  * Factory for creating Observable Plot marks for PriceMove visualization.
- * Uses rect marks for price range boxes.
+ * Supports two display modes:
+ * - Rectangle: boxes showing high/low price range
+ * - Line: diagonal lines showing price movement direction
  */
 import type { PriceMove } from '@fractal-price-structure/core'
-import { PriceMoveState } from '@fractal-price-structure/core'
+import { PriceMoveState, Polarity } from '@fractal-price-structure/core'
 import * as Plot from '@observablehq/plot'
 import type { FilterState } from '../../domain/index.js'
 
@@ -66,7 +68,7 @@ export function filterMoves(moves: PriceMove[], filterState: FilterState): Price
 
 /**
  * Create price move marks for Observable Plot.
- * Returns an array of rect marks for the moves.
+ * Supports rectangle and line display modes.
  */
 export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
   const {
@@ -84,8 +86,6 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
   const activeMoves = filteredMoves.filter((m) => m.timeRange.start <= cursorTime)
   const futureMoves = filteredMoves.filter((m) => m.timeRange.start > cursorTime)
 
-  const marks = []
-
   // Separate moves by state for proper z-ordering:
   // Growing moves (larger, englobing) rendered first (underneath)
   // Reference moves rendered on top to be visible
@@ -96,6 +96,59 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
   const futureGrowing = futureMoves.filter(m => m.state === PriceMoveState.Growing)
   const futureReference = futureMoves.filter(m => m.state === PriceMoveState.Reference)
   const futureArchived = futureMoves.filter(m => m.state === PriceMoveState.Archived)
+
+  // Choose mark creation function based on display mode
+  if (filterState.displayMode === 'line') {
+    return createLineMarks({
+      activeGrowing,
+      activeReference,
+      activeArchived,
+      futureGrowing,
+      futureReference,
+      futureArchived,
+      strokeWidth,
+    })
+  }
+
+  return createRectMarks({
+    activeGrowing,
+    activeReference,
+    activeArchived,
+    futureGrowing,
+    futureReference,
+    futureArchived,
+    fillOpacity,
+    strokeWidth,
+  })
+}
+
+interface StateGroupedMoves {
+  activeGrowing: PriceMove[]
+  activeReference: PriceMove[]
+  activeArchived: PriceMove[]
+  futureGrowing: PriceMove[]
+  futureReference: PriceMove[]
+  futureArchived: PriceMove[]
+  fillOpacity?: number
+  strokeWidth: number
+}
+
+/**
+ * Create rectangle marks (box mode).
+ */
+function createRectMarks(params: StateGroupedMoves) {
+  const {
+    activeGrowing,
+    activeReference,
+    activeArchived,
+    futureGrowing,
+    futureReference,
+    futureArchived,
+    fillOpacity = DEFAULT_FILL_OPACITY,
+    strokeWidth,
+  } = params
+
+  const marks: ReturnType<typeof Plot.rect>[] = []
 
   // Helper to create rect mark
   const createRectMark = (
@@ -132,6 +185,65 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
   const futureGrowingMark = createRectMark(futureGrowing, fillOpacity * 0.3, 0.3)
   const futureArchivedMark = createRectMark(futureArchived, fillOpacity * 0.3, 0.3)
   const futureReferenceMark = createRectMark(futureReference, fillOpacity * 0.3, 0.3, 2)
+
+  if (futureGrowingMark) marks.push(futureGrowingMark)
+  if (futureArchivedMark) marks.push(futureArchivedMark)
+  if (futureReferenceMark) marks.push(futureReferenceMark)
+
+  return marks
+}
+
+/**
+ * Create line marks (diagonal mode).
+ * Lines go from start to end, direction based on polarity:
+ * - Up: (startTime, low) → (endTime, high)
+ * - Down: (startTime, high) → (endTime, low)
+ */
+function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
+  const {
+    activeGrowing,
+    activeReference,
+    activeArchived,
+    futureGrowing,
+    futureReference,
+    futureArchived,
+    strokeWidth,
+  } = params
+
+  const marks: ReturnType<typeof Plot.link>[] = []
+
+  // Helper to create line mark using Plot.link
+  const createLineMark = (
+    moves: PriceMove[],
+    strokeOp: number = 1,
+    stroke: number = strokeWidth
+  ) => {
+    if (moves.length === 0) return null
+    return Plot.link(moves, {
+      x1: (d: PriceMove) => d.timeRange.start,
+      y1: (d: PriceMove) => d.polarity === Polarity.Up ? d.priceRange.low : d.priceRange.high,
+      x2: (d: PriceMove) => d.timeRange.end,
+      y2: (d: PriceMove) => d.polarity === Polarity.Up ? d.priceRange.high : d.priceRange.low,
+      stroke: (d: PriceMove) => getStateColor(d.state),
+      strokeWidth: stroke,
+      strokeOpacity: strokeOp,
+    })
+  }
+
+  // Active moves - render in order: Growing (bottom), Archived, Reference (top)
+  // Reference moves get thicker stroke (2px) to stand out
+  const growingMark = createLineMark(activeGrowing, 1, strokeWidth)
+  const archivedMark = createLineMark(activeArchived, 1, strokeWidth)
+  const referenceMark = createLineMark(activeReference, 1, strokeWidth + 1)
+
+  if (growingMark) marks.push(growingMark)
+  if (archivedMark) marks.push(archivedMark)
+  if (referenceMark) marks.push(referenceMark)
+
+  // Future moves - same order with reduced opacity
+  const futureGrowingMark = createLineMark(futureGrowing, 0.3)
+  const futureArchivedMark = createLineMark(futureArchived, 0.3)
+  const futureReferenceMark = createLineMark(futureReference, 0.3, strokeWidth + 1)
 
   if (futureGrowingMark) marks.push(futureGrowingMark)
   if (futureArchivedMark) marks.push(futureArchivedMark)

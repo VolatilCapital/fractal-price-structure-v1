@@ -8,10 +8,11 @@ import {
   setShowSubStructures as setShowSubStructuresAction,
   setShowArchived as setShowArchivedAction,
   setShowUndefinedDegre as setShowUndefinedDegreAction,
+  setDisplayMode as setDisplayModeAction,
   serializeFilterState,
   deserializeFilterState,
 } from '../../../domain/index.js'
-import type { FilterState } from '../../../domain/index.js'
+import type { FilterState, DisplayMode } from '../../../domain/index.js'
 
 const STORAGE_KEY = 'fractal-visualizer-filters'
 
@@ -58,11 +59,16 @@ export function useFilters() {
     filterState.value = setShowUndefinedDegreAction(filterState.value, show)
   }
 
+  function setDisplayMode(mode: DisplayMode) {
+    filterState.value = setDisplayModeAction(filterState.value, mode)
+  }
+
   return {
     filterState,
     toggleDegre,
     setShowSubStructures,
     setShowArchived,
     setShowUndefinedDegre,
+    setDisplayMode,
   }
 }
