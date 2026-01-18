@@ -33,11 +33,13 @@ const stats = engine.getMemoryStats();
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm lint` - Run linting
 - `pnpm format` - Format code
+- `pnpm visualizer:dev` - Launch web visualizer (Vue.js + Observable Plot)
+- `pnpm visualizer:build` - Build web visualizer for production
 
 ## Packages
 
 - `packages/core` - Core library with FractalEngine facade
-- `packages/visualizer` - (future) Visualization tools
+- `packages/visualizer` - Visualization tools (web app + terminal debug)
 
 ## Architecture
 
