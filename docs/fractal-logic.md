@@ -1,5 +1,7 @@
 # Fractal Price Structure - Logic Specification
 
+> **Technical Reference**: See [Protocole de Construction](./protocole-construction.md) for the authoritative technical specification of fractal construction rules.
+
 ## Overview
 
 This document specifies the fractal price structure logic - how candlestick data is transformed into a hierarchical structure of nested price movements.
@@ -16,7 +18,7 @@ A **PriceMove** represents a directional price movement:
 | `priceRange` | Price bounds: `[low, high]` |
 | `timeRange` | Time bounds: `[start, end]` |
 | `generation` | Hierarchy level: 0 = root, 1 = child of root, etc. |
-| `state` | `Active` (ongoing) or `Closed` (invalidated) |
+| `state` | `Growing` (active), `Reference` (terminated, serves as level), or `Archived` (no longer relevant) |
 | `childMoves` | Nested moves contained within this move |
 | `englobingMove` | Parent move that contains this move |
 
@@ -117,44 +119,6 @@ For a healthy fractal structure:
 | Moves with parent | > 0 (children exist) |
 | Moves with children | > 0 (parents exist) |
 | Closed moves | > 0 (invalidations occur) |
-
-## Current Implementation Issues
-
-### Issue 1: Generation Never Updated
-
-**Location**: `PriceMoveStructure.add()` and `PriceMove.tryExtendWith()`
-
-**Problem**: When a move becomes a child (via `englobingMove`), its `generation` is never updated from the default 0.
-
-**Fix**: After setting `englobingMove`, update `generation`:
-```typescript
-candidate.englobingMove = parent
-candidate.generation = parent.generation + 1  // MISSING!
-```
-
-### Issue 2: Duplicate Children
-
-**Location**: `PriceMove.tryExtendWith()` and `PriceMoveStructure.add()`
-
-**Problem**:
-1. `tryExtendWith()` adds candidate to `childMoves` when it's an internal child
-2. `add()` also checks for englobment and adds to `childMoves`
-3. Same move can be added twice
-
-**Fix**: Check before adding to `childMoves`:
-```typescript
-if (!parent.childMoves.includes(candidate)) {
-  parent.childMoves.push(candidate)
-}
-```
-
-### Issue 3: Side Effects in canExtendWith
-
-**Location**: `PriceMoveRules.canExtendWith()`
-
-**Problem**: This function is named like a predicate (returns boolean) but calls `tryExtendWith()` which modifies state.
-
-**Fix**: Separate the check from the action, or rename to make side effects clear.
 
 ## Validation Criteria
 

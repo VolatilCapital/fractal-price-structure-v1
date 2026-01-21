@@ -10,6 +10,8 @@ status: 'complete'
 
 _Critical rules and patterns for implementing code in this project. Focus on unobvious details that agents might miss._
 
+> **Technical Reference**: See [docs/protocole-construction.md](../docs/protocole-construction.md) for the authoritative specification of fractal construction rules.
+
 ---
 
 ## Technology Stack & Versions
@@ -96,7 +98,8 @@ Dependencies flow INWARD only: infrastructure → application → domain
 A PriceMove represents a directional price movement with:
 - **Polarity**: Up or Down
 - **Extension**: Move extends when price breaks directional boundary
-- **Invalidation**: Move closes when opposite boundary is broken
+- **Invalidation**: Move terminates when reference level is broken
+- **Three States**: Growing (active) → Reference (terminated, serves as level) → Archived (no longer relevant)
 - **Generation**: Child moves inherit generation from parent + 1
 - **Englobment**: Parent-child relationships form fractal hierarchy
 

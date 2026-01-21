@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Fractal Price Structure is a TypeScript monorepo that generates fractal price structures from candlestick data. It converts candles into PriceMoves and builds recursive fractal layers representing nested price movements with generation tracking.
 
+> **Technical Reference**: See [docs/protocole-construction.md](docs/protocole-construction.md) for the authoritative specification of fractal construction rules, including the three structure states (Growing/Reference/Archived), reference levels, and cascade invalidation.
+
 ## Quick Start
 
 ```typescript
@@ -107,9 +109,14 @@ engine.clear()                              // reset to empty state
 
 ### Key Types
 - `Candle` - Input: { openTime, closeTime, open, high, low, close, volume }
-- `PriceMove` - Output: polarity, priceRange, timeRange, state, generation, childMoves, closedAt?
+- `PriceMove` - Output: polarity, priceRange, timeRange, state (Growing/Reference/Archived), generation, childMoves, closedAt?
 - `FractalLayer` - { level: number, moves: PriceMove[] }
 - `Logger` - { debug, info, warn, error } interface
+
+### PriceMove States
+- **Growing**: Active structure, can still be extended by new price action
+- **Reference**: Terminated, serves as reference level for detecting parent invalidation
+- **Archived**: No longer relevant for structure detection, can be freed from memory
 
 ### Point-in-Time Query Example
 ```typescript

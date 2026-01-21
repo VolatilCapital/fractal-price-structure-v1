@@ -1,5 +1,7 @@
 # Data Models
 
+> **Technical Reference**: See [Protocole de Construction](./protocole-construction.md) for the authoritative specification of fractal construction rules and state transitions.
+
 ## Domain Entities
 
 ### PriceMove (Aggregate Root)
@@ -17,7 +19,7 @@ class PriceMove {
   timeRange: TimeRange      // Start/end timestamps (milliseconds)
   priceRange: PriceRange    // Low/high price bounds
   polarity: Polarity        // Direction: Up | Down
-  state: PriceMoveState     // Lifecycle: Active | Closed
+  state: PriceMoveState     // Lifecycle: Growing | Reference | Archived
 
   // Hierarchical relationships
   origin: PriceMove[]           // Initial source moves
@@ -28,9 +30,10 @@ class PriceMove {
 ```
 
 **Key Methods**:
-- `tryExtendWith(candidate)`: Attempt to extend, close, or attach as child
-- `isActive()`: Check if move can still be extended
-- `isClosed()`: Check if move is terminated
+- `tryExtendWith(candidate)`: Attempt to extend, terminate, or attach as child
+- `isGrowing()`: Check if move can still be extended
+- `isReference()`: Check if move is terminated but serves as reference level
+- `isArchived()`: Check if move is no longer relevant
 
 ### Candle (Interface)
 
@@ -136,14 +139,15 @@ enum Polarity {
 
 ### PriceMoveState
 
-Lifecycle state of a PriceMove.
+Lifecycle state of a PriceMove. See [Protocole de Construction](./protocole-construction.md#13-les-trois-états-dune-structure) for detailed state transitions.
 
 **Location**: `src/domain/price-move/PriceMoveState.ts`
 
 ```typescript
 enum PriceMoveState {
-  Active = "active",  // Can be extended
-  Closed = "closed"   // Terminated
+  Growing = "growing",      // Active, can be extended
+  Reference = "reference",  // Terminated, serves as reference level
+  Archived = "archived"     // No longer relevant, can be freed
 }
 ```
 

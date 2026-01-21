@@ -1,5 +1,9 @@
 # Spécification de la Structure Fractale des Prix
 
+> **Note** : Ce document complète le [Protocole de Construction](./protocole-construction.md) qui fait autorité pour les règles de construction de la structure fractale. Cette spécification apporte des concepts complémentaires, notamment la distinction **Rang vs Degré**.
+
+---
+
 ## 1. Philosophie Fondamentale
 
 ### 1.1 Principe de Composition

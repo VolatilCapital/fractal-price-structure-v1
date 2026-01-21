@@ -17,7 +17,7 @@ fractal-price-structure/
 │   │   │   ├── PriceMoveId.ts     # Value object - UUID identifier
 │   │   │   ├── PriceMoveFactory.ts # Factory - creates PriceMove from Candle
 │   │   │   ├── PriceMoveRules.ts  # Domain rules for extension/invalidation
-│   │   │   ├── PriceMoveState.ts  # Enum: Active | Closed
+│   │   │   ├── PriceMoveState.ts  # Enum: Growing | Reference | Archived
 │   │   │   └── Polarity.ts        # Enum: Up | Down
 │   │   │
 │   │   └── structure/

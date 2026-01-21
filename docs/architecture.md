@@ -1,5 +1,7 @@
 # Architecture Documentation
 
+> **Technical Reference**: See [Protocole de Construction](./protocole-construction.md) for the authoritative specification of fractal construction rules.
+
 ## Executive Summary
 
 Fractal Price Structure is a TypeScript tool that generates hierarchical fractal structures from candlestick price data. It follows Clean Architecture / Hexagonal Architecture principles with Domain-Driven Design (DDD) patterns.
@@ -79,7 +81,7 @@ class PriceMove {
   timeRange: TimeRange      // Start/end timestamps
   priceRange: PriceRange    // Low/high price bounds
   polarity: Polarity        // Up or Down direction
-  state: PriceMoveState     // Active or Closed
+  state: PriceMoveState     // Growing, Reference, or Archived
 
   origin: PriceMove[]           // Source moves (initial)
   confirmedOrigins: PriceMove[] // Moves that extended this
@@ -95,8 +97,9 @@ class PriceMove {
 - **Down**: Close < Open (bearish candle/move)
 
 #### PriceMove States
-- **Active**: Can be extended by new moves
-- **Closed**: Terminated, no longer extensible
+- **Growing**: Active, can be extended by new moves
+- **Reference**: Terminated, serves as reference level for parent structure
+- **Archived**: No longer relevant, can be freed from memory
 
 #### Extension Logic (`tryExtendWith`)
 

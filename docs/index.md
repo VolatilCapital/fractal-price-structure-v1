@@ -31,6 +31,9 @@
 
 | Document | Description |
 |----------|-------------|
+| [Protocole de Construction](./protocole-construction.md) | **Reference** - Authoritative specification for fractal construction rules |
+| [Spécification Fractale](./specification-fractale.md) | Complementary concepts (Rang vs Degré) |
+| [Fractal Logic](./fractal-logic.md) | Logic specification (English) |
 | [Project Overview](./project-overview.md) | High-level project summary and purpose |
 | [Architecture](./architecture.md) | Detailed architecture documentation with diagrams |
 | [Data Models](./data-models.md) | Domain entities, value objects, and relationships |
