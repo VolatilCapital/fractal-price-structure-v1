@@ -419,9 +419,95 @@ Pour une définition précise de la structure fractale en intraday :
 
 ---
 
-## 12. Les Trois États d'une Structure
+## 12. Identifiants et Relations
 
-### 12.1 Cycle de vie
+### 12.1 Identifiant unique
+
+Chaque structure reçoit un **ID unique global** (incrémental) :
+
+```
+#1, #2, #3, #4, #5...
+```
+
+L'ID est **stable** — il ne change jamais une fois attribué.
+
+### 12.2 Niveau (level)
+
+Le niveau n'est **pas** encodé dans l'ID. Il est **calculé dynamiquement** selon le contexte.
+
+```
+#4 (level 2 vu depuis #1, mais level 1 vu depuis #3)
+```
+
+Le niveau dépend du point de vue — il n'est pas intrinsèque à la structure.
+
+### 12.3 Relations parent/composantes
+
+| Relation | Cardinalité | Description |
+|----------|-------------|-------------|
+| `parent_id` | 0 ou 1 | Un seul parent direct (ou null si racine/en attente) |
+| `components` | 0 à N | Liste des composantes directes |
+
+**Structure arborescente :**
+
+```
+         ┌─────────────────┐
+         │   Structure A   │  ← 1 seul parent (ou null)
+         │      (#1)       │
+         └────────┬────────┘
+                  │
+    ┌─────────────┼─────────────┐
+    │             │             │
+    ▼             ▼             ▼
+┌───────┐    ┌───────┐    ┌───────┐
+│  #2   │    │  #3   │    │  #4   │  ← plusieurs composantes
+└───────┘    └───────┘    └───────┘
+```
+
+### 12.4 Règle d'assignation du parent
+
+Le `parent_id` est assigné **au moment où la structure devient une composante formelle**, c'est-à-dire quand elle casse une borne et "rejoint" une structure parente.
+
+```
+AVANT cassure :
+- Structure X en formation dans le contexte de B
+- X.parent_id = null (pas encore de parent)
+- X est dans un état "interne" / "en attente"
+
+APRÈS cassure (X casse la borne de A) :
+- X devient une composante formelle de A
+- X.parent_id = A (parent assigné pour la première fois)
+```
+
+**Tant qu'une structure est "interne" / "en attente", elle n'a pas de parent.**
+
+### 12.5 Promotion d'une sous-structure
+
+Quand une sous-structure B (interne à A) casse une borne de A :
+
+```
+Structure A (#1)
+├── I1 (#2)
+├── C1 (#3)
+├── I2 (#4)
+│   └── B se forme en interne (B.parent = null)
+│
+│   ... B casse la borne de A ...
+│
+├── B (#5) ← promu, B.parent = #1
+│   └── i1 (#6), c1 (#7), i2 (#8) ← restent enfants de B
+└── X (#9) ← promu, X.parent = #1
+```
+
+- B et X deviennent des composantes directes de A
+- Les enfants de B restent enfants de B (inchangés)
+- Chaque structure a **un seul parent** à tout moment
+
+---
+
+## 13. Les Trois États d'une Structure
+
+### 13.1 Cycle de vie
 
 Une structure passe par **trois états** dans l'ordre :
 
@@ -433,7 +519,7 @@ Une structure passe par **trois états** dans l'ordre :
       🟢                               🟠                                 ⬜
 ```
 
-### 12.2 Description des états
+### 13.2 Description des états
 
 | État | Description | Utilité |
 |------|-------------|---------|
@@ -441,7 +527,7 @@ Une structure passe par **trois états** dans l'ordre :
 | **Reference** 🟠 | Terminée, sert de niveau de référence pour le parent | Détection des cassures |
 | **Archived** ⬜ | N'est plus référence, aucune utilité active | Historique uniquement |
 
-### 12.3 Transitions
+### 13.3 Transitions
 
 **Growing → Reference**
 - Déclenché quand : le niveau de référence de la structure est cassé (sens opposé)
@@ -453,7 +539,7 @@ Une structure passe par **trois états** dans l'ordre :
 - La structure n'a plus aucune utilité active
 - Peut être libérée de la mémoire (optimisation)
 
-### 12.4 Exemple
+### 13.4 Exemple
 
 ```
 Structure A (n+1) : Growing 🟢
