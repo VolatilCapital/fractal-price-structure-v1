@@ -24,6 +24,7 @@ export function useEngine() {
       const result = await loadCandles({
         candleLoader: loader,
         engineFactory: () => new FractalEngineClass({ deterministic: true }),
+        maxCandles: 50,
       })
 
       candles.value = result.candles

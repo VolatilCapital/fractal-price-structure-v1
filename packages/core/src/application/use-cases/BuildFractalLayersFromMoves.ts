@@ -15,7 +15,18 @@ export function buildFractalLayersFromMoves(
     let currentMoves = baseMoves
 
     for (let level = 1; level <= levels; level++) {
-        const structure = new PriceMoveStructure({ save: () => { }, findAll: () => [], findActive: () => [], findById: () => undefined, clear: () => { } })
+        const structure = new PriceMoveStructure({
+            save: () => { },
+            findAll: () => [],
+            findActive: () => [],
+            findById: () => undefined,
+            findByState: () => [],
+            findGrowing: () => [],
+            findReference: () => [],
+            findArchived: () => [],
+            removeArchived: () => 0,
+            clear: () => { }
+        })
 
         for (const move of currentMoves) {
             const pseudoCandle = {

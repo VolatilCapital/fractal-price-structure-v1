@@ -20,8 +20,15 @@ const emit = defineEmits<{
 // Available degre levels (0-5 typically)
 const degreeLevels = [0, 1, 2, 3, 4, 5]
 
-// Degre colors for visual distinction
-const degreColors = ['#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#00BCD4']
+// Degre colors - must match PriceMoveMark.ts DEGRE_COLORS
+const degreColors = [
+  '#E91E63', // D0 - Pink
+  '#9C27B0', // D1 - Purple
+  '#3F51B5', // D2 - Indigo
+  '#2196F3', // D3 - Blue
+  '#00BCD4', // D4 - Cyan
+  '#009688', // D5 - Teal
+]
 
 function isDegreVisible(degre: number): boolean {
   return props.filterState.visibleDegres.has(degre)
@@ -115,20 +122,28 @@ function getDegreColor(degre: number): string {
     <!-- Legend -->
     <v-divider class="my-4" />
 
-    <div class="text-caption text-grey mb-2">Legend</div>
+    <div class="text-caption text-grey mb-2">Legend - États</div>
     <div class="d-flex flex-column ga-1">
       <div class="d-flex align-center">
         <div class="legend-box" style="background-color: #4caf50"></div>
-        <span class="text-caption ml-2">Growing</span>
+        <span class="text-caption ml-2">🟢 Growing (en construction)</span>
       </div>
       <div class="d-flex align-center">
-        <div class="legend-box" style="background-color: #ff9800"></div>
-        <span class="text-caption ml-2">Reference</span>
+        <div class="legend-box" style="background-color: #FF9800"></div>
+        <span class="text-caption ml-2">🟠 Reference (niveau de cassure)</span>
       </div>
       <div class="d-flex align-center">
         <div class="legend-box" style="background-color: #9e9e9e"></div>
-        <span class="text-caption ml-2">Archived</span>
+        <span class="text-caption ml-2">⬜ Archived (historique)</span>
       </div>
+    </div>
+
+    <v-divider class="my-4" />
+
+    <div class="text-caption text-grey mb-2">Rang vs Degré</div>
+    <div class="text-caption">
+      <div><strong>Rang</strong> = complexité (bottom-up)</div>
+      <div><strong>Degré</strong> = hiérarchie (top-down)</div>
     </div>
   </div>
 </template>

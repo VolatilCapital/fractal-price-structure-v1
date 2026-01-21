@@ -48,7 +48,7 @@ export interface FractalEngineOptions {
  * }
  *
  * // Query the structure
- * const activeMoves = engine.getActiveMoves();
+ * const growingMoves = engine.getGrowingMoves();
  * const layers = engine.getLayers();
  * ```
  */
@@ -118,33 +118,69 @@ export class FractalEngine {
   }
 
   // ============================================
-  // Structure Queries
+  // Structure Queries - New API
   // ============================================
 
   /**
+   * Returns all currently growing moves, sorted by rang.
+   * Growing moves are those that can still be extended.
+   */
+  getGrowingMoves(): PriceMove[] {
+    return this.structure.getGrowingMoves()
+  }
+
+  /**
+   * Returns all reference moves (terminated but not archived).
+   * Reference moves serve as support/resistance levels.
+   */
+  getReferenceMoves(): PriceMove[] {
+    return this.structure.getReferenceMoves()
+  }
+
+  /**
+   * Returns all archived moves.
+   * Archived moves are kept for historical analysis.
+   */
+  getArchivedMoves(): PriceMove[] {
+    return this.structure.getArchivedMoves()
+  }
+
+  /**
+   * Returns structures at a specific degre.
+   * Degre represents the complexity of the sub-structure.
+   */
+  getStructuresByDegre(degre: number): PriceMove[] {
+    return this.structure.getStructuresByDegre(degre)
+  }
+
+  // ============================================
+  // Structure Queries - Legacy API (deprecated)
+  // ============================================
+
+  /**
+   * @deprecated Use getGrowingMoves() instead
    * Returns all currently active moves, sorted by generation.
-   * Active moves are those that haven't been invalidated yet.
    */
   getActiveMoves(): PriceMove[] {
     return this.structure.getActiveMoves()
   }
 
   /**
-   * Returns all moves (both active and closed).
+   * Returns all moves (growing, reference, and archived).
    */
   getAllMoves(): PriceMove[] {
     return this.structure.getAllMoves()
   }
 
   /**
-   * Returns the number of fractal layers (generations) in the structure.
+   * Returns the number of fractal layers (rang levels) in the structure.
    */
   getLayerCount(): number {
     return this.structure.getLayerCount()
   }
 
   /**
-   * Returns all fractal layers organized by generation level.
+   * Returns all fractal layers organized by rang level.
    * Layer 0 contains root moves, layer 1 contains their children, etc.
    */
   getLayers(): FractalLayer[] {
@@ -152,7 +188,7 @@ export class FractalEngine {
   }
 
   /**
-   * Returns moves at a specific generation level.
+   * Returns moves at a specific rang level.
    */
   getLayer(level: number): FractalLayer {
     return this.structure.getLayer(level)
@@ -176,25 +212,25 @@ export class FractalEngine {
    *
    * A move was active at timestamp T if:
    * - The move had started (timeRange.start <= T)
-   * - AND the move wasn't closed yet (closedAt is undefined OR closedAt > T)
+   * - AND the move wasn't terminated yet (terminatedAt is undefined OR terminatedAt > T)
    *
    * @param timestamp - Unix timestamp in milliseconds
-   * @returns Array of moves that were active at the given timestamp, sorted by generation
+   * @returns Array of moves that were active at the given timestamp, sorted by rang
    */
   getStack(timestamp: number): PriceMove[] {
     return this.structure.getStack(timestamp)
   }
 
   /**
-   * Returns the active move at a specific generation level for a given timestamp.
+   * Returns the active move at a specific rang level for a given timestamp.
    * Useful for querying a specific layer of the fractal at a point in time.
    *
-   * @param generation - The generation level to query (0 = root, 1 = first children, etc.)
+   * @param rang - The rang level to query (0 = root, 1 = first children, etc.)
    * @param timestamp - Unix timestamp in milliseconds
-   * @returns The active move at that generation and timestamp, or undefined if none
+   * @returns The active move at that rang and timestamp, or undefined if none
    */
-  getMove(generation: number, timestamp: number): PriceMove | undefined {
-    return this.structure.getMove(generation, timestamp)
+  getMove(rang: number, timestamp: number): PriceMove | undefined {
+    return this.structure.getMove(rang, timestamp)
   }
 
   // ============================================
@@ -223,6 +259,9 @@ export class FractalEngine {
     totalMoves: number
     activeMoves: number
     closedMoves: number
+    growingMoves: number
+    referenceMoves: number
+    archivedMoves: number
     movesWithChildren: number
     movesWithParent: number
     maxChildCount: number
@@ -251,6 +290,16 @@ export class FractalEngine {
    */
   pruneClosedMoves(beforeTimestamp: number): number {
     return this.structure.pruneClosedMoves(beforeTimestamp)
+  }
+
+  /**
+   * Archives orphaned structures that are no longer needed.
+   *
+   * @param beforeTimestamp - Archive structures ending before this time
+   * @returns Number of structures archived
+   */
+  archiveOrphanedStructures(beforeTimestamp: number): number {
+    return this.structure.archiveOrphanedStructures(beforeTimestamp)
   }
 
   /**

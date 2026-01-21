@@ -24,6 +24,18 @@ const STATE_COLORS: Record<PriceMoveState, string> = {
   [PriceMoveState.Archived]: '#9E9E9E',
 }
 
+// Degree colors - distinct colors for each degree level
+const DEGRE_COLORS: string[] = [
+  '#E91E63', // D0 - Pink
+  '#9C27B0', // D1 - Purple
+  '#3F51B5', // D2 - Indigo
+  '#2196F3', // D3 - Blue
+  '#00BCD4', // D4 - Cyan
+  '#009688', // D5 - Teal
+  '#FF5722', // D6 - Deep Orange
+  '#795548', // D7 - Brown
+]
+
 const DEFAULT_FILL_OPACITY = 0.2
 const DEFAULT_STROKE_WIDTH = 1
 
@@ -32,6 +44,22 @@ const DEFAULT_STROKE_WIDTH = 1
  */
 export function getStateColor(state: PriceMoveState): string {
   return STATE_COLORS[state] ?? '#9E9E9E'
+}
+
+/**
+ * Get color for a move based on its degree.
+ * Growing moves (undefined degre) use green, Reference uses degree color.
+ */
+export function getMoveColor(move: PriceMove): string {
+  if (move.state === PriceMoveState.Growing) {
+    return STATE_COLORS[PriceMoveState.Growing]
+  }
+  if (move.state === PriceMoveState.Archived) {
+    return STATE_COLORS[PriceMoveState.Archived]
+  }
+  // Reference move - use degree color
+  const degre = move.degre ?? 0
+  return DEGRE_COLORS[degre % DEGRE_COLORS.length]
 }
 
 /**
@@ -148,7 +176,7 @@ function createRectMarks(params: StateGroupedMoves) {
     strokeWidth,
   } = params
 
-  const marks: ReturnType<typeof Plot.rect>[] = []
+  const marks: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.text>)[] = []
 
   // Helper to create rect mark
   const createRectMark = (
@@ -171,6 +199,26 @@ function createRectMarks(params: StateGroupedMoves) {
     })
   }
 
+  // Helper to create text labels showing Rang and Degré
+  const createTextMark = (moves: PriceMove[], opacity: number = 1) => {
+    if (moves.length === 0) return null
+    return Plot.text(moves, {
+      x: (d: PriceMove) => (d.timeRange.start + d.timeRange.end) / 2,
+      y: (d: PriceMove) => (d.priceRange.low + d.priceRange.high) / 2,
+      text: (d: PriceMove) => {
+        const rang = `R${d.rang}`
+        const degre = d.degre !== undefined ? ` D${d.degre}` : ''
+        return rang + degre
+      },
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 0.5,
+      fontSize: 10,
+      textAnchor: 'middle',
+      opacity,
+    })
+  }
+
   // Active moves - render in order: Growing (bottom), Archived, Reference (top)
   // Reference moves get thicker stroke (2px) to stand out when nested inside Growing moves
   const growingMark = createRectMark(activeGrowing, fillOpacity)
@@ -180,6 +228,11 @@ function createRectMarks(params: StateGroupedMoves) {
   if (growingMark) marks.push(growingMark)
   if (archivedMark) marks.push(archivedMark)
   if (referenceMark) marks.push(referenceMark)
+
+  // Text labels for active moves
+  const allActive = [...activeGrowing, ...activeReference, ...activeArchived]
+  const textMark = createTextMark(allActive)
+  if (textMark) marks.push(textMark)
 
   // Future moves - same order with reduced opacity
   const futureGrowingMark = createRectMark(futureGrowing, fillOpacity * 0.3, 0.3)

@@ -15,16 +15,23 @@ export interface LoadCandlesResult {
 export interface LoadCandlesOptions {
   candleLoader: CandleLoader
   engineFactory: () => FractalEngine
+  /** Maximum number of candles to load (undefined = all) */
+  maxCandles?: number
 }
 
 /**
  * Load candles, build the fractal structure, and derive events.
  */
 export async function loadCandles(options: LoadCandlesOptions): Promise<LoadCandlesResult> {
-  const { candleLoader, engineFactory } = options
+  const { candleLoader, engineFactory, maxCandles } = options
 
   // Load candles from the data source
-  const candles = await candleLoader.loadCandles()
+  let candles = await candleLoader.loadCandles()
+
+  // Limit number of candles if specified
+  if (maxCandles !== undefined && maxCandles > 0 && candles.length > maxCandles) {
+    candles = candles.slice(0, maxCandles)
+  }
 
   if (candles.length === 0) {
     throw new Error('No candles loaded')
