@@ -19,33 +19,57 @@ Pendant la suite de mouvements de prix, il n'existe que trois cas de figure :
 2. **Dépassement dans le sens opposé** — Le mouvement est dépassé dans la direction inverse
 3. **Pas de dépassement** — Le mouvement n'est pas dépassé
 
-## 3. Les Deux Niveaux de Référence
+## 3. Le Niveau de Référence
 
-### 3.1 Mouvement élémentaire (niveau 0)
+### 3.1 Règle fondamentale
 
-Un mouvement élémentaire (issu d'une bougie) n'a que ses propres bornes :
-- **High** : borne haute
-- **Low** : borne basse
+> **Tout mouvement a un niveau de référence dès qu'il existe.**
 
-Il n'a pas de niveau de référence interne car il n'a pas de composantes.
+- **Mouvement haussier** → niveau de référence = son **low**
+- **Mouvement baissier** → niveau de référence = son **high**
 
-### 3.2 Structure composée (niveau n+1)
+Le niveau de référence est la borne **opposée** à la direction du mouvement.
 
-Dès qu'une structure possède des composantes internes (ex: Impulsion + Correction + Impulsion), elle a **deux niveaux de référence** :
+### 3.2 Les deux niveaux à surveiller
 
-**Pour une structure HAUSSIÈRE :**
-- **Borne haute (H)** : le plus haut atteint → cassure = extension
-- **Niveau de référence (L_ref)** : le low de la dernière impulsion → cassure = structure terminée
+Tout mouvement/structure a **deux niveaux** à surveiller :
 
-**Pour une structure BAISSIÈRE :**
-- **Borne basse (L)** : le plus bas atteint → cassure = extension
-- **Niveau de référence (H_ref)** : le high de la dernière impulsion → cassure = structure terminée
+| Niveau | Description | Si cassé |
+|--------|-------------|----------|
+| **Borne directionnelle** | High (haussier) ou Low (baissier) | Extension |
+| **Niveau de référence** | Low (haussier) ou High (baissier) | Terminaison |
 
-### 3.3 Règle fondamentale
+### 3.3 Évolution du niveau de référence
 
-> Une structure en cours a toujours deux niveaux à surveiller :
-> 1. Sa **borne directionnelle** (extension si cassée dans le sens)
-> 2. Son **niveau de référence** (terminaison si cassé dans le sens opposé)
+Quand une structure grandit (Impulsion → Correction → Impulsion), le niveau de référence **évolue** :
+
+```
+Étape 1 : Impulsion I1 seule
+          Niveau de référence = low de I1
+
+Étape 2 : I1 + Correction C1 + Impulsion I2
+          Niveau de référence = low de I2 (le dernier brin)
+
+Étape 3 : I1 + C1 + I2 + C2 + I3
+          Niveau de référence = low de I3 (le dernier brin)
+```
+
+> **Le niveau de référence est toujours le dernier brin de la structure.**
+
+### 3.4 Le brin de référence
+
+Le **brin de référence** est le dernier mouvement dans le sens de la structure :
+
+```
+Structure n+1 :     [═══════════════════════]
+                           │
+Sous-structure :    [I1] [C1] [I2]
+                               ↑
+                          BRIN DE RÉFÉRENCE
+                     (son low = niveau de référence de n+1)
+```
+
+Le brin de référence appartient à la sous-structure, mais il **détermine l'invalidation de la structure parente**.
 
 ---
 
@@ -243,6 +267,114 @@ Prix
   B est contenue entre H_A et L1
   B a son propre niveau de référence interne
 ```
+
+---
+
+## 9. Algorithme de Traitement
+
+### 9.1 Entrée
+
+- **M** : Nouveau mouvement (bougie ou structure) avec `high`, `low`, `polarité`
+- **S** : Structure active courante (si existe)
+
+### 9.2 Étape 1 : Déterminer le type de dépassement
+
+```
+Comparer M avec S :
+
+1. M dépasse S dans le MÊME SENS ?
+   → Haussier : M.high > S.high
+   → Baissier : M.low < S.low
+
+2. M dépasse S dans le SENS OPPOSÉ ?
+   → Haussier : M.low < S.niveau_reference
+   → Baissier : M.high > S.niveau_reference
+
+3. M dépasse des DEUX CÔTÉS ? (cas englobant)
+   → M.high > S.high ET M.low < S.niveau_reference
+
+4. M ne dépasse PAS ?
+   → Aucune des conditions ci-dessus
+```
+
+### 9.3 Étape 2 : Appliquer la règle correspondante
+
+**CAS "même sens" → Extension**
+```
+- S s'étend (nouveau high/low)
+- M devient le nouveau brin de référence
+- Le niveau de référence de S est mis à jour
+```
+
+**CAS "sens opposé" → Terminaison**
+```
+- S est terminée (état = Archived)
+- M devient le début d'une nouvelle structure
+- Cette nouvelle structure a pour niveau de référence la borne opposée de M
+```
+
+**CAS "englobant" → Traitement séquentiel**
+```
+- Utiliser l'heuristique de couleur (voir section 10)
+- Traiter le premier sens
+- Puis traiter le second sens
+```
+
+**CAS "pas de dépassement" → Sous-structure interne**
+```
+- M forme une sous-structure interne à S
+- Récursion : traiter M dans le contexte de cette sous-structure
+- La sous-structure reste "en attente" de rejoindre S
+```
+
+### 9.4 Étape 3 : Vérifier la cascade d'invalidation
+
+Après chaque traitement, vérifier si l'invalidation remonte aux niveaux supérieurs :
+
+```
+POUR chaque niveau de la pile (du plus bas au plus haut) :
+    SI niveau_reference est cassé :
+        → Marquer la structure comme terminée
+        → Propager au niveau supérieur
+```
+
+---
+
+## 10. Cas Particulier : Bougie Englobante
+
+### 10.1 Définition
+
+Une bougie englobante dépasse **à la fois** le high ET le low de la structure précédente.
+
+C'est équivalent à **deux actions** :
+1. Terminer la structure dans un sens
+2. Créer une nouvelle impulsion dans l'autre sens
+
+### 10.2 Problème
+
+Sans données tick-by-tick, on ne peut pas connaître la séquence réelle intra-bougie.
+
+### 10.3 Heuristique de la couleur
+
+On utilise la **couleur de la bougie** pour déterminer l'ordre de traitement :
+
+```
+Bougie VERTE (close > open) :
+  Séquence supposée : Open → Low → High → Close
+  → Traiter d'abord le LOW (terminaison/invalidation)
+  → Puis traiter le HIGH (extension/nouvelle impulsion)
+
+Bougie ROUGE (close < open) :
+  Séquence supposée : Open → High → Low → Close
+  → Traiter d'abord le HIGH (terminaison/invalidation)
+  → Puis traiter le LOW (extension/nouvelle impulsion)
+```
+
+### 10.4 Limitation
+
+Cette heuristique est correcte dans **~95% des cas**.
+
+Dans certains cas exceptionnels (annonces économiques, flash crashes), la séquence réelle peut différer. C'est une **approximation acceptée** en l'absence de données tick.
 
 ---
 
