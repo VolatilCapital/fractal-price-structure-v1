@@ -23,7 +23,7 @@ const engine = new FractalEngine({
 engine.buildFromCandles(candles);
 
 // Query the structure
-const activeMoves = engine.getActiveMoves();
+const growingMoves = engine.getGrowingMoves();
 const layers = engine.getLayers();
 const stats = engine.getMemoryStats();
 ```
@@ -84,13 +84,19 @@ engine.tryAddCandle(candle)                 // returns CandleResult
 engine.buildFromCandles(candles)            // throws on error
 engine.tryBuildFromCandles(candles)         // returns BatchIngestionResult
 
-// Queries
-engine.getActiveMoves()                     // PriceMove[] sorted by generation
-engine.getAllMoves()                        // PriceMove[] including closed
-engine.getLayers()                          // FractalLayer[] by generation
+// Queries - State-based API
+engine.getGrowingMoves()                    // PriceMove[] that can still extend
+engine.getReferenceMoves()                  // PriceMove[] terminated, serve as levels
+engine.getArchivedMoves()                   // PriceMove[] historical only
+engine.getStructuresByDegre(degre)          // PriceMove[] at specific complexity
+engine.getAllMoves()                        // PriceMove[] all states
+engine.getLayers()                          // FractalLayer[] by rang
 engine.getLayer(level)                      // FractalLayer at specific level
-engine.getLayerCount()                      // number of generations
+engine.getLayerCount()                      // number of rang levels
 engine.validate()                           // { valid: boolean, errors: string[] }
+
+// Legacy (deprecated)
+engine.getActiveMoves()                     // Use getGrowingMoves() instead
 
 // Point-in-Time Queries (historical analysis)
 engine.getStack(timestamp)                  // PriceMove[] active at timestamp
@@ -109,9 +115,14 @@ engine.clear()                              // reset to empty state
 
 ### Key Types
 - `Candle` - Input: { openTime, closeTime, open, high, low, close, volume }
-- `PriceMove` - Output: polarity, priceRange, timeRange, state (Growing/Reference/Archived), generation, childMoves, closedAt?
+- `PriceMove` - Output: polarity, priceRange, timeRange, state, rang, degre?, currentReferenceLevel, subStructures, parentStructure?
 - `FractalLayer` - { level: number, moves: PriceMove[] }
 - `Logger` - { debug, info, warn, error } interface
+
+### Key Properties
+- **rang** - Complexity level (bottom-up): higher rang = more sub-structures
+- **degre** - Hierarchy level (top-down): assigned when structure terminates
+- **currentReferenceLevel** - Dynamic invalidation threshold (opposite bound of last extending move)
 
 ### PriceMove States
 - **Growing**: Active structure, can still be extended by new price action
