@@ -3,6 +3,29 @@
  *
  * Debug visualization tools for fractal price structures.
  *
+ * ## Display Modes
+ *
+ * The visualizer supports multiple display modes via `DisplayOptions`:
+ *
+ * - **compact**: Minimal output (ID, polarity, price range, state)
+ * - **standard**: Default view with Rang, Degré, timestamps
+ * - **detailed**: Includes currentReferenceLevel for protocol debugging
+ * - **protocol**: Full protocol view with all internal state
+ *
+ * @example
+ * ```typescript
+ * const visualizer = new DebugVisualizer(engine);
+ *
+ * // Standard view
+ * visualizer.printTree();
+ *
+ * // Detailed view with reference levels
+ * visualizer.printTree(5, { mode: 'detailed' });
+ *
+ * // Protocol debugging view
+ * visualizer.printTree(5, { mode: 'protocol' });
+ * ```
+ *
  * @packageDocumentation
  */
 
@@ -14,7 +37,29 @@ import {
   type PriceMove,
 } from '@fractal-price-structure/core';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
+
+/**
+ * Display mode for move visualization.
+ *
+ * - `compact`: ID, polarity, price range, state only
+ * - `standard`: + Rang, Degré, timestamps
+ * - `detailed`: + currentReferenceLevel
+ * - `protocol`: + all internal state (subStructures count, etc.)
+ */
+export type DisplayMode = 'compact' | 'standard' | 'detailed' | 'protocol';
+
+/**
+ * Options for controlling display output.
+ */
+export interface DisplayOptions {
+  /** Display mode (default: 'standard') */
+  mode?: DisplayMode;
+  /** Show timestamps (default: true for standard+) */
+  showTime?: boolean;
+  /** Show colors (default: true) */
+  colors?: boolean;
+}
 
 /**
  * ANSI color codes for terminal output
@@ -79,45 +124,93 @@ function printHeader(title: string): void {
   printSeparator('═');
 }
 
-/**
- * Print move details in a compact format
- */
-function printMove(move: PriceMove, indent = 0): void {
-  const prefix = '  '.repeat(indent);
-  const color = getPolarityColor(move.polarity);
-  const symbol = getPolaritySymbol(move.polarity);
-  const state = move.isGrowing()
-    ? `${Colors.green}GROWING${Colors.reset}`
-    : move.isReference()
-      ? `${Colors.yellow}REFERENCE${Colors.reset}`
-      : `${Colors.dim}ARCHIVED${Colors.reset}`;
-  const id = move.id.toString().slice(0, 8);
-  const degre = move.degre !== undefined ? ` D${move.degre}` : '';
+/** Default display options */
+const DEFAULT_DISPLAY_OPTIONS: Required<DisplayOptions> = {
+  mode: 'standard',
+  showTime: true,
+  colors: true,
+};
 
-  console.log(
-    `${prefix}${color}${symbol}${Colors.reset} ` +
-      `R${Colors.yellow}${move.rang}${Colors.reset}${degre} | ` +
-      `${color}${move.polarity.padEnd(4)}${Colors.reset} | ` +
-      `${formatPrice(move.priceRange.low)} - ${formatPrice(move.priceRange.high)} | ` +
-      `${formatTime(move.timeRange.start)} → ${formatTime(move.timeRange.end)} | ` +
-      `${state} | ` +
-      `${Colors.dim}${id}${Colors.reset}`,
-  );
+/**
+ * Print move details with configurable display mode.
+ *
+ * Display modes:
+ * - compact: ▲ [100-110] GROWING #abc123
+ * - standard: ▲ R0 D0 | up | 100-110 | 12:00→12:01 | GROWING | #abc123
+ * - detailed: + ref:105
+ * - protocol: + children:3, parent:yes
+ */
+function printMove(move: PriceMove, indent = 0, options: DisplayOptions = {}): void {
+  const opts = { ...DEFAULT_DISPLAY_OPTIONS, ...options };
+  const c = opts.colors ? Colors : { reset: '', bright: '', dim: '', red: '', green: '', yellow: '', blue: '', magenta: '', cyan: '', white: '', bgRed: '', bgGreen: '' };
+
+  const prefix = '  '.repeat(indent);
+  const color = opts.colors ? getPolarityColor(move.polarity) : '';
+  const symbol = getPolaritySymbol(move.polarity);
+  const id = move.id.toString().slice(0, 8);
+
+  const stateStr = move.isGrowing()
+    ? `${c.green}GROWING${c.reset}`
+    : move.isReference()
+      ? `${c.yellow}REFERENCE${c.reset}`
+      : `${c.dim}ARCHIVED${c.reset}`;
+
+  // Compact mode: minimal info
+  if (opts.mode === 'compact') {
+    console.log(
+      `${prefix}${color}${symbol}${c.reset} ` +
+        `[${move.priceRange.low.toFixed(0)}-${move.priceRange.high.toFixed(0)}] ` +
+        `${stateStr} ` +
+        `${c.dim}#${id}${c.reset}`,
+    );
+    return;
+  }
+
+  // Standard mode: add rang, degre, timestamps
+  const degre = move.degre !== undefined ? ` D${move.degre}` : '';
+  const timeStr = opts.showTime
+    ? ` | ${formatTime(move.timeRange.start)} → ${formatTime(move.timeRange.end)}`
+    : '';
+
+  let line =
+    `${prefix}${color}${symbol}${c.reset} ` +
+    `R${c.yellow}${move.rang}${c.reset}${degre} | ` +
+    `${color}${move.polarity.padEnd(4)}${c.reset} | ` +
+    `${formatPrice(move.priceRange.low)} - ${formatPrice(move.priceRange.high)}` +
+    `${timeStr} | ` +
+    `${stateStr} | ` +
+    `${c.dim}#${id}${c.reset}`;
+
+  // Detailed mode: add reference level
+  if (opts.mode === 'detailed' || opts.mode === 'protocol') {
+    const refLevel = move.currentReferenceLevel;
+    const refColor = move.polarity === Polarity.Up ? c.red : c.green;
+    line += ` | ${c.cyan}ref:${refColor}${refLevel.toFixed(0)}${c.reset}`;
+  }
+
+  // Protocol mode: add children count and parent info
+  if (opts.mode === 'protocol') {
+    const childCount = move.subStructures.length;
+    const hasParent = move.parentStructure !== undefined;
+    line += ` | ${c.dim}children:${childCount}, parent:${hasParent ? 'yes' : 'no'}${c.reset}`;
+  }
+
+  console.log(line);
 }
 
 /**
- * Print move tree recursively
+ * Print move tree recursively with display options.
  */
-function printMoveTree(move: PriceMove, indent = 0, maxDepth = 5): void {
+function printMoveTree(move: PriceMove, indent = 0, maxDepth = 5, options: DisplayOptions = {}): void {
   if (indent > maxDepth) {
     console.log(`${'  '.repeat(indent) + Colors.dim}...${Colors.reset}`);
     return;
   }
 
-  printMove(move, indent);
+  printMove(move, indent, options);
 
   for (const child of move.subStructures) {
-    printMoveTree(child, indent + 1, maxDepth);
+    printMoveTree(child, indent + 1, maxDepth, options);
   }
 }
 
@@ -170,7 +263,7 @@ export class DebugVisualizer {
   /**
    * Print all active moves
    */
-  printActiveMoves(): void {
+  printActiveMoves(options: DisplayOptions = {}): void {
     printHeader('ACTIVE MOVES');
     const moves = this.engine.getActiveMoves();
 
@@ -180,14 +273,14 @@ export class DebugVisualizer {
     }
 
     for (const move of moves) {
-      printMove(move);
+      printMove(move, 1, options);
     }
   }
 
   /**
    * Print moves organized by layer
    */
-  printLayers(): void {
+  printLayers(options: DisplayOptions = {}): void {
     printHeader('FRACTAL LAYERS');
     const layers = this.engine.getLayers();
 
@@ -204,15 +297,18 @@ export class DebugVisualizer {
       printSeparator('─', 76);
 
       for (const move of layer.moves) {
-        printMove(move, 1);
+        printMove(move, 1, options);
       }
     }
   }
 
   /**
    * Print the move tree from roots
+   *
+   * @param maxDepth - Maximum tree depth to display (default: 5)
+   * @param options - Display options (mode: 'compact'|'standard'|'detailed'|'protocol')
    */
-  printTree(maxDepth = 5): void {
+  printTree(maxDepth = 5, options: DisplayOptions = {}): void {
     printHeader('MOVE TREE');
     const allMoves = this.engine.getAllMoves();
     const roots = allMoves.filter((m) => !m.parentStructure);
@@ -226,7 +322,7 @@ export class DebugVisualizer {
     console.log();
 
     for (const root of roots) {
-      printMoveTree(root, 1, maxDepth);
+      printMoveTree(root, 1, maxDepth, options);
       console.log();
     }
   }
@@ -234,7 +330,7 @@ export class DebugVisualizer {
   /**
    * Print state at a specific timestamp
    */
-  printStateAt(timestamp: number): void {
+  printStateAt(timestamp: number, options: DisplayOptions = {}): void {
     printHeader(`STATE AT ${new Date(timestamp).toISOString()}`);
     const stack = this.engine.getStack(timestamp);
 
@@ -247,7 +343,7 @@ export class DebugVisualizer {
     console.log();
 
     for (const move of stack) {
-      printMove(move, 1);
+      printMove(move, 1, options);
     }
   }
 
@@ -271,11 +367,11 @@ export class DebugVisualizer {
   /**
    * Print complete debug output
    */
-  printAll(): void {
+  printAll(options: DisplayOptions = {}): void {
     this.printStats();
-    this.printActiveMoves();
-    this.printLayers();
-    this.printTree();
+    this.printActiveMoves(options);
+    this.printLayers(options);
+    this.printTree(5, options);
     this.printValidation();
   }
 }
@@ -326,12 +422,28 @@ if (process.argv[1]?.includes('visualizer')) {
   const visualizer = new DebugVisualizer();
   visualizer.loadCandles(candles);
 
-  // Print all debug info
-  visualizer.printAll();
+  // Print stats and validation
+  visualizer.printStats();
+  visualizer.printValidation();
+
+  // Demonstrate display modes
+  console.log(`\n${Colors.bright}${Colors.cyan}Display Mode Examples:${Colors.reset}`);
+
+  console.log(`\n${Colors.yellow}Compact mode:${Colors.reset}`);
+  visualizer.printTree(3, { mode: 'compact' });
+
+  console.log(`\n${Colors.yellow}Standard mode (default):${Colors.reset}`);
+  visualizer.printTree(3, { mode: 'standard' });
+
+  console.log(`\n${Colors.yellow}Detailed mode (with reference level):${Colors.reset}`);
+  visualizer.printTree(3, { mode: 'detailed' });
+
+  console.log(`\n${Colors.yellow}Protocol mode (full internal state):${Colors.reset}`);
+  visualizer.printTree(3, { mode: 'protocol' });
 
   // Show point-in-time query example
   const midTime = candles[25].openTime;
-  visualizer.printStateAt(midTime);
+  visualizer.printStateAt(midTime, { mode: 'detailed' });
 
   console.log();
   printSeparator('═');

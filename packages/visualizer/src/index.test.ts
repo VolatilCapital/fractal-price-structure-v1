@@ -3,7 +3,7 @@ import { VERSION, DebugVisualizer, generateSampleCandles } from "./index.js"
 
 describe("Visualizer Package", () => {
   it("should export VERSION", () => {
-    expect(VERSION).toBe("1.0.0")
+    expect(VERSION).toBe("1.1.0")
   })
 
   it("should export DebugVisualizer class", () => {
