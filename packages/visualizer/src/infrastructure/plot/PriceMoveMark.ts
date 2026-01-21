@@ -8,6 +8,7 @@ import type { PriceMove } from '@fractal-price-structure/core'
 import { PriceMoveState, Polarity } from '@fractal-price-structure/core'
 import * as Plot from '@observablehq/plot'
 import type { FilterState } from '../../domain/index.js'
+import { STATE_COLORS } from '../../domain/index.js'
 
 export interface PriceMoveMarkOptions {
   moves: PriceMove[]
@@ -17,11 +18,11 @@ export interface PriceMoveMarkOptions {
   strokeWidth?: number
 }
 
-// State colors matching spec: Growing 🟢, Reference 🟠, Archived ⬜
-const STATE_COLORS: Record<PriceMoveState, string> = {
-  [PriceMoveState.Growing]: '#4CAF50',
-  [PriceMoveState.Reference]: '#FF9800',
-  [PriceMoveState.Archived]: '#9E9E9E',
+// Map PriceMoveState enum to STATE_COLORS keys
+const STATE_COLOR_MAP: Record<PriceMoveState, string> = {
+  [PriceMoveState.Growing]: STATE_COLORS.Growing,
+  [PriceMoveState.Reference]: STATE_COLORS.Reference,
+  [PriceMoveState.Archived]: STATE_COLORS.Archived,
 }
 
 // Degree colors - distinct colors for each degree level
@@ -43,7 +44,7 @@ const DEFAULT_STROKE_WIDTH = 1
  * Get color for a move's state.
  */
 export function getStateColor(state: PriceMoveState): string {
-  return STATE_COLORS[state] ?? '#9E9E9E'
+  return STATE_COLOR_MAP[state] ?? STATE_COLORS.Archived
 }
 
 /**
@@ -52,10 +53,10 @@ export function getStateColor(state: PriceMoveState): string {
  */
 export function getMoveColor(move: PriceMove): string {
   if (move.state === PriceMoveState.Growing) {
-    return STATE_COLORS[PriceMoveState.Growing]
+    return STATE_COLORS.Growing
   }
   if (move.state === PriceMoveState.Archived) {
-    return STATE_COLORS[PriceMoveState.Archived]
+    return STATE_COLORS.Archived
   }
   // Reference move - use degree color
   const degre = move.degre ?? 0
@@ -67,6 +68,17 @@ export function getMoveColor(move: PriceMove): string {
  */
 export function filterMoves(moves: PriceMove[], filterState: FilterState): PriceMove[] {
   return moves.filter((move) => {
+    // Filter by state (Growing, Reference, Archived)
+    if (!filterState.showGrowing && move.state === PriceMoveState.Growing) {
+      return false
+    }
+    if (!filterState.showReference && move.state === PriceMoveState.Reference) {
+      return false
+    }
+    if (!filterState.showArchived && move.state === PriceMoveState.Archived) {
+      return false
+    }
+
     // Filter by degre visibility
     const degre = move.degre
     if (degre !== undefined) {
@@ -78,11 +90,6 @@ export function filterMoves(moves: PriceMove[], filterState: FilterState): Price
       if (!filterState.showUndefinedDegre) {
         return false
       }
-    }
-
-    // Filter archived moves
-    if (!filterState.showArchived && move.state === PriceMoveState.Archived) {
-      return false
     }
 
     // Filter sub-structures (moves with englobingMove)

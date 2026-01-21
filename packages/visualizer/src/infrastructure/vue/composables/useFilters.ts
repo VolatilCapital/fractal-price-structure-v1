@@ -6,6 +6,8 @@ import {
   createFilterState,
   toggleDegre as toggleDegreAction,
   setShowSubStructures as setShowSubStructuresAction,
+  setShowGrowing as setShowGrowingAction,
+  setShowReference as setShowReferenceAction,
   setShowArchived as setShowArchivedAction,
   setShowUndefinedDegre as setShowUndefinedDegreAction,
   setDisplayMode as setDisplayModeAction,
@@ -51,6 +53,14 @@ export function useFilters() {
     filterState.value = setShowSubStructuresAction(filterState.value, show)
   }
 
+  function setShowGrowing(show: boolean) {
+    filterState.value = setShowGrowingAction(filterState.value, show)
+  }
+
+  function setShowReference(show: boolean) {
+    filterState.value = setShowReferenceAction(filterState.value, show)
+  }
+
   function setShowArchived(show: boolean) {
     filterState.value = setShowArchivedAction(filterState.value, show)
   }
@@ -67,6 +77,8 @@ export function useFilters() {
     filterState,
     toggleDegre,
     setShowSubStructures,
+    setShowGrowing,
+    setShowReference,
     setShowArchived,
     setShowUndefinedDegre,
     setDisplayMode,

@@ -14,7 +14,7 @@ const drawer = ref(true)
 // Composables
 const { candles, engine, events, isLoading, error, load } = useEngine()
 const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo } = usePlayback(candles)
-const { filterState, toggleDegre, setShowSubStructures, setShowArchived, setShowUndefinedDegre, setDisplayMode } = useFilters()
+const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setDisplayMode } = useFilters()
 
 // Computed
 const cursorTime = computed(() => visualizationState.value.cursorTime)
@@ -103,6 +103,8 @@ onMounted(() => {
         :filter-state="filterState"
         @toggle-degre="toggleDegre"
         @set-show-sub-structures="setShowSubStructures"
+        @set-show-growing="setShowGrowing"
+        @set-show-reference="setShowReference"
         @set-show-archived="setShowArchived"
         @set-show-undefined-degre="setShowUndefinedDegre"
         @set-display-mode="setDisplayMode"

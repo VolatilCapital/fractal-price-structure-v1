@@ -1,5 +1,6 @@
 // Visualization domain
-export type { VisualizationState, PlaybackState, PlaybackSpeed, FilterState, DisplayMode } from './visualization/index.js'
+export type { VisualizationState, PlaybackState, PlaybackSpeed, FilterState, DisplayMode, StateColorKey } from './visualization/index.js'
+export { STATE_COLORS } from './visualization/index.js'
 export {
   createVisualizationState,
   setCursorIndex,
@@ -16,6 +17,8 @@ export {
   createFilterState,
   toggleDegre,
   setShowSubStructures,
+  setShowGrowing,
+  setShowReference,
   setShowArchived,
   setShowUndefinedDegre,
   setMaxRang,

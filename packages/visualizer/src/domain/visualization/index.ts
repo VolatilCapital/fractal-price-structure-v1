@@ -1,6 +1,9 @@
 export type { VisualizationState } from './VisualizationState.js'
 export { createVisualizationState, setCursorIndex } from './VisualizationState.js'
 
+export type { StateColorKey } from './StateColors.js'
+export { STATE_COLORS } from './StateColors.js'
+
 export type { PlaybackState, PlaybackSpeed } from './PlaybackState.js'
 export {
   PlaybackMode,
@@ -20,6 +23,8 @@ export {
   createFilterState,
   toggleDegre,
   setShowSubStructures,
+  setShowGrowing,
+  setShowReference,
   setShowArchived,
   setShowUndefinedDegre,
   setMaxRang,

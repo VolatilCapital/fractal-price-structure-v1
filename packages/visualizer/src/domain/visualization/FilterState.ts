@@ -13,7 +13,11 @@ export interface FilterState {
   visibleDegres: Set<number>
   /** Whether to show sub-structures within moves */
   showSubStructures: boolean
-  /** Whether to show archived moves */
+  /** Whether to show Growing moves (en construction) */
+  showGrowing: boolean
+  /** Whether to show Reference moves (niveaux de cassure) */
+  showReference: boolean
+  /** Whether to show Archived moves (historique) */
   showArchived: boolean
   /** Whether to show moves with undefined degre (Growing moves) */
   showUndefinedDegre: boolean
@@ -26,6 +30,8 @@ export function createFilterState(): FilterState {
     displayMode: 'rectangle',
     visibleDegres: new Set([0, 1, 2, 3, 4, 5]),
     showSubStructures: true,
+    showGrowing: true,
+    showReference: true,
     showArchived: false,
     showUndefinedDegre: true,
     maxRang: undefined,
@@ -44,6 +50,14 @@ export function toggleDegre(state: FilterState, degre: number): FilterState {
 
 export function setShowSubStructures(state: FilterState, show: boolean): FilterState {
   return { ...state, showSubStructures: show }
+}
+
+export function setShowGrowing(state: FilterState, show: boolean): FilterState {
+  return { ...state, showGrowing: show }
+}
+
+export function setShowReference(state: FilterState, show: boolean): FilterState {
+  return { ...state, showReference: show }
 }
 
 export function setShowArchived(state: FilterState, show: boolean): FilterState {
@@ -101,6 +115,8 @@ export function serializeFilterState(state: FilterState): string {
     displayMode: state.displayMode,
     visibleDegres: Array.from(state.visibleDegres),
     showSubStructures: state.showSubStructures,
+    showGrowing: state.showGrowing,
+    showReference: state.showReference,
     showArchived: state.showArchived,
     showUndefinedDegre: state.showUndefinedDegre,
     maxRang: state.maxRang,
@@ -117,6 +133,8 @@ export function deserializeFilterState(json: string): FilterState | null {
       displayMode: parsed.displayMode ?? 'rectangle',
       visibleDegres: new Set(parsed.visibleDegres ?? [0, 1, 2, 3, 4, 5]),
       showSubStructures: parsed.showSubStructures ?? true,
+      showGrowing: parsed.showGrowing ?? true,
+      showReference: parsed.showReference ?? true,
       showArchived: parsed.showArchived ?? false,
       showUndefinedDegre: parsed.showUndefinedDegre ?? true,
       maxRang: parsed.maxRang,

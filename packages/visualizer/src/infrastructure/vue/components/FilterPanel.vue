@@ -4,6 +4,7 @@
  * Shows degre checkboxes and toggle switches.
  */
 import type { FilterState, DisplayMode } from '../../../domain/index.js'
+import { STATE_COLORS } from '../../../domain/index.js'
 
 const props = defineProps<{
   filterState: FilterState
@@ -12,6 +13,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   toggleDegre: [degre: number]
   setShowSubStructures: [show: boolean]
+  setShowGrowing: [show: boolean]
+  setShowReference: [show: boolean]
   setShowArchived: [show: boolean]
   setShowUndefinedDegre: [show: boolean]
   setDisplayMode: [mode: DisplayMode]
@@ -43,12 +46,12 @@ function getDegreColor(degre: number): string {
   <div class="pa-4">
     <h3 class="text-subtitle-1 mb-3">
       <v-icon icon="mdi-filter" class="mr-2" />
-      Filters
+      Filtres
     </h3>
 
     <!-- Display Mode -->
     <div class="mb-4">
-      <div class="text-caption text-grey mb-2">Display Mode</div>
+      <div class="text-caption text-grey mb-2">Mode d'affichage</div>
       <v-btn-toggle
         :model-value="filterState.displayMode"
         @update:model-value="emit('setDisplayMode', $event as DisplayMode)"
@@ -71,7 +74,7 @@ function getDegreColor(degre: number): string {
 
     <!-- Degre visibility -->
     <div class="mb-4">
-      <div class="text-caption text-grey mb-2">Degre Levels</div>
+      <div class="text-caption text-grey mb-2">Niveaux de degré</div>
       <div class="d-flex flex-wrap ga-1">
         <v-chip
           v-for="degre in degreeLevels"
@@ -87,57 +90,74 @@ function getDegreColor(degre: number): string {
       </div>
     </div>
 
-    <!-- Toggle switches -->
+    <!-- State visibility (Growing, Reference, Archived) -->
     <v-divider class="mb-4" />
 
+    <div class="text-caption text-grey mb-2">États visibles</div>
+
     <v-switch
-      :model-value="filterState.showSubStructures"
-      @update:model-value="emit('setShowSubStructures', $event as boolean)"
-      label="Show sub-structures"
-      color="primary"
+      :model-value="filterState.showGrowing"
+      @update:model-value="emit('setShowGrowing', $event as boolean)"
+      :color="STATE_COLORS.Growing"
       density="compact"
       hide-details
-      class="mb-2"
-    />
+      class="mb-1"
+    >
+      <template #label>
+        <span class="d-flex align-center">
+          <span class="state-dot" :style="{ backgroundColor: STATE_COLORS.Growing }"></span>
+          Growing (en construction)
+        </span>
+      </template>
+    </v-switch>
+
+    <v-switch
+      :model-value="filterState.showReference"
+      @update:model-value="emit('setShowReference', $event as boolean)"
+      :color="STATE_COLORS.Reference"
+      density="compact"
+      hide-details
+      class="mb-1"
+    >
+      <template #label>
+        <span class="d-flex align-center">
+          <span class="state-dot" :style="{ backgroundColor: STATE_COLORS.Reference }"></span>
+          Reference (niveau de cassure)
+        </span>
+      </template>
+    </v-switch>
 
     <v-switch
       :model-value="filterState.showArchived"
       @update:model-value="emit('setShowArchived', $event as boolean)"
-      label="Show archived moves"
-      color="primary"
+      :color="STATE_COLORS.Archived"
       density="compact"
       hide-details
       class="mb-2"
-    />
+    >
+      <template #label>
+        <span class="d-flex align-center">
+          <span class="state-dot" :style="{ backgroundColor: STATE_COLORS.Archived }"></span>
+          Archived (historique)
+        </span>
+      </template>
+    </v-switch>
+
+    <!-- Other toggles -->
+    <v-divider class="mb-4" />
+
+    <div class="text-caption text-grey mb-2">Options</div>
 
     <v-switch
-      :model-value="filterState.showUndefinedDegre"
-      @update:model-value="emit('setShowUndefinedDegre', $event as boolean)"
-      label="Show growing (no degre)"
+      :model-value="filterState.showSubStructures"
+      @update:model-value="emit('setShowSubStructures', $event as boolean)"
+      label="Sous-structures"
       color="primary"
       density="compact"
       hide-details
     />
 
-    <!-- Legend -->
-    <v-divider class="my-4" />
-
-    <div class="text-caption text-grey mb-2">Legend - États</div>
-    <div class="d-flex flex-column ga-1">
-      <div class="d-flex align-center">
-        <div class="legend-box" style="background-color: #4caf50"></div>
-        <span class="text-caption ml-2">🟢 Growing (en construction)</span>
-      </div>
-      <div class="d-flex align-center">
-        <div class="legend-box" style="background-color: #FF9800"></div>
-        <span class="text-caption ml-2">🟠 Reference (niveau de cassure)</span>
-      </div>
-      <div class="d-flex align-center">
-        <div class="legend-box" style="background-color: #9e9e9e"></div>
-        <span class="text-caption ml-2">⬜ Archived (historique)</span>
-      </div>
-    </div>
-
+    <!-- Info -->
     <v-divider class="my-4" />
 
     <div class="text-caption text-grey mb-2">Rang vs Degré</div>
@@ -153,10 +173,11 @@ function getDegreColor(degre: number): string {
   cursor: pointer;
 }
 
-.legend-box {
-  width: 16px;
-  height: 16px;
-  border-radius: 2px;
-  opacity: 0.7;
+.state-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 </style>
