@@ -380,35 +380,95 @@ Dans certains cas exceptionnels (annonces économiques, flash crashes), la séqu
 
 ## 11. Sources de Données
 
-### 11.1 Types de données supportées
+### 11.1 Principe fondamental
 
-L'algorithme peut être alimenté par différentes sources, de la moins précise à la plus précise :
+L'algorithme est **identique** quelle que soit l'unité de temps. Seule la granularité change.
 
-| Source | Précision | Cas englobant |
-|--------|-----------|---------------|
-| Bougies 1h | Faible | Heuristique couleur (~95%) |
-| Bougies 1min | Moyenne | Heuristique couleur (~95%) |
-| Ticks | Maximale | Séquence réelle (100%) |
+| Source | Cas englobant |
+|--------|---------------|
+| Bougies (toute timeframe) | Heuristique couleur (~95%) |
+| Ticks | Séquence réelle (100%) |
 
-### 11.2 Principe
+### 11.2 Indépendance de l'unité de temps
 
-L'algorithme est **identique** quelle que soit la source. Seule la granularité change :
+L'unité de temps est **libre** :
+- 1 jour, 4 heures, 1 heure, 15 minutes, 1 minute...
+- Le choix dépend de l'**objectif** et de la **précision** souhaitée
+
+```
+Trading long terme   → Bougies journalières ou 4h
+Trading intraday     → Bougies 1 minute ou ticks
+Analyse de structure → N'importe quelle timeframe
+```
+
+### 11.3 Bougies vs Ticks
 
 - **Bougies** : Chaque bougie = un mouvement de niveau 0
-- **Ticks** : Chaque tick = un mouvement élémentaire, agrégé en mouvements
-
-### 11.3 Avantage des ticks
+- **Ticks** : Chaque tick = un mouvement élémentaire
 
 Avec des données tick, le cas des bougies englobantes **disparaît** :
 - On connaît la séquence réelle des prix
 - Pas besoin d'heuristique
 - Précision de 100%
 
-### 11.4 Recommandation
+### 11.4 Recommandation pour le trading intraday
 
-- **Développement/tests** : Bougies 1h (plus simple)
-- **Production** : Bougies 1min (bon compromis)
-- **Précision maximale** : Ticks (élimine les 5% d'erreurs potentielles)
+Pour une définition précise de la structure fractale en intraday :
+- **Minimum** : Bougies 1 minute
+- **Optimal** : Ticks (élimine les 5% d'erreurs potentielles)
+
+---
+
+## 12. Les Trois États d'une Structure
+
+### 12.1 Cycle de vie
+
+Une structure passe par **trois états** dans l'ordre :
+
+```
+┌─────────────┐     cassure      ┌─────────────┐     n'est plus     ┌─────────────┐
+│   GROWING   │ ───────────────► │  REFERENCE  │ ─────────────────► │  ARCHIVED   │
+│ (croissance)│   du niveau de   │ (référence) │    référence       │  (archivée) │
+└─────────────┘    référence     └─────────────┘                    └─────────────┘
+      🟢                               🟠                                 ⬜
+```
+
+### 12.2 Description des états
+
+| État | Description | Utilité |
+|------|-------------|---------|
+| **Growing** 🟢 | Structure active, peut encore s'étendre | Suivi temps réel |
+| **Reference** 🟠 | Terminée, sert de niveau de référence pour le parent | Détection des cassures |
+| **Archived** ⬜ | N'est plus référence, aucune utilité active | Historique uniquement |
+
+### 12.3 Transitions
+
+**Growing → Reference**
+- Déclenché quand : le niveau de référence de la structure est cassé (sens opposé)
+- La structure est "solidifiée" — elle ne peut plus s'étendre
+- Elle devient le niveau de référence pour détecter la cassure du niveau supérieur
+
+**Reference → Archived**
+- Déclenché quand : la structure parente (qui utilisait cette référence) est elle-même terminée
+- La structure n'a plus aucune utilité active
+- Peut être libérée de la mémoire (optimisation)
+
+### 12.4 Exemple
+
+```
+Structure A (n+1) : Growing 🟢
+  └── Sous-structure : [I1] [C1] [I2]
+                                  ↑
+                             brin de référence
+
+Étape 1 : Le niveau de référence de A (low de I2) est cassé
+  → A passe en Reference 🟠
+  → A sert maintenant de référence pour le niveau n+2
+
+Étape 2 : Le niveau n+2 est aussi cassé
+  → A passe en Archived ⬜
+  → A n'a plus d'utilité active
+```
 
 ---
 
