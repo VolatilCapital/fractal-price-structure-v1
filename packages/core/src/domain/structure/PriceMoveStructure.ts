@@ -7,6 +7,8 @@ import { PriceMoveFactory } from "../price-move/PriceMoveFactory.js"
 import type { FractalLayer } from "./FractalLayer.js"
 import type { Logger } from "../../application/ports/Logger.js"
 import { noopLogger } from "../../application/ports/Logger.js"
+import { Polarity } from "../price-move/Polarity.js"
+import { Price } from "../../shared/Price.js"
 
 /**
  * Error thrown when candle ingestion fails.
@@ -44,7 +46,7 @@ export interface BatchIngestionResult {
 }
 
 export class PriceMoveStructure {
-  private activeMoves: Set<PriceMove> = new Set()
+  private growingMoves: Set<PriceMove> = new Set()
   private logger: Logger = noopLogger
 
   constructor(
@@ -59,88 +61,334 @@ export class PriceMoveStructure {
     this.logger = logger
   }
 
+  /**
+   * Adds a new PriceMove to the structure.
+   * Uses 3-outcome logic: extend-boundary, extend-internal, or break.
+   *
+   * - extended-boundary: Parent grows, new move is NOT a sub-structure
+   * - extended-internal: New move becomes a sub-structure
+   * - broken: Cascade termination
+   *
+   * Also handles engulfing candles (protocole section 10) where the candidate
+   * breaks both the directional bound AND the reference level.
+   */
   public add(priceMove: PriceMove): void {
     this.logger.debug(
       `[ADD] New move: ${priceMove.polarity} [${priceMove.priceRange.low.toFixed(2)}-${priceMove.priceRange.high.toFixed(2)}]`
     )
 
-    for (const active of this.activeMoves) {
-      const wasActive = active.isActive()
-      if (PriceMoveRules.canExtendWith(active, priceMove)) {
+    // Find the deepest growing structure to process against
+    const deepestGrowing = this.findDeepestGrowingStructure()
+
+    if (deepestGrowing) {
+      // Check for engulfing candle (protocole section 10)
+      if (this.isEngulfingCandle(deepestGrowing, priceMove)) {
+        this.handleEngulfingCandle(deepestGrowing, priceMove)
+        return
+      }
+
+      const wasGrowing = deepestGrowing.isGrowing()
+      const result = deepestGrowing.processCandidate(priceMove)
+
+      if (result === "extended-boundary") {
+        // True extension: parent range was updated
+        // New move is NOT added as sub-structure - it extended the parent
         this.logger.debug(
-          `[EXTEND] Move ${active.id.toString().slice(0, 8)} extended by new move`
+          `[EXTEND] Move ${deepestGrowing.id.toString().slice(0, 8)} extended (boundary broken)`
         )
-        active.tryExtendWith(priceMove)
         this.repo.save(priceMove)
         return
       }
 
-      // Check if the move was closed by the canExtendWith call (side effect of tryExtendWith)
-      if (wasActive && active.isClosed()) {
+      if (result === "extended-internal") {
+        // Internal movement: becomes a sub-structure of the parent
         this.logger.debug(
-          `[CLOSE] Move ${active.id.toString().slice(0, 8)} invalidated and closed`
+          `[INTERNAL] Move added as sub-structure to ${deepestGrowing.id.toString().slice(0, 8)}`
         )
-        this.activeMoves.delete(active)
+        deepestGrowing.addSubStructure(priceMove)
+        this.repo.save(priceMove)
+        return
+      }
+
+      // Result is "broken" - handle cascade termination
+      if (wasGrowing) {
+        this.logger.debug(
+          `[BREAK] Move ${deepestGrowing.id.toString().slice(0, 8)} broken by new move`
+        )
+        const survivingParent = this.handleCascadeTermination(deepestGrowing, priceMove)
+
+        // After cascade, check if the new move is internal to a surviving parent
+        if (survivingParent && survivingParent.isGrowing()) {
+          const parentResult = survivingParent.processCandidate(priceMove)
+          if (parentResult === "extended-internal") {
+            this.logger.debug(
+              `[INTERNAL-AFTER-CASCADE] Move added as sub-structure to surviving parent ${survivingParent.id.toString().slice(0, 8)}`
+            )
+            survivingParent.addSubStructure(priceMove)
+            this.repo.save(priceMove)
+            return
+          }
+          // If it extended the surviving parent, that's already handled by processCandidate
+          if (parentResult === "extended-boundary") {
+            this.logger.debug(
+              `[EXTEND-AFTER-CASCADE] Surviving parent ${survivingParent.id.toString().slice(0, 8)} extended`
+            )
+            this.repo.save(priceMove)
+            return
+          }
+        }
       }
     }
 
-    // This move extends nothing: it becomes a new root
+    // This move becomes a new root (no growing structure or all broken)
     this.logger.debug(
       `[ROOT] New root move created: ${priceMove.id.toString().slice(0, 8)}`
     )
-    this.activeMoves.add(priceMove)
+    this.growingMoves.add(priceMove)
     this.repo.save(priceMove)
-
-    // Check if it's englobed by an existing larger move
-    for (const potentialParent of this.repo.findAll()) {
-      if (
-        potentialParent !== priceMove &&
-        potentialParent.timeRange.includes(priceMove.timeRange.start) &&
-        potentialParent.timeRange.includes(priceMove.timeRange.end) &&
-        potentialParent.priceRange.contains(priceMove.priceRange)
-      ) {
-        // Avoid duplicates
-        if (!potentialParent.childMoves.includes(priceMove)) {
-          this.logger.debug(
-            `[CHILD] Move ${priceMove.id.toString().slice(0, 8)} attached to parent ${potentialParent.id.toString().slice(0, 8)}`
-          )
-          priceMove.englobingMove = potentialParent
-          priceMove.generation = potentialParent.generation + 1
-          potentialParent.childMoves.push(priceMove)
-        }
-        break
-      }
-    }
   }
 
   /**
-   * Returns all currently active moves, sorted by generation (ascending).
+   * Detects if a candidate is an engulfing candle (protocole section 10.1).
+   * An engulfing candle breaks BOTH the directional bound AND the reference level.
+   */
+  private isEngulfingCandle(target: PriceMove, candidate: PriceMove): boolean {
+    if (!target.isGrowing()) return false
+
+    const breaksDirectionalBound = target.polarity === Polarity.Up
+      ? Price.gt(candidate.priceRange.high, target.priceRange.high)
+      : Price.lt(candidate.priceRange.low, target.priceRange.low)
+
+    const breaksReferenceLevel = target.polarity === Polarity.Up
+      ? Price.lt(candidate.priceRange.low, target.currentReferenceLevel)
+      : Price.gt(candidate.priceRange.high, target.currentReferenceLevel)
+
+    return breaksDirectionalBound && breaksReferenceLevel
+  }
+
+  /**
+   * Handles engulfing candles using the color heuristic (protocole section 10.3).
+   *
+   * Green candle (Up polarity): sequence is Open → Low → High → Close
+   *   → Process LOW first (invalidation), then HIGH (new impulsion)
+   *
+   * Red candle (Down polarity): sequence is Open → High → Low → Close
+   *   → Process HIGH first (potential extension), then LOW (invalidation)
+   *
+   * In both cases, the target structure is terminated and the engulfing candle
+   * becomes a new root structure.
+   */
+  private handleEngulfingCandle(target: PriceMove, candidate: PriceMove): void {
+    this.logger.debug(
+      `[ENGULFING] ${candidate.polarity === Polarity.Up ? "Green" : "Red"} candle engulfs ${target.id.toString().slice(0, 8)}`
+    )
+
+    if (candidate.polarity === Polarity.Up) {
+      // Green candle: Low came first, so invalidation happened before any potential high extension
+      // 1. First the low broke the reference level → structure is terminated
+      // 2. Then the high created upward momentum → new Up structure
+      this.logger.debug(
+        `[ENGULFING] Processing GREEN: Low (${candidate.priceRange.low}) broke ref (${target.currentReferenceLevel}), then High (${candidate.priceRange.high})`
+      )
+    } else {
+      // Red candle: High came first
+      // For an Up target: high might have extended it momentarily before low broke it
+      // For a Down target: high broke reference, then low extended
+      if (target.polarity === Polarity.Up) {
+        // Extend the structure with the high before terminating
+        target.priceRange = target.priceRange.extendWith(candidate.priceRange.high)
+        target.timeRange = target.timeRange.extendWith(candidate.timeRange.end)
+        this.logger.debug(
+          `[ENGULFING] Processing RED on Up structure: Extended to ${candidate.priceRange.high}, then Low (${candidate.priceRange.low}) broke ref (${target.currentReferenceLevel})`
+        )
+      } else {
+        this.logger.debug(
+          `[ENGULFING] Processing RED on Down structure: High (${candidate.priceRange.high}) broke ref (${target.currentReferenceLevel}), then Low (${candidate.priceRange.low})`
+        )
+      }
+    }
+
+    // Terminate the target structure
+    target.terminate(candidate.timeRange.start)
+    target.correction = candidate
+    this.growingMoves.delete(target)
+
+    // The engulfing candle becomes a new root structure
+    this.growingMoves.add(candidate)
+    this.repo.save(candidate)
+  }
+
+  /**
+   * Finds the deepest growing structure in the hierarchy.
+   * Searches recursively through all subStructures to find the Growing structure
+   * that is deepest in the tree (has no Growing children).
+   */
+  private findDeepestGrowingStructure(): PriceMove | undefined {
+    let deepest: PriceMove | undefined
+
+    // Start from root growing moves and descend recursively
+    for (const root of this.growingMoves) {
+      if (root.isGrowing()) {
+        const candidate = this.findDeepestGrowingInSubtree(root)
+        if (candidate) {
+          // Take the one with highest rang, or if equal, the most recent
+          if (!deepest || candidate.rang > deepest.rang) {
+            deepest = candidate
+          }
+        }
+      }
+    }
+
+    return deepest
+  }
+
+  /**
+   * Recursively finds the deepest Growing structure in a subtree.
+   * Returns the Growing structure with no Growing children (the "leaf" of the growing path).
+   */
+  private findDeepestGrowingInSubtree(move: PriceMove): PriceMove | undefined {
+    if (!move.isGrowing()) {
+      return undefined
+    }
+
+    // Look for Growing children
+    for (const child of move.subStructures) {
+      if (child.isGrowing()) {
+        const deeper = this.findDeepestGrowingInSubtree(child)
+        if (deeper) {
+          return deeper
+        }
+      }
+    }
+
+    // No Growing children found, this is the deepest
+    return move
+  }
+
+  /**
+   * Handles cascade termination when a structure is broken.
+   * Terminates the broken structure and potentially its parents.
+   * Returns the surviving parent (the first parent that wasn't broken), or undefined.
+   */
+  private handleCascadeTermination(brokenStructure: PriceMove, breakingMove: PriceMove): PriceMove | undefined {
+    // Terminate the broken structure
+    brokenStructure.terminate(breakingMove.timeRange.start)
+    this.growingMoves.delete(brokenStructure)
+
+    // Set the breaking move as the correction
+    brokenStructure.correction = breakingMove
+
+    // Check if parent structures should also be terminated
+    let current = brokenStructure.parentStructure
+    while (current && current.isGrowing()) {
+      const result = current.processCandidate(breakingMove)
+      if (result === "broken") {
+        this.logger.debug(
+          `[CASCADE] Parent ${current.id.toString().slice(0, 8)} also broken`
+        )
+        current.terminate(breakingMove.timeRange.start)
+        current.correction = breakingMove
+        this.growingMoves.delete(current)
+        current = current.parentStructure
+      } else {
+        // Parent survived (absorbed the breaking move via extension or internal)
+        this.logger.debug(
+          `[SURVIVING] Parent ${current.id.toString().slice(0, 8)} survived cascade`
+        )
+        return current
+      }
+    }
+
+    // No surviving parent found
+    return undefined
+  }
+
+  /**
+   * Archives orphaned structures that are no longer needed.
+   */
+  public archiveOrphanedStructures(beforeTimestamp: number): number {
+    let archivedCount = 0
+    const allMoves = this.repo.findAll()
+
+    for (const move of allMoves) {
+      if (move.isReference() && move.timeRange.end < beforeTimestamp) {
+        // Check if this structure has no active children
+        const hasGrowingChildren = move.subStructures.some(s => s.isGrowing())
+        if (!hasGrowingChildren) {
+          move.archive(beforeTimestamp)
+          archivedCount++
+        }
+      }
+    }
+
+    if (archivedCount > 0) {
+      this.logger.info(`[ARCHIVE] Archived ${archivedCount} structures`)
+    }
+
+    return archivedCount
+  }
+
+  // ============================================
+  // Legacy compatibility - renamed from activeMoves
+  // ============================================
+
+  /**
+   * @deprecated Use growingMoves internally
+   */
+  private get activeMoves(): Set<PriceMove> {
+    return this.growingMoves
+  }
+
+  /**
+   * Returns all currently growing moves, sorted by rang (ascending).
    * Returns a defensive copy - modifications won't affect internal state.
    */
+  public getGrowingMoves(): PriceMove[] {
+    return this.repo.findGrowing().sort((a, b) => a.rang - b.rang)
+  }
+
+  /**
+   * Returns all reference moves (terminated but not archived).
+   */
+  public getReferenceMoves(): PriceMove[] {
+    return this.repo.findReference()
+  }
+
+  /**
+   * Returns all archived moves.
+   */
+  public getArchivedMoves(): PriceMove[] {
+    return this.repo.findArchived()
+  }
+
+  /**
+   * @deprecated Use getGrowingMoves() instead
+   * Returns all currently active moves, sorted by generation (ascending).
+   */
   public getActiveMoves(): PriceMove[] {
-    return this.repo.findActive().sort((a, b) => a.generation - b.generation)
+    return this.getGrowingMoves()
   }
 
   /**
    * Returns a human-readable formatted string of all active moves.
    * Useful for debugging and logging purposes.
    *
-   * Format per line: "  [Gen N] POLARITY [low-high] (id: xxxxxxxx)"
+   * Format per line: "  [Rang N] POLARITY [low-high] (id: xxxxxxxx)"
    */
   public formatActiveMoves(): string {
-    const activeMoves = this.getActiveMoves()
-    if (activeMoves.length === 0) {
+    const growingMoves = this.getGrowingMoves()
+    if (growingMoves.length === 0) {
       return "No active moves"
     }
 
-    return activeMoves
+    return growingMoves
       .map(m => {
         const id = m.id.toString().slice(0, 8)
-        const gen = m.generation
+        const rang = m.rang
         const pol = m.polarity.padEnd(4)
         const low = m.priceRange.low.toFixed(2)
         const high = m.priceRange.high.toFixed(2)
-        return `  [Gen ${gen}] ${pol} [${low}-${high}] (id: ${id})`
+        return `  [Gen ${rang}] ${pol} [${low}-${high}] (id: ${id})`
       })
       .join("\n")
   }
@@ -149,11 +397,11 @@ export class PriceMoveStructure {
    * Logs the current active moves using the configured logger.
    */
   public logActiveMoves(): void {
-    this.logger.info(`Active moves (${this.getActiveMoves().length}):\n${this.formatActiveMoves()}`)
+    this.logger.info(`Active moves (${this.getGrowingMoves().length}):\n${this.formatActiveMoves()}`)
   }
 
   /**
-   * Returns all moves (active and closed).
+   * Returns all moves (growing, reference, and archived).
    * Returns a defensive copy - modifications won't affect internal state.
    */
   public getAllMoves(): PriceMove[] {
@@ -161,18 +409,18 @@ export class PriceMoveStructure {
   }
 
   /**
-   * Returns the maximum generation depth in the structure.
+   * Returns the maximum rang depth in the structure.
    * Returns 0 if the structure is empty.
    */
   public getLayerCount(): number {
     const moves = this.repo.findAll()
     if (moves.length === 0) return 0
-    return Math.max(...moves.map(m => m.generation)) + 1
+    return Math.max(...moves.map(m => m.rang)) + 1
   }
 
   /**
-   * Returns all fractal layers, organized by generation level.
-   * Layer 0 contains root moves (generation 0), layer 1 contains generation 1, etc.
+   * Returns all fractal layers, organized by rang level.
+   * Layer 0 contains root moves (rang 0), layer 1 contains rang 1, etc.
    */
   public getLayers(): FractalLayer[] {
     const layerCount = this.getLayerCount()
@@ -182,7 +430,7 @@ export class PriceMoveStructure {
     for (let level = 0; level < layerCount; level++) {
       layers.push({
         level,
-        moves: allMoves.filter(m => m.generation === level),
+        moves: allMoves.filter(m => m.rang === level),
       })
     }
 
@@ -190,14 +438,21 @@ export class PriceMoveStructure {
   }
 
   /**
-   * Returns moves at a specific generation level.
+   * Returns moves at a specific rang level.
    * Returns empty array if the level doesn't exist.
    */
   public getLayer(level: number): FractalLayer {
     return {
       level,
-      moves: this.repo.findAll().filter(m => m.generation === level),
+      moves: this.repo.findAll().filter(m => m.rang === level),
     }
+  }
+
+  /**
+   * Returns structures at a specific degre.
+   */
+  public getStructuresByDegre(degre: number): PriceMove[] {
+    return this.repo.findAll().filter(m => m.degre === degre)
   }
 
   /**
@@ -206,41 +461,38 @@ export class PriceMoveStructure {
    *
    * A move was active at timestamp T if:
    * - The move had started (timeRange.start <= T)
-   * - AND the move wasn't closed yet (closedAt is undefined OR closedAt > T)
+   * - AND the move wasn't terminated yet (terminatedAt is undefined OR terminatedAt > T)
    *
    * @param timestamp - Unix timestamp in milliseconds
-   * @returns Array of moves that were active at the given timestamp, sorted by generation
+   * @returns Array of moves that were active at the given timestamp, sorted by rang
    */
   public getStack(timestamp: number): PriceMove[] {
     return this.repo
       .findAll()
       .filter(move => move.wasActiveAt(timestamp))
-      .sort((a, b) => a.generation - b.generation)
+      .sort((a, b) => a.rang - b.rang)
   }
 
   /**
-   * Returns the active move at a specific generation level for a given timestamp.
+   * Returns the active move at a specific rang level for a given timestamp.
    * Useful for querying a specific layer of the fractal at a point in time.
    *
-   * @param generation - The generation level to query (0 = root, 1 = first children, etc.)
+   * @param rang - The rang level to query (0 = root, 1 = first children, etc.)
    * @param timestamp - Unix timestamp in milliseconds
-   * @returns The active move at that generation and timestamp, or undefined if none
+   * @returns The active move at that rang and timestamp, or undefined if none
    */
-  public getMove(generation: number, timestamp: number): PriceMove | undefined {
+  public getMove(rang: number, timestamp: number): PriceMove | undefined {
     return this.repo
       .findAll()
-      .find(move => move.generation === generation && move.wasActiveAt(timestamp))
+      .find(move => move.rang === rang && move.wasActiveAt(timestamp))
   }
 
   /**
    * Validates the structural integrity of the fractal structure.
    * Checks:
    * - All parent-child relationships are bidirectional
-   * - No orphaned moves (moves with englobingMove that don't exist)
-   * - Active moves are properly tracked
-   *
-   * Note: Generation consistency is not validated as the current implementation
-   * doesn't update generation when moves are attached as children.
+   * - No orphaned moves (moves with parentStructure that don't exist)
+   * - Growing moves are properly tracked
    *
    * @returns Validation result with any errors found
    */
@@ -251,11 +503,11 @@ export class PriceMoveStructure {
 
     for (const move of allMoves) {
       // Check parent-child bidirectional relationship
-      if (move.englobingMove) {
-        const parent = move.englobingMove
-        if (!parent.childMoves.includes(move)) {
+      if (move.parentStructure) {
+        const parent = move.parentStructure
+        if (!parent.subStructures.includes(move)) {
           errors.push(
-            `Move ${move.id.toString().slice(0, 8)} has englobingMove but is not in parent's childMoves`
+            `Move ${move.id.toString().slice(0, 8)} has parentStructure but is not in parent's subStructures`
           )
         }
         // Check parent exists in repository
@@ -267,9 +519,9 @@ export class PriceMoveStructure {
       }
 
       // Check children point back to this move (using Set to handle duplicates)
-      const uniqueChildren = new Set(move.childMoves)
+      const uniqueChildren = new Set(move.subStructures)
       for (const child of uniqueChildren) {
-        if (child.englobingMove !== move) {
+        if (child.parentStructure !== move) {
           errors.push(
             `Move ${move.id.toString().slice(0, 8)} has child that doesn't reference it as parent`
           )
@@ -319,9 +571,9 @@ export class PriceMoveStructure {
     this.add(move)
 
     // Log state after candle ingestion
-    const activeMoves = this.getActiveMoves()
+    const growingMoves = this.getGrowingMoves()
     this.logger.debug(
-      `[STATE] After candle: ${activeMoves.length} active moves, ${this.repo.findAll().length} total moves`
+      `[STATE] After candle: ${growingMoves.length} growing moves, ${this.repo.findAll().length} total moves`
     )
 
     return move
@@ -464,7 +716,7 @@ export class PriceMoveStructure {
    * Clears all moves and resets the structure to empty state.
    */
   public clear(): void {
-    this.activeMoves.clear()
+    this.growingMoves.clear()
     this.repo.clear()
   }
 
@@ -476,22 +728,29 @@ export class PriceMoveStructure {
     totalMoves: number
     activeMoves: number
     closedMoves: number
+    growingMoves: number
+    referenceMoves: number
+    archivedMoves: number
     movesWithChildren: number
     movesWithParent: number
     maxChildCount: number
     layerCount: number
   } {
     const allMoves = this.repo.findAll()
-    const activeMoves = allMoves.filter(m => m.isActive())
-    const closedMoves = allMoves.filter(m => m.isClosed())
-    const movesWithChildren = allMoves.filter(m => m.childMoves.length > 0)
-    const movesWithParent = allMoves.filter(m => m.englobingMove !== undefined)
-    const maxChildCount = allMoves.reduce((max, m) => Math.max(max, m.childMoves.length), 0)
+    const growing = allMoves.filter(m => m.isGrowing())
+    const reference = allMoves.filter(m => m.isReference())
+    const archived = allMoves.filter(m => m.isArchived())
+    const movesWithChildren = allMoves.filter(m => m.subStructures.length > 0)
+    const movesWithParent = allMoves.filter(m => m.parentStructure !== undefined)
+    const maxChildCount = allMoves.reduce((max, m) => Math.max(max, m.subStructures.length), 0)
 
     return {
       totalMoves: allMoves.length,
-      activeMoves: activeMoves.length,
-      closedMoves: closedMoves.length,
+      activeMoves: growing.length, // Legacy alias
+      closedMoves: reference.length + archived.length, // Legacy alias
+      growingMoves: growing.length,
+      referenceMoves: reference.length,
+      archivedMoves: archived.length,
       movesWithChildren: movesWithChildren.length,
       movesWithParent: movesWithParent.length,
       maxChildCount,
@@ -505,16 +764,16 @@ export class PriceMoveStructure {
   public logMemoryStats(): void {
     const stats = this.getMemoryStats()
     this.logger.info(
-      `[MEMORY] Moves: ${stats.totalMoves} total (${stats.activeMoves} active, ${stats.closedMoves} closed). ` +
+      `[MEMORY] Moves: ${stats.totalMoves} total (${stats.growingMoves} growing, ${stats.referenceMoves} reference, ${stats.archivedMoves} archived). ` +
       `Parents: ${stats.movesWithChildren}, Children: ${stats.movesWithParent}, Max children: ${stats.maxChildCount}`
     )
   }
 
   /**
-   * Prunes closed moves that ended before the given timestamp.
+   * Prunes archived moves that ended before the given timestamp.
    *
-   * This removes old closed moves from the repository to free memory.
-   * Active moves are never pruned. Parent-child relationships are
+   * This removes old archived moves from the repository to free memory.
+   * Growing and Reference moves are never pruned. Parent-child relationships are
    * preserved for remaining moves.
    *
    * @param beforeTimestamp - Prune moves that ended before this timestamp
@@ -525,11 +784,14 @@ export class PriceMoveStructure {
     const movesToPrune: PriceMove[] = []
 
     for (const move of allMoves) {
-      // Only prune closed moves that ended before the timestamp
-      if (move.isClosed() && move.timeRange.end < beforeTimestamp) {
-        // Don't prune if this move is a parent of active moves
-        const hasActiveChildren = move.childMoves.some(child => child.isActive())
-        if (!hasActiveChildren) {
+      // Only prune archived moves that ended before the timestamp
+      if (move.isArchived() && move.timeRange.end < beforeTimestamp) {
+        movesToPrune.push(move)
+      }
+      // Also allow pruning Reference moves without active children
+      else if (move.isReference() && move.timeRange.end < beforeTimestamp) {
+        const hasGrowingChildren = move.subStructures.some(child => child.isGrowing())
+        if (!hasGrowingChildren) {
           movesToPrune.push(move)
         }
       }
@@ -552,25 +814,30 @@ export class PriceMoveStructure {
    * This breaks parent-child relationships to allow garbage collection.
    */
   private detachMove(move: PriceMove): void {
-    // Remove from parent's childMoves
-    if (move.englobingMove) {
-      const parent = move.englobingMove
-      const idx = parent.childMoves.indexOf(move)
+    // Remove from parent's subStructures
+    if (move.parentStructure) {
+      const parent = move.parentStructure
+      const idx = parent.subStructures.indexOf(move)
       if (idx !== -1) {
-        parent.childMoves.splice(idx, 1)
+        parent.subStructures.splice(idx, 1)
       }
-      move.englobingMove = undefined
+      move.parentStructure = undefined
     }
 
     // Orphan children (they become root moves)
-    for (const child of move.childMoves) {
-      child.englobingMove = undefined
+    for (const child of move.subStructures) {
+      child.parentStructure = undefined
     }
-    move.childMoves = []
+    move.subStructures = []
 
-    // Clear origin references
-    move.origin = []
-    move.confirmedOrigins = []
+    // Clear correction reference
+    move.correction = undefined
+
+    // Clear reference levels
+    move.referenceLevels = []
+
+    // Remove from growingMoves set
+    this.growingMoves.delete(move)
 
     // Remove from repository
     // Note: InMemoryPriceMoveRepository doesn't have delete, so we rebuild

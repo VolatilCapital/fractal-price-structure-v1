@@ -238,9 +238,9 @@ describe("PriceMoveStructure", () => {
         })
         structure.addCandle(candle2)
 
-        // The first move should be closed
-        expect(move1.state).toBe(PriceMoveState.Closed)
-        expect(move1.isClosed()).toBe(true)
+        // The first move should be terminated (Reference state)
+        expect(move1.isReference()).toBe(true)
+        expect(move1.isClosed()).toBe(true) // Legacy check
       })
 
       it("should invalidate Down move when new candle breaks above its high", () => {
@@ -266,9 +266,9 @@ describe("PriceMoveStructure", () => {
         })
         structure.addCandle(candle2)
 
-        // The first move should be closed
-        expect(move1.state).toBe(PriceMoveState.Closed)
-        expect(move1.isClosed()).toBe(true)
+        // The first move should be terminated (Reference state)
+        expect(move1.isReference()).toBe(true)
+        expect(move1.isClosed()).toBe(true) // Legacy check
       })
     })
 
@@ -1183,7 +1183,7 @@ describe("PriceMoveStructure", () => {
       expect(logs.some(l => l.includes("[EXTEND]"))).toBe(true)
     })
 
-    it("should log closure events", () => {
+    it("should log break events", () => {
       const logs: string[] = []
       const mockLogger = {
         debug: (msg: string) => logs.push(msg),
@@ -1219,7 +1219,7 @@ describe("PriceMoveStructure", () => {
         })
       )
 
-      expect(logs.some(l => l.includes("[CLOSE]"))).toBe(true)
+      expect(logs.some(l => l.includes("[BREAK]"))).toBe(true)
     })
   })
 
@@ -1595,6 +1595,263 @@ describe("PriceMoveStructure", () => {
 
       // May or may not log depending on whether moves were prunable
       // This test just ensures no errors occur
+    })
+  })
+
+  // Protocol compliance: Engulfing candles (protocole section 10)
+  describe("engulfing candle handling - protocol compliance", () => {
+    it("should detect and handle green engulfing candle", () => {
+      const logs: string[] = []
+      const mockLogger = {
+        debug: (msg: string) => logs.push(msg),
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      }
+      structure.setLogger(mockLogger)
+
+      // Create an Up structure
+      structure.addCandle(
+        createCandle({
+          openTime: 1000,
+          closeTime: 2000,
+          open: 100,
+          close: 110,
+          low: 100,
+          high: 110,
+        })
+      )
+
+      // Green engulfing candle (close > open) that breaks both bounds
+      // Breaks high (120 > 110) AND breaks reference level (95 < 100)
+      structure.addCandle(
+        createCandle({
+          openTime: 2000,
+          closeTime: 3000,
+          open: 105,
+          close: 120, // Green: close > open
+          low: 95,    // Breaks reference (100)
+          high: 125,  // Breaks high (110)
+        })
+      )
+
+      expect(logs.some(l => l.includes("[ENGULFING]"))).toBe(true)
+      expect(logs.some(l => l.includes("Green"))).toBe(true)
+    })
+
+    it("should detect and handle red engulfing candle on Up structure", () => {
+      const logs: string[] = []
+      const mockLogger = {
+        debug: (msg: string) => logs.push(msg),
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      }
+      structure.setLogger(mockLogger)
+
+      // Create an Up structure
+      structure.addCandle(
+        createCandle({
+          openTime: 1000,
+          closeTime: 2000,
+          open: 100,
+          close: 110,
+          low: 100,
+          high: 110,
+        })
+      )
+
+      // Red engulfing candle (close < open) that breaks both bounds
+      structure.addCandle(
+        createCandle({
+          openTime: 2000,
+          closeTime: 3000,
+          open: 115,
+          close: 90,  // Red: close < open
+          low: 85,    // Breaks reference (100)
+          high: 120,  // Breaks high (110)
+        })
+      )
+
+      expect(logs.some(l => l.includes("[ENGULFING]"))).toBe(true)
+      expect(logs.some(l => l.includes("Red"))).toBe(true)
+    })
+
+    it("should terminate target and create new root on engulfing", () => {
+      // Create an Up structure
+      structure.addCandle(
+        createCandle({
+          openTime: 1000,
+          closeTime: 2000,
+          open: 100,
+          close: 110,
+          low: 100,
+          high: 110,
+        })
+      )
+
+      const movesAfterFirst = structure.getGrowingMoves()
+      expect(movesAfterFirst).toHaveLength(1)
+      const firstMove = movesAfterFirst[0]
+      expect(firstMove.isGrowing()).toBe(true)
+
+      // Engulfing candle terminates the first structure
+      structure.addCandle(
+        createCandle({
+          openTime: 2000,
+          closeTime: 3000,
+          open: 105,
+          close: 120,
+          low: 95,
+          high: 125,
+        })
+      )
+
+      // First move should be terminated
+      expect(firstMove.isGrowing()).toBe(false)
+      expect(firstMove.isReference()).toBe(true)
+
+      // New structure should be growing
+      const growingMoves = structure.getGrowingMoves()
+      expect(growingMoves).toHaveLength(1)
+      expect(growingMoves[0]).not.toBe(firstMove)
+    })
+
+    it("should NOT detect engulfing when only one bound is broken", () => {
+      const logs: string[] = []
+      const mockLogger = {
+        debug: (msg: string) => logs.push(msg),
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      }
+      structure.setLogger(mockLogger)
+
+      // Create an Up structure
+      structure.addCandle(
+        createCandle({
+          openTime: 1000,
+          closeTime: 2000,
+          open: 100,
+          close: 110,
+          low: 100,
+          high: 110,
+        })
+      )
+
+      // Candle that only breaks high (extension), not reference
+      structure.addCandle(
+        createCandle({
+          openTime: 2000,
+          closeTime: 3000,
+          open: 105,
+          close: 115,
+          low: 102, // Above reference (100)
+          high: 120, // Breaks high
+        })
+      )
+
+      // Should NOT log engulfing
+      expect(logs.some(l => l.includes("[ENGULFING]"))).toBe(false)
+      // Should log extension instead
+      expect(logs.some(l => l.includes("[EXTEND]"))).toBe(true)
+    })
+  })
+
+  // Protocol compliance: Reference level invalidation (protocole section 3.2)
+  describe("reference level invalidation - protocol compliance", () => {
+    it("should invalidate when breaking evolved reference level", () => {
+      // Create Up structure
+      const firstMove = structure.addCandle(
+        createCandle({
+          openTime: 1000,
+          closeTime: 2000,
+          open: 100,
+          close: 105,
+          low: 100,
+          high: 105,
+        })
+      )
+
+      expect(firstMove.currentReferenceLevel).toBe(100) // Initial ref = low
+      expect(firstMove.isGrowing()).toBe(true)
+
+      // Extend it (reference level evolves to 108)
+      structure.addCandle(
+        createCandle({
+          openTime: 2000,
+          closeTime: 3000,
+          open: 109,  // Must be between low and high
+          close: 112,
+          low: 108,
+          high: 115,
+        })
+      )
+
+      // After extension, firstMove's reference level should be updated
+      expect(firstMove.currentReferenceLevel).toBe(108)
+      expect(firstMove.priceRange.high).toBe(115) // Structure extended
+      expect(firstMove.isGrowing()).toBe(true)
+
+      // Now a candle with low=106 should break (106 < 108)
+      // even though 106 > 100 (original structure low)
+      structure.addCandle(
+        createCandle({
+          openTime: 3000,
+          closeTime: 4000,
+          open: 110,
+          close: 107,
+          low: 106,  // Breaks reference 108
+          high: 112,
+        })
+      )
+
+      // Original structure should be terminated
+      expect(firstMove.isReference()).toBe(true)
+      expect(firstMove.isGrowing()).toBe(false)
+    })
+
+    it("should NOT invalidate when above evolved reference level", () => {
+      // Create Up structure
+      const firstMove = structure.addCandle(
+        createCandle({
+          openTime: 1000,
+          closeTime: 2000,
+          open: 100,
+          close: 105,
+          low: 100,
+          high: 105,
+        })
+      )
+
+      // Extend it (reference level evolves to 108)
+      structure.addCandle(
+        createCandle({
+          openTime: 2000,
+          closeTime: 3000,
+          open: 109,
+          close: 112,
+          low: 108,
+          high: 115,
+        })
+      )
+
+      expect(firstMove.currentReferenceLevel).toBe(108)
+
+      // Candle with low=109 should NOT break (109 > 108)
+      structure.addCandle(
+        createCandle({
+          openTime: 3000,
+          closeTime: 4000,
+          open: 112,
+          close: 110,
+          low: 109,  // Above reference 108 → no break
+          high: 114,
+        })
+      )
+
+      // Structure should still be growing
+      expect(firstMove.isGrowing()).toBe(true)
     })
   })
 })

@@ -85,13 +85,14 @@ describe("PriceMove Entity", () => {
       )
     })
 
-    it("should start in Active state", () => {
+    it("should start in Growing state", () => {
       const candle = createCandle()
       const move = PriceMoveFactory.fromCandle(candle)
 
-      expect(move.state).toBe(PriceMoveState.Active)
-      expect(move.isActive()).toBe(true)
-      expect(move.isClosed()).toBe(false)
+      expect(move.state).toBe(PriceMoveState.Growing)
+      expect(move.isGrowing()).toBe(true)
+      expect(move.isActive()).toBe(true) // Legacy
+      expect(move.isClosed()).toBe(false) // Legacy
     })
 
     it("should handle extreme price values", () => {
@@ -135,37 +136,123 @@ describe("PriceMove Entity", () => {
   })
 
   describe("initial state", () => {
-    it("should have empty childMoves array", () => {
+    it("should have empty subStructures array", () => {
       const candle = createCandle()
       const move = PriceMoveFactory.fromCandle(candle)
 
-      expect(move.childMoves).toEqual([])
+      expect(move.subStructures).toEqual([])
+      expect(move.childMoves).toEqual([]) // Legacy alias
     })
 
-    it("should have empty origin array", () => {
+    it("should have empty referenceLevels array", () => {
       const candle = createCandle()
       const move = PriceMoveFactory.fromCandle(candle)
 
-      expect(move.origin).toEqual([])
+      expect(move.referenceLevels).toEqual([])
     })
 
-    it("should have empty confirmedOrigins array", () => {
+    it("should have undefined parentStructure", () => {
       const candle = createCandle()
       const move = PriceMoveFactory.fromCandle(candle)
 
-      expect(move.confirmedOrigins).toEqual([])
-    })
-
-    it("should have undefined englobingMove", () => {
-      const candle = createCandle()
-      const move = PriceMoveFactory.fromCandle(candle)
-
-      expect(move.englobingMove).toBeUndefined()
+      expect(move.parentStructure).toBeUndefined()
+      expect(move.englobingMove).toBeUndefined() // Legacy alias
     })
   })
 
-  // Story 2.2: Move Extension Logic
-  describe("tryExtendWith - extension logic", () => {
+  // Story 2.2: Move Extension Logic (using processCandidate)
+  describe("processCandidate - extension logic", () => {
+    it("should extend Up move when candidate has higher high", () => {
+      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 120 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("extended-boundary")
+      expect(parent.priceRange.high).toBe(120)
+      expect(parent.timeRange.end).toBe(3000)
+      expect(parent.referenceLevels.length).toBe(1)
+    })
+
+    it("should extend Down move when candidate has lower low", () => {
+      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 80, high: 100 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("extended-boundary")
+      expect(parent.priceRange.low).toBe(80)
+      expect(parent.timeRange.end).toBe(3000)
+      expect(parent.referenceLevels.length).toBe(1)
+    })
+
+    it("should return extended-internal for internal candidate (neither extends nor breaks)", () => {
+      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 95, high: 105 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      // Internal candidates return "extended-internal" in the new model
+      expect(result).toBe("extended-internal")
+      expect(parent.priceRange.high).toBe(110) // unchanged
+    })
+
+    it("should not extend when move is not Growing", () => {
+      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+      parent.terminate(2000) // Makes it Reference
+      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 120 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("broken")
+      expect(parent.priceRange.high).toBe(110) // unchanged
+    })
+  })
+
+  // Story 2.3: Move Invalidation Logic (using processCandidate)
+  describe("processCandidate - invalidation logic", () => {
+    it("should break Up move when candidate low < parent low", () => {
+      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 85, high: 100 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("broken")
+      // Note: processCandidate doesn't call terminate - that's done by the structure
+    })
+
+    it("should break Down move when candidate high > parent high", () => {
+      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 115 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("broken")
+    })
+
+    it("should NOT break Up move when candidate low == parent low (boundary case)", () => {
+      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 105 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("extended-internal") // Internal candidate
+      expect(parent.isGrowing()).toBe(true) // not terminated
+    })
+
+    it("should NOT break Down move when candidate high == parent high (boundary case)", () => {
+      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
+      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 95, high: 110 }, timeRange: { start: 2000, end: 3000 } })
+
+      const result = parent.processCandidate(candidate)
+
+      expect(result).toBe("extended-internal") // Internal candidate
+      expect(parent.isGrowing()).toBe(true) // not terminated
+    })
+  })
+
+  // Legacy tryExtendWith tests for backward compatibility
+  describe("tryExtendWith - legacy backward compatibility", () => {
     it("should extend Up move when candidate has higher high", () => {
       const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
       const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 120 }, timeRange: { start: 2000, end: 3000 } })
@@ -175,59 +262,8 @@ describe("PriceMove Entity", () => {
       expect(result).toBe(true)
       expect(parent.priceRange.high).toBe(120)
       expect(parent.timeRange.end).toBe(3000)
-      expect(parent.confirmedOrigins).toContain(candidate)
     })
 
-    it("should extend Down move when candidate has lower low", () => {
-      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 80, high: 100 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      expect(result).toBe(true)
-      expect(parent.priceRange.low).toBe(80)
-      expect(parent.timeRange.end).toBe(3000)
-      expect(parent.confirmedOrigins).toContain(candidate)
-    })
-
-    it("should NOT extend Up move when candidate high <= parent high", () => {
-      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 95, high: 105 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      // Should attach as child, not extend
-      expect(result).toBe(true)
-      expect(parent.priceRange.high).toBe(110) // unchanged
-      expect(parent.childMoves).toContain(candidate)
-    })
-
-    it("should NOT extend Down move when candidate low >= parent low", () => {
-      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 95, high: 105 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      // Should attach as child, not extend
-      expect(result).toBe(true)
-      expect(parent.priceRange.low).toBe(90) // unchanged
-      expect(parent.childMoves).toContain(candidate)
-    })
-
-    it("should not extend when move is Closed", () => {
-      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
-      parent.state = PriceMoveState.Closed
-      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 120 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      expect(result).toBe(false)
-      expect(parent.priceRange.high).toBe(110) // unchanged
-    })
-  })
-
-  // Story 2.3: Move Invalidation Logic
-  describe("tryExtendWith - invalidation logic", () => {
     it("should invalidate Up move when candidate low < parent low", () => {
       const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
       const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 85, high: 100 }, timeRange: { start: 2000, end: 3000 } })
@@ -235,159 +271,349 @@ describe("PriceMove Entity", () => {
       const result = parent.tryExtendWith(candidate)
 
       expect(result).toBe(false)
-      expect(parent.state).toBe(PriceMoveState.Closed)
-      expect(parent.isClosed()).toBe(true)
+      expect(parent.isReference()).toBe(true) // Terminated
+      expect(parent.isClosed()).toBe(true) // Legacy
     })
 
-    it("should invalidate Down move when candidate high > parent high", () => {
-      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 115 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      expect(result).toBe(false)
-      expect(parent.state).toBe(PriceMoveState.Closed)
-      expect(parent.isClosed()).toBe(true)
-    })
-
-    it("should NOT invalidate Up move when candidate low == parent low (boundary case)", () => {
-      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 105 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      expect(result).toBe(true)
-      expect(parent.state).toBe(PriceMoveState.Active) // not invalidated
-    })
-
-    it("should NOT invalidate Down move when candidate high == parent high (boundary case)", () => {
-      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 95, high: 110 }, timeRange: { start: 2000, end: 3000 } })
-
-      const result = parent.tryExtendWith(candidate)
-
-      expect(result).toBe(true)
-      expect(parent.state).toBe(PriceMoveState.Active) // not invalidated
-    })
-  })
-
-  // Story 2.4: Child Move Attachment
-  describe("tryExtendWith - child attachment", () => {
-    it("should attach candidate as child when it fits within parent bounds", () => {
+    it("should attach candidate as subStructure when it fits within parent bounds", () => {
       const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
       const candidate = createMove({ polarity: Polarity.Up, priceRange: { low: 95, high: 105 }, timeRange: { start: 2000, end: 3000 } })
 
       const result = parent.tryExtendWith(candidate)
 
       expect(result).toBe(true)
-      expect(parent.childMoves).toContain(candidate)
-      expect(candidate.englobingMove).toBe(parent)
-    })
-
-    it("should set bidirectional relationship between parent and child", () => {
-      const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
-      const candidate = createMove({ polarity: Polarity.Down, priceRange: { low: 92, high: 108 }, timeRange: { start: 2000, end: 3000 } })
-
-      parent.tryExtendWith(candidate)
-
-      expect(parent.childMoves.includes(candidate)).toBe(true)
-      expect(candidate.englobingMove).toBe(parent)
-    })
-
-    it("should allow multiple children", () => {
-      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
-      const child1 = createMove({ polarity: Polarity.Up, priceRange: { low: 92, high: 100 }, timeRange: { start: 2000, end: 2500 } })
-      const child2 = createMove({ polarity: Polarity.Up, priceRange: { low: 95, high: 105 }, timeRange: { start: 2500, end: 3000 } })
-
-      parent.tryExtendWith(child1)
-      parent.tryExtendWith(child2)
-
-      expect(parent.childMoves).toHaveLength(2)
-      expect(parent.childMoves).toContain(child1)
-      expect(parent.childMoves).toContain(child2)
+      expect(parent.subStructures).toContain(candidate)
+      expect(candidate.parentStructure).toBe(parent)
     })
   })
 
-  // Story 2.5: Generation Tracking
-  describe("generation tracking", () => {
-    it("should have generation 0 by default (root move)", () => {
+  // Story 2.5: Rang Tracking (formerly Generation)
+  describe("rang tracking", () => {
+    it("should have rang 0 by default (root move)", () => {
       const move = createMove()
 
-      expect(move.generation).toBe(0)
+      expect(move.rang).toBe(0)
+      expect(move.generation).toBe(0) // Legacy alias
     })
 
-    it("should accept explicit generation in constructor", () => {
+    it("should accept explicit rang in constructor", () => {
       const move = new PriceMove({
         id: PriceMoveId.create(),
         polarity: Polarity.Up,
         priceRange: new PriceRange(90, 110),
         timeRange: new TimeRange(1000, 2000),
-        generation: 3,
+        rang: 3,
       })
 
-      expect(move.generation).toBe(3)
+      expect(move.rang).toBe(3)
+      expect(move.generation).toBe(3) // Legacy alias
     })
 
-    it("should have readonly generation (immutable after creation)", () => {
-      const move = createMove()
-
-      // TypeScript ensures generation is readonly at compile time
-      expect(move.generation).toBe(0)
-    })
-
-    it("should create move with parent generation + 1 for proper nesting", () => {
-      const parent = new PriceMove({
-        id: PriceMoveId.create(),
-        polarity: Polarity.Up,
-        priceRange: new PriceRange(90, 110),
-        timeRange: new TimeRange(1000, 2000),
-        generation: 2,
-      })
-
+    it("should recalculate rang based on subStructures", () => {
+      const parent = createMove()
       const child = new PriceMove({
         id: PriceMoveId.create(),
         polarity: Polarity.Up,
         priceRange: new PriceRange(95, 105),
         timeRange: new TimeRange(1100, 1900),
-        generation: parent.generation + 1,
+        rang: 2,
       })
 
-      expect(parent.generation).toBe(2)
-      expect(child.generation).toBe(3)
+      parent.addSubStructure(child)
+
+      expect(parent.rang).toBe(3) // max(child.rang) + 1
     })
   })
 
-  // Story 2.7: Move Origins Tracking
-  describe("origins tracking", () => {
-    it("should add extending candidate to confirmedOrigins", () => {
+  // State transitions
+  describe("state transitions", () => {
+    it("should transition from Growing to Reference on terminate", () => {
+      const move = createMove()
+
+      expect(move.isGrowing()).toBe(true)
+      expect(move.state).toBe(PriceMoveState.Growing)
+
+      move.terminate(2000)
+
+      expect(move.isGrowing()).toBe(false)
+      expect(move.isReference()).toBe(true)
+      expect(move.state).toBe(PriceMoveState.Reference)
+      expect(move.terminatedAt).toBe(2000)
+    })
+
+    it("should transition from Reference to Archived on archive", () => {
+      const move = createMove()
+      move.terminate(2000)
+
+      expect(move.isReference()).toBe(true)
+
+      move.archive(3000)
+
+      expect(move.isReference()).toBe(false)
+      expect(move.isArchived()).toBe(true)
+      expect(move.state).toBe(PriceMoveState.Archived)
+      expect(move.archivedAt).toBe(3000)
+    })
+
+    it("should not terminate if already terminated", () => {
+      const move = createMove()
+      move.terminate(2000)
+      move.terminate(3000)
+
+      expect(move.terminatedAt).toBe(2000) // First terminate wins
+    })
+
+    it("should not archive if not Reference", () => {
+      const move = createMove()
+      move.archive(3000)
+
+      expect(move.isArchived()).toBe(false)
+      expect(move.isGrowing()).toBe(true)
+    })
+  })
+
+  // Reference levels tracking
+  describe("referenceLevels tracking", () => {
+    it("should add reference level when extending", () => {
       const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
       const extending = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 120 }, timeRange: { start: 2000, end: 3000 } })
 
-      parent.tryExtendWith(extending)
+      parent.processCandidate(extending)
 
-      expect(parent.confirmedOrigins).toContain(extending)
+      expect(parent.referenceLevels.length).toBe(1)
+      expect(parent.referenceLevels[0].price).toBe(120) // high for Up move
+      expect(parent.referenceLevels[0].move).toBe(extending)
     })
 
-    it("should NOT add internal child to confirmedOrigins", () => {
+    it("should NOT add reference level for internal candidate", () => {
       const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
-      const child = createMove({ polarity: Polarity.Up, priceRange: { low: 95, high: 105 }, timeRange: { start: 2000, end: 3000 } })
+      const internal = createMove({ polarity: Polarity.Up, priceRange: { low: 95, high: 105 }, timeRange: { start: 2000, end: 3000 } })
 
-      parent.tryExtendWith(child)
+      parent.processCandidate(internal)
 
-      expect(parent.confirmedOrigins).not.toContain(child)
+      expect(parent.referenceLevels.length).toBe(0)
     })
 
-    it("should track multiple extensions in confirmedOrigins", () => {
+    it("should track multiple extensions in referenceLevels", () => {
       const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
       const ext1 = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 115 }, timeRange: { start: 2000, end: 3000 } })
       const ext2 = createMove({ polarity: Polarity.Up, priceRange: { low: 105, high: 120 }, timeRange: { start: 3000, end: 4000 } })
 
-      parent.tryExtendWith(ext1)
-      parent.tryExtendWith(ext2)
+      parent.processCandidate(ext1)
+      parent.processCandidate(ext2)
 
-      expect(parent.confirmedOrigins).toHaveLength(2)
-      expect(parent.confirmedOrigins).toContain(ext1)
-      expect(parent.confirmedOrigins).toContain(ext2)
+      expect(parent.referenceLevels.length).toBe(2)
+      expect(parent.referenceLevels[0].index).toBe(0)
+      expect(parent.referenceLevels[1].index).toBe(1)
+    })
+
+    it("should provide legacy confirmedOrigins as alias", () => {
+      const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+      const extending = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 120 }, timeRange: { start: 2000, end: 3000 } })
+
+      parent.processCandidate(extending)
+
+      expect(parent.confirmedOrigins).toContain(extending) // Legacy accessor
+    })
+  })
+
+  // Degre calculation
+  describe("degre calculation", () => {
+    it("should calculate degre 0 for root move (no parent)", () => {
+      const move = createMove()
+      move.terminate(2000)
+
+      expect(move.degre).toBe(0) // Root has degre 0
+    })
+
+    it("should calculate degre based on parent (degre = parent.degre + 1)", () => {
+      const parent = createMove()
+      const child = createMove()
+
+      parent.addSubStructure(child)
+
+      // First terminate parent (it gets degre 0 as root)
+      parent.terminate(2000)
+      expect(parent.degre).toBe(0)
+
+      // Then terminate child (it gets degre = parent.degre + 1 = 1)
+      child.terminate(2500)
+      expect(child.degre).toBe(1)
+    })
+
+    it("should calculate degre for deeply nested structures", () => {
+      const grandparent = createMove()
+      const parent = createMove()
+      const child = createMove()
+
+      grandparent.addSubStructure(parent)
+      parent.addSubStructure(child)
+
+      grandparent.terminate(3000)
+      expect(grandparent.degre).toBe(0) // Root
+
+      parent.terminate(2500)
+      expect(parent.degre).toBe(1) // grandparent.degre + 1
+
+      child.terminate(2000)
+      expect(child.degre).toBe(2) // parent.degre + 1
+    })
+  })
+
+  // Protocol compliance: currentReferenceLevel (protocole section 3)
+  describe("currentReferenceLevel - protocol compliance", () => {
+    describe("initialization (protocole section 3.1)", () => {
+      it("should initialize reference level to LOW for Up move", () => {
+        const move = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 110 } })
+
+        expect(move.currentReferenceLevel).toBe(100) // low is opposite bound for Up
+      })
+
+      it("should initialize reference level to HIGH for Down move", () => {
+        const move = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
+
+        expect(move.currentReferenceLevel).toBe(110) // high is opposite bound for Down
+      })
+    })
+
+    describe("dynamic updates on extension (protocole section 3.3)", () => {
+      it("should update reference level when Up move is extended", () => {
+        // Up move with initial ref = 90 (the low)
+        const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 90, high: 110 } })
+        expect(parent.currentReferenceLevel).toBe(90)
+
+        // Extend with a candidate that has low=105
+        const extending = createMove({
+          polarity: Polarity.Up,
+          priceRange: { low: 105, high: 120 },
+          timeRange: { start: 2000, end: 3000 }
+        })
+
+        parent.processCandidate(extending)
+
+        // After extension, reference level = low of extending move (105)
+        expect(parent.currentReferenceLevel).toBe(105)
+        expect(parent.priceRange.high).toBe(120) // Structure extended
+      })
+
+      it("should update reference level when Down move is extended", () => {
+        // Down move with initial ref = 110 (the high)
+        const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
+        expect(parent.currentReferenceLevel).toBe(110)
+
+        // Extend with a candidate that has high=85
+        const extending = createMove({
+          polarity: Polarity.Down,
+          priceRange: { low: 80, high: 85 },
+          timeRange: { start: 2000, end: 3000 }
+        })
+
+        parent.processCandidate(extending)
+
+        // After extension, reference level = high of extending move (85)
+        expect(parent.currentReferenceLevel).toBe(85)
+        expect(parent.priceRange.low).toBe(80) // Structure extended
+      })
+
+      it("should track multiple extensions with evolving reference level", () => {
+        // Protocole section 3.3 example: I1 → C1 → I2 → C2 → I3
+        // Reference level evolves: low of I1 → low of I2 → low of I3
+        const structure = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 105 } })
+        expect(structure.currentReferenceLevel).toBe(100) // Initial: low of I1
+
+        // I2 extends (with low=104)
+        const i2 = createMove({
+          polarity: Polarity.Up,
+          priceRange: { low: 104, high: 112 },
+          timeRange: { start: 2000, end: 3000 }
+        })
+        structure.processCandidate(i2)
+        expect(structure.currentReferenceLevel).toBe(104) // Now: low of I2
+
+        // I3 extends (with low=108)
+        const i3 = createMove({
+          polarity: Polarity.Up,
+          priceRange: { low: 108, high: 118 },
+          timeRange: { start: 4000, end: 5000 }
+        })
+        structure.processCandidate(i3)
+        expect(structure.currentReferenceLevel).toBe(108) // Now: low of I3
+      })
+    })
+
+    describe("invalidation against reference level (protocole section 3.2)", () => {
+      it("should break Up move when candidate breaks reference level (not structure low)", () => {
+        // Up move: priceRange [100, 120], but reference level evolved to 108
+        const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 110 } })
+
+        // Extend to evolve reference level
+        const extending = createMove({
+          polarity: Polarity.Up,
+          priceRange: { low: 108, high: 120 },
+          timeRange: { start: 2000, end: 3000 }
+        })
+        parent.processCandidate(extending)
+        expect(parent.currentReferenceLevel).toBe(108)
+
+        // Now a candidate with low=106 should break (106 < 108 reference)
+        // even though 106 > 100 (structure low)
+        const breaking = createMove({
+          polarity: Polarity.Down,
+          priceRange: { low: 106, high: 115 },
+          timeRange: { start: 3000, end: 4000 }
+        })
+
+        const result = parent.processCandidate(breaking)
+        expect(result).toBe("broken")
+      })
+
+      it("should NOT break Up move when candidate is above reference level", () => {
+        const parent = createMove({ polarity: Polarity.Up, priceRange: { low: 100, high: 110 } })
+
+        // Extend to evolve reference level to 108
+        const extending = createMove({
+          polarity: Polarity.Up,
+          priceRange: { low: 108, high: 120 },
+          timeRange: { start: 2000, end: 3000 }
+        })
+        parent.processCandidate(extending)
+
+        // Candidate with low=109 should NOT break (109 > 108 reference)
+        const notBreaking = createMove({
+          polarity: Polarity.Down,
+          priceRange: { low: 109, high: 115 },
+          timeRange: { start: 3000, end: 4000 }
+        })
+
+        const result = parent.processCandidate(notBreaking)
+        expect(result).toBe("extended-internal") // Internal, not broken
+        expect(parent.isGrowing()).toBe(true)
+      })
+
+      it("should break Down move when candidate breaks reference level (not structure high)", () => {
+        // Down move: priceRange [80, 110], but reference level evolved to 92
+        const parent = createMove({ polarity: Polarity.Down, priceRange: { low: 90, high: 110 } })
+
+        // Extend to evolve reference level
+        const extending = createMove({
+          polarity: Polarity.Down,
+          priceRange: { low: 80, high: 92 },
+          timeRange: { start: 2000, end: 3000 }
+        })
+        parent.processCandidate(extending)
+        expect(parent.currentReferenceLevel).toBe(92)
+
+        // Candidate with high=95 should break (95 > 92 reference)
+        // even though 95 < 110 (structure high)
+        const breaking = createMove({
+          polarity: Polarity.Up,
+          priceRange: { low: 85, high: 95 },
+          timeRange: { start: 3000, end: 4000 }
+        })
+
+        const result = parent.processCandidate(breaking)
+        expect(result).toBe("broken")
+      })
     })
   })
 })
