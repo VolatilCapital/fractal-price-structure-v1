@@ -558,3 +558,248 @@ Structure A (n+1) : Growing 🟢
 
 ---
 
+## 14. Exemple Pas à Pas
+
+### 14.1 Données d'entrée
+
+Séquence de 10 bougies :
+
+```
+| #   | High | Low | Side |
+|-----|------|-----|------|
+| B1  | 105  | 100 |  ▲   |
+| B2  | 112  | 104 |  ▲   |
+| B3  | 108  | 102 |  ▼   |
+| B4  | 115  | 107 |  ▲   |
+| B5  | 113  | 109 |  ▼   |
+| B6  | 111  | 106 |  ▼   |
+| B7  | 110  | 105 |  ▼   |
+| B8  | 112  | 108 |  ▲   |
+| B9  | 118  | 111 |  ▲   |
+| B10 | 116  | 110 |  ▼   |
+```
+
+### 14.2 Traitement pas à pas
+
+---
+
+**Étape 1 : B1 arrive**
+
+```
+B1 : H:105 L:100 ▲
+```
+
+- Première bougie → création de la structure #1
+- `#1 : ▲ H:105 L:100 | ref:100 | parent:null | Growing 🟢`
+
+---
+
+**Étape 2 : B2 arrive**
+
+```
+B2 : H:112 L:104 ▲
+Comparaison avec #1 : B2.high (112) > #1.high (105) → MÊME SENS
+```
+
+- B2 dépasse #1 dans le même sens → Extension
+- #1 s'étend : nouveau high = 112
+- B2 devient le brin de référence → ref = 104
+
+```
+#1 : ▲ H:112 L:100 | ref:104 | parent:null | Growing 🟢
+     └── composantes: [B1, B2]
+```
+
+---
+
+**Étape 3 : B3 arrive**
+
+```
+B3 : H:108 L:102 ▼
+Comparaison avec #1 :
+  - B3.high (108) < #1.high (112) → pas d'extension
+  - B3.low (102) > #1.ref (104) → NON, 102 < 104... CASSURE !
+```
+
+⚠️ Attendons — 102 < 104, donc B3 casse le niveau de référence de #1.
+
+- #1 est terminée → passe en Reference 🟠
+- B3 démarre une nouvelle structure baissière #2
+
+```
+#1 : ▲ H:112 L:100 | ref:104 | parent:null | Reference 🟠
+#2 : ▼ H:108 L:102 | ref:108 | parent:null | Growing 🟢
+```
+
+---
+
+**Étape 4 : B4 arrive**
+
+```
+B4 : H:115 L:107 ▲
+Comparaison avec #2 (▼) :
+  - B4.high (115) > #2.ref (108) → CASSURE sens opposé
+```
+
+- #2 est terminée → passe en Reference 🟠
+- B4 démarre une nouvelle structure haussière #3
+
+```
+#1 : ▲ H:112 L:100 | Reference 🟠
+#2 : ▼ H:108 L:102 | Reference 🟠
+#3 : ▲ H:115 L:107 | ref:107 | parent:null | Growing 🟢
+```
+
+---
+
+**Étape 5 : B5 arrive**
+
+```
+B5 : H:113 L:109 ▼
+Comparaison avec #3 :
+  - B5.high (113) < #3.high (115) → pas d'extension
+  - B5.low (109) > #3.ref (107) → pas de cassure
+```
+
+- Pas de dépassement → B5 forme une sous-structure interne
+- Création de #4 (interne à #3, pas encore de parent)
+
+```
+#3 : ▲ H:115 L:107 | ref:107 | Growing 🟢
+     └── interne: #4 : ▼ H:113 L:109 | ref:113 | parent:null | Growing 🟢
+```
+
+---
+
+**Étape 6 : B6 arrive**
+
+```
+B6 : H:111 L:106 ▼
+Comparaison avec #4 (▼) :
+  - B6.low (106) < #4.low (109) → MÊME SENS → extension de #4
+```
+
+- #4 s'étend : nouveau low = 106
+- Mais B6.low (106) < #3.ref (107) → CASSURE de #3 !
+
+```
+#3 passe en Reference 🟠
+#4 est promu comme composante (correction de la hausse)
+B6 continue la baisse → #4 s'étend
+```
+
+```
+#3 : ▲ H:115 L:107 | Reference 🟠
+#4 : ▼ H:113 L:106 | ref:109 | parent:null | Growing 🟢
+     └── composantes: [B5, B6]
+```
+
+---
+
+**Étape 7 : B7 arrive**
+
+```
+B7 : H:110 L:105 ▼
+Comparaison avec #4 :
+  - B7.low (105) < #4.low (106) → MÊME SENS → extension
+```
+
+- #4 s'étend : nouveau low = 105, ref = 105
+
+```
+#4 : ▼ H:113 L:105 | ref:110 | Growing 🟢
+     └── composantes: [B5, B6, B7]
+```
+
+---
+
+**Étape 8 : B8 arrive**
+
+```
+B8 : H:112 L:108 ▲
+Comparaison avec #4 (▼) :
+  - B8.high (112) > #4.ref (110) → CASSURE sens opposé
+```
+
+- #4 est terminée → passe en Reference 🟠
+- B8 démarre une nouvelle structure haussière #5
+
+```
+#4 : ▼ H:113 L:105 | Reference 🟠
+#5 : ▲ H:112 L:108 | ref:108 | parent:null | Growing 🟢
+```
+
+---
+
+**Étape 9 : B9 arrive**
+
+```
+B9 : H:118 L:111 ▲
+Comparaison avec #5 :
+  - B9.high (118) > #5.high (112) → MÊME SENS → extension
+```
+
+- #5 s'étend : nouveau high = 118, ref = 111
+
+```
+#5 : ▲ H:118 L:108 | ref:111 | Growing 🟢
+     └── composantes: [B8, B9]
+```
+
+---
+
+**Étape 10 : B10 arrive**
+
+```
+B10 : H:116 L:110 ▼
+Comparaison avec #5 :
+  - B10.high (116) < #5.high (118) → pas d'extension
+  - B10.low (110) > #5.ref (111) → NON, 110 < 111 → CASSURE !
+```
+
+- #5 est terminée → passe en Reference 🟠
+- B10 démarre une nouvelle structure baissière #6
+
+```
+#5 : ▲ H:118 L:108 | Reference 🟠
+#6 : ▼ H:116 L:110 | ref:116 | parent:null | Growing 🟢
+```
+
+---
+
+### 14.3 État final
+
+```
+#1 : ▲ H:112 L:100 | Reference 🟠 (peut être archivée)
+#2 : ▼ H:108 L:102 | Reference 🟠 (peut être archivée)
+#3 : ▲ H:115 L:107 | Reference 🟠 (peut être archivée)
+#4 : ▼ H:113 L:105 | Reference 🟠
+#5 : ▲ H:118 L:108 | Reference 🟠
+#6 : ▼ H:116 L:110 | Growing 🟢 ← structure active
+```
+
+### 14.4 Visualisation
+
+```
+Prix
+  │
+118├─────────────────────────────────────────#5─────┐
+  │                                         /\      │
+115├───────────────────#3────┐             /  \     │
+  │                    /\    │            /    \    │
+112├──────#1────┐     /  \   │       #4  /      \   │  #6
+  │        /\   │    /    \  │       /\ /        \  │  /\
+  │       /  \  │   /      \ │      /  X          \ │ /  \
+108├──────/────\─│──/────────\│─────/──/─\──────────\│/────\
+  │      /    #2│ /          \│    /  /   \          X     \
+105├────/──────\│/────────────\│──/──/─────\────────────────\
+  │    /        X              \ /  /       \                \
+102├──/─────────│───────────────X──/─────────\────────────────
+  │  /          │                \/           \
+100├─/──────────│─────────────────────────────────────────────
+  │
+  └───B1───B2───B3───B4───B5───B6───B7───B8───B9───B10───→ Temps
+```
+
+---
+
