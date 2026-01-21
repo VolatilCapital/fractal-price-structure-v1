@@ -378,3 +378,37 @@ Dans certains cas exceptionnels (annonces économiques, flash crashes), la séqu
 
 ---
 
+## 11. Sources de Données
+
+### 11.1 Types de données supportées
+
+L'algorithme peut être alimenté par différentes sources, de la moins précise à la plus précise :
+
+| Source | Précision | Cas englobant |
+|--------|-----------|---------------|
+| Bougies 1h | Faible | Heuristique couleur (~95%) |
+| Bougies 1min | Moyenne | Heuristique couleur (~95%) |
+| Ticks | Maximale | Séquence réelle (100%) |
+
+### 11.2 Principe
+
+L'algorithme est **identique** quelle que soit la source. Seule la granularité change :
+
+- **Bougies** : Chaque bougie = un mouvement de niveau 0
+- **Ticks** : Chaque tick = un mouvement élémentaire, agrégé en mouvements
+
+### 11.3 Avantage des ticks
+
+Avec des données tick, le cas des bougies englobantes **disparaît** :
+- On connaît la séquence réelle des prix
+- Pas besoin d'heuristique
+- Précision de 100%
+
+### 11.4 Recommandation
+
+- **Développement/tests** : Bougies 1h (plus simple)
+- **Production** : Bougies 1min (bon compromis)
+- **Précision maximale** : Ticks (élimine les 5% d'erreurs potentielles)
+
+---
+
