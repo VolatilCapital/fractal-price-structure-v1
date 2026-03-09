@@ -19,6 +19,12 @@ import {
   getFullDataRange,
 } from '../../plot/index.js'
 import { useZoom } from '../composables/useZoom.js'
+import {
+  decorateMoveElements,
+  attachHoverListeners,
+  applyHighlightClasses,
+  buildMoveIndex,
+} from '../../plot/HoverDecorator.js'
 
 const props = defineProps<{
   candles: Candle[]
@@ -177,7 +183,24 @@ watchEffect(() => {
   })
 
   chartContainer.value.appendChild(chart)
+
+  // --- Hover highlight (non-reactive, pure DOM) ---
+  // Clean up previous listeners
+  if (hoverCleanup) hoverCleanup()
+
+  const moveIndex = buildMoveIndex(allMoves.value)
+  decorateMoveElements(chart, allMoves.value)
+  hoverCleanup = attachHoverListeners(
+    chartContainer.value,
+    moveIndex,
+    (moveId, hierarchyIds) => {
+      if (!chartContainer.value) return
+      applyHighlightClasses(chartContainer.value, moveId, hierarchyIds)
+    },
+  )
 })
+
+let hoverCleanup: (() => void) | null = null
 
 // --- Zoom & Pan event handlers ---
 
@@ -242,6 +265,7 @@ onMounted(() => {
 // Cleanup on unmount
 onUnmounted(() => {
   resizeObserver?.disconnect()
+  if (hoverCleanup) hoverCleanup()
   window.removeEventListener('mouseup', handleMouseUp)
   window.removeEventListener('mousemove', handleMouseMove)
   if (chartContainer.value) {
@@ -294,5 +318,24 @@ onUnmounted(() => {
 
 .zoom-indicator:hover {
   background: rgba(0, 0, 0, 0.9);
+}
+
+/* Hover highlight — applied via JS class toggling, targets dynamically generated SVG */
+.price-chart :deep([data-move-id]) {
+  transition: opacity 0.12s ease;
+  cursor: pointer;
+}
+
+.price-chart :deep([data-move-id].move-hovered) {
+  filter: brightness(1.5) saturate(1.3);
+  stroke-width: 3px;
+}
+
+.price-chart :deep([data-move-id].move-highlighted) {
+  filter: brightness(1.25);
+}
+
+.price-chart.has-hover :deep([data-move-id]:not(.move-hovered):not(.move-highlighted)) {
+  opacity: 0.2 !important;
 }
 </style>
