@@ -208,6 +208,19 @@ interface StateGroupedMoves {
 }
 
 /**
+ * Tooltip text for a PriceMove (used by both rect and line marks).
+ */
+function moveTitle(d: PriceMove): string {
+  const pol = d.polarity === Polarity.Up ? 'Up' : 'Down'
+  const state = d.state === PriceMoveState.Growing ? 'Growing'
+    : d.state === PriceMoveState.Reference ? 'Reference' : 'Archived'
+  const degre = d.degre !== undefined ? `D${d.degre}` : '-'
+  const range = `${d.priceRange.low.toFixed(2)} - ${d.priceRange.high.toFixed(2)}`
+  const subs = d.subStructures?.length ?? 0
+  return `R${d.rang} ${degre} | ${pol} ${state}\n${range}\nSous-structures: ${subs}`
+}
+
+/**
  * Create rectangle marks (box mode).
  */
 function createRectMarks(params: StateGroupedMoves) {
@@ -252,6 +265,7 @@ function createRectMarks(params: StateGroupedMoves) {
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: (d: PriceMove) => rangStrokeWidth(d, stroke),
       strokeOpacity: strokeOp,
+      title: moveTitle,
     })
   }
 
@@ -280,6 +294,7 @@ function createRectMarks(params: StateGroupedMoves) {
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: (d: PriceMove) => rangStrokeWidth(d, stroke),
       strokeOpacity: strokeOp,
+      title: moveTitle,
     })
   }
 
@@ -438,6 +453,7 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: (d: PriceMove) => rangLineStroke(d, _stroke),
       strokeOpacity: strokeOp,
+      title: moveTitle,
     })
   }
 
@@ -457,6 +473,7 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: (d: PriceMove) => rangLineStroke(d, _stroke),
       strokeOpacity: strokeOp,
+      title: moveTitle,
     })
   }
 
