@@ -7,6 +7,7 @@ import {
   createPlaybackState,
   createVisualizationState,
   PlaybackMode,
+  PlaybackDirection,
   PLAYBACK_SPEEDS,
 } from '../../../domain/index.js'
 import type { PlaybackState, VisualizationState } from '../../../domain/index.js'
@@ -128,6 +129,13 @@ export function usePlayback(candles: ShallowRef<Candle[]>) {
     changeSpeed(playbackState.value.speedIndex - 1)
   }
 
+  function toggleDirection() {
+    const newDir = playbackState.value.direction === PlaybackDirection.Forward
+      ? PlaybackDirection.Backward
+      : PlaybackDirection.Forward
+    playbackState.value = { ...playbackState.value, direction: newDir }
+  }
+
   // Cleanup on unmount
   onUnmounted(() => {
     stopInterval()
@@ -145,5 +153,6 @@ export function usePlayback(candles: ShallowRef<Candle[]>) {
     changeSpeed,
     speedUp,
     speedDown,
+    toggleDirection,
   }
 }

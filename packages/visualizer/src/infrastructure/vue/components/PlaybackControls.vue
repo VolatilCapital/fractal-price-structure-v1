@@ -5,7 +5,7 @@
  */
 import { computed } from 'vue'
 import type { PlaybackState } from '../../../domain/index.js'
-import { PlaybackMode, PLAYBACK_SPEEDS } from '../../../domain/index.js'
+import { PlaybackMode, PlaybackDirection, PLAYBACK_SPEEDS } from '../../../domain/index.js'
 
 const props = defineProps<{
   playbackState: PlaybackState
@@ -19,10 +19,12 @@ const emit = defineEmits<{
   stepBackward: []
   speedUp: []
   speedDown: []
+  toggleDirection: []
 }>()
 
 const isPlaying = computed(() => props.playbackState.mode === PlaybackMode.Playing)
 const isPaused = computed(() => props.playbackState.mode === PlaybackMode.Paused)
+const isForward = computed(() => props.playbackState.direction === PlaybackDirection.Forward)
 const speedLabel = computed(() => PLAYBACK_SPEEDS[props.playbackState.speedIndex]?.label ?? 'Normal')
 </script>
 
@@ -44,6 +46,19 @@ const speedLabel = computed(() => PLAYBACK_SPEEDS[props.playbackState.speedIndex
       <!-- Stop -->
       <v-btn icon variant="text" @click="emit('stop')" aria-label="Stop" data-testid="btn-stop">
         <v-icon>mdi-stop</v-icon>
+      </v-btn>
+
+      <!-- Direction toggle -->
+      <v-btn
+        icon
+        variant="text"
+        size="small"
+        @click="emit('toggleDirection')"
+        :aria-label="isForward ? 'Switch to backward' : 'Switch to forward'"
+        :title="isForward ? 'Lecture avant' : 'Lecture arrière'"
+        data-testid="btn-direction"
+      >
+        <v-icon size="small">{{ isForward ? 'mdi-arrow-right' : 'mdi-arrow-left' }}</v-icon>
       </v-btn>
 
       <!-- Play/Pause toggle -->

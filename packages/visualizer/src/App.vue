@@ -18,7 +18,7 @@ const layersOpen = ref(false)
 
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
-const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo, speedUp, speedDown } = usePlayback(candles)
+const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo, speedUp, speedDown, toggleDirection } = usePlayback(candles)
 const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setShowParentChildLinks, setShowEventHighlights, setDisplayMode, setMaxRang } = useFilters()
 
 // Computed
@@ -246,6 +246,7 @@ if (import.meta.env.DEV) {
             @step-backward="stepBackward"
             @speed-up="speedUp"
             @speed-down="speedDown"
+            @toggle-direction="toggleDirection"
           />
           <TimeSlider
             :cursor-index="cursorIndex"
