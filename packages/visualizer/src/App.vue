@@ -24,7 +24,7 @@ const stackOpen = ref(false)
 const theme = useTheme()
 const isDark = computed(() => theme.global.current.value.dark)
 function toggleTheme() {
-  theme.global.name.value = isDark.value ? 'light' : 'dark'
+  theme.change(isDark.value ? 'light' : 'dark')
 }
 
 // Composables
@@ -83,7 +83,7 @@ function changeDataSourceById(id: string) {
 }
 
 // URL state sync
-const currentSourceId = computed(() => currentSource.id)
+const currentSourceId = computed(() => currentSource.value.id)
 useUrlState({
   cursorIndex,
   seekTo,
