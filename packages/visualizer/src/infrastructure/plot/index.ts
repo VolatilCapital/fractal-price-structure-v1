@@ -5,6 +5,7 @@
 export { createCandlestickMarks, type CandlestickMarkOptions } from './CandlestickMark.js'
 export {
   createPriceMoveMarks,
+  createParentChildLinkMarks,
   getStateColor,
   filterMoves,
   type PriceMoveMarkOptions,

@@ -10,6 +10,8 @@ import type { FilterState } from '../../../domain/index.js'
 import {
   createCandlestickMarks,
   createPriceMoveMarks,
+  createParentChildLinkMarks,
+  filterMoves,
   createTimeCursorMark,
   getFullDataRange,
 } from '../../plot/index.js'
@@ -68,6 +70,14 @@ watchEffect(() => {
     cursorTime: props.cursorTime,
   })
 
+  // Parent-child connection links (optional)
+  const parentChildMarks = props.filterState.showParentChildLinks
+    ? createParentChildLinkMarks(
+        filterMoves(allMoves.value, props.filterState),
+        props.cursorTime,
+      )
+    : []
+
   // Create chart
   const chart = Plot.plot({
     width: chartContainer.value.clientWidth || 1200,
@@ -94,6 +104,8 @@ watchEffect(() => {
       Plot.gridY({ stroke: '#e0e0e0', strokeOpacity: 0.5 }),
       // Price moves (rendered first, behind candles)
       ...priceMoveMarks,
+      // Parent-child links (between moves, behind candles)
+      ...parentChildMarks,
       // Candlesticks
       ...candlestickMarks,
       // Time cursor

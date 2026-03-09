@@ -19,7 +19,7 @@ const layersOpen = ref(false)
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
 const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo } = usePlayback(candles)
-const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setDisplayMode, setMaxRang } = useFilters()
+const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setShowParentChildLinks, setDisplayMode, setMaxRang } = useFilters()
 
 // Computed
 const cursorTime = computed(() => visualizationState.value.cursorTime)
@@ -200,6 +200,7 @@ if (import.meta.env.DEV) {
         @set-show-reference="setShowReference"
         @set-show-archived="setShowArchived"
         @set-show-undefined-degre="setShowUndefinedDegre"
+        @set-show-parent-child-links="setShowParentChildLinks"
         @set-display-mode="setDisplayMode"
         @set-max-rang="setMaxRang"
       />

@@ -27,6 +27,7 @@ const emit = defineEmits<{
   setShowReference: [show: boolean]
   setShowArchived: [show: boolean]
   setShowUndefinedDegre: [show: boolean]
+  setShowParentChildLinks: [show: boolean]
   setDisplayMode: [mode: DisplayMode]
   setMaxRang: [maxRang: number | undefined]
 }>()
@@ -172,6 +173,17 @@ function getDegreColor(degre: number): string {
       density="compact"
       hide-details
       data-testid="switch-sub-structures"
+    />
+
+    <v-switch
+      :model-value="filterState.showParentChildLinks"
+      @update:model-value="emit('setShowParentChildLinks', $event as boolean)"
+      label="Liens parent-enfant"
+      color="primary"
+      density="compact"
+      hide-details
+      class="mt-1"
+      data-testid="switch-parent-child-links"
     />
 
     <!-- Rang filter -->

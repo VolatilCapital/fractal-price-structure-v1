@@ -10,6 +10,7 @@ import {
   setShowReference as setShowReferenceAction,
   setShowArchived as setShowArchivedAction,
   setShowUndefinedDegre as setShowUndefinedDegreAction,
+  setShowParentChildLinks as setShowParentChildLinksAction,
   setDisplayMode as setDisplayModeAction,
   setMaxRang as setMaxRangAction,
   serializeFilterState,
@@ -74,6 +75,10 @@ export function useFilters() {
     filterState.value = setDisplayModeAction(filterState.value, mode)
   }
 
+  function setShowParentChildLinks(show: boolean) {
+    filterState.value = setShowParentChildLinksAction(filterState.value, show)
+  }
+
   function setMaxRang(maxRang: number | undefined) {
     filterState.value = setMaxRangAction(filterState.value, maxRang)
   }
@@ -86,6 +91,7 @@ export function useFilters() {
     setShowReference,
     setShowArchived,
     setShowUndefinedDegre,
+    setShowParentChildLinks,
     setDisplayMode,
     setMaxRang,
   }

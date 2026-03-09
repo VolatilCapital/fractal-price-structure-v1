@@ -30,6 +30,7 @@ export {
   setShowReference,
   setShowArchived,
   setShowUndefinedDegre,
+  setShowParentChildLinks,
   setMaxRang,
   setDisplayMode,
   isMoveVisible,

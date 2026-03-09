@@ -23,6 +23,8 @@ export interface FilterState {
   showUndefinedDegre: boolean
   /** Maximum rang level to display (undefined = all) */
   maxRang?: number
+  /** Whether to show parent-child connection links on the price chart */
+  showParentChildLinks: boolean
 }
 
 export function createFilterState(): FilterState {
@@ -35,6 +37,7 @@ export function createFilterState(): FilterState {
     showArchived: false,
     showUndefinedDegre: true,
     maxRang: undefined,
+    showParentChildLinks: false,
   }
 }
 
@@ -70,6 +73,10 @@ export function setShowUndefinedDegre(state: FilterState, show: boolean): Filter
 
 export function setMaxRang(state: FilterState, maxRang: number | undefined): FilterState {
   return { ...state, maxRang }
+}
+
+export function setShowParentChildLinks(state: FilterState, show: boolean): FilterState {
+  return { ...state, showParentChildLinks: show }
 }
 
 export function setDisplayMode(state: FilterState, displayMode: DisplayMode): FilterState {
@@ -120,6 +127,7 @@ export function serializeFilterState(state: FilterState): string {
     showArchived: state.showArchived,
     showUndefinedDegre: state.showUndefinedDegre,
     maxRang: state.maxRang,
+    showParentChildLinks: state.showParentChildLinks,
   })
 }
 
@@ -138,6 +146,7 @@ export function deserializeFilterState(json: string): FilterState | null {
       showArchived: parsed.showArchived ?? false,
       showUndefinedDegre: parsed.showUndefinedDegre ?? true,
       maxRang: parsed.maxRang,
+      showParentChildLinks: parsed.showParentChildLinks ?? false,
     }
   } catch {
     return null

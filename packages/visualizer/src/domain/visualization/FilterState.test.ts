@@ -4,6 +4,7 @@ import {
   setShowGrowing,
   setShowReference,
   setShowArchived,
+  setShowParentChildLinks,
   serializeFilterState,
   deserializeFilterState,
 } from './FilterState.js'
@@ -16,6 +17,7 @@ describe('FilterState', () => {
       expect(state.showGrowing).toBe(true)
       expect(state.showReference).toBe(true)
       expect(state.showArchived).toBe(false)
+      expect(state.showParentChildLinks).toBe(false)
       expect(state.displayMode).toBe('rectangle')
     })
   })
@@ -61,6 +63,16 @@ describe('FilterState', () => {
 
       expect(newState.showArchived).toBe(true)
       expect(state.showArchived).toBe(false) // original unchanged
+    })
+  })
+
+  describe('setShowParentChildLinks', () => {
+    it('should toggle showParentChildLinks to true', () => {
+      const state = createFilterState()
+      const newState = setShowParentChildLinks(state, true)
+
+      expect(newState.showParentChildLinks).toBe(true)
+      expect(state.showParentChildLinks).toBe(false) // original unchanged
     })
   })
 

@@ -477,3 +477,75 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
 
   return marks
 }
+
+/**
+ * Link data for parent-child connections on the price chart.
+ */
+export interface ParentChildLink {
+  x1: number // child midpoint time
+  y1: number // child midpoint price
+  x2: number // parent midpoint time
+  y2: number // parent midpoint price
+  childRang: number
+  parentRang: number
+}
+
+/**
+ * Prepare parent-child link data from filtered moves.
+ * Only includes links where both parent and child are active (start <= cursorTime).
+ */
+export function prepareParentChildLinks(
+  moves: PriceMove[],
+  cursorTime: number,
+): ParentChildLink[] {
+  const links: ParentChildLink[] = []
+
+  for (const child of moves) {
+    if (!child.englobingMove) continue
+    if (child.timeRange.start > cursorTime) continue
+
+    const parent = child.englobingMove
+    if (parent.timeRange.start > cursorTime) continue
+
+    const childMidTime = (child.timeRange.start + Math.min(child.timeRange.end, cursorTime)) / 2
+    const childMidPrice = (child.priceRange.low + child.priceRange.high) / 2
+    const parentMidTime = (parent.timeRange.start + Math.min(parent.timeRange.end, cursorTime)) / 2
+    const parentMidPrice = (parent.priceRange.low + parent.priceRange.high) / 2
+
+    links.push({
+      x1: childMidTime,
+      y1: childMidPrice,
+      x2: parentMidTime,
+      y2: parentMidPrice,
+      childRang: child.rang,
+      parentRang: parent.rang,
+    })
+  }
+
+  return links
+}
+
+/**
+ * Create Observable Plot marks for parent-child connection links on the price chart.
+ * Dashed lines connecting child midpoint to parent midpoint.
+ */
+export function createParentChildLinkMarks(
+  moves: PriceMove[],
+  cursorTime: number,
+): ReturnType<typeof Plot.link>[] {
+  const links = prepareParentChildLinks(moves, cursorTime)
+  if (links.length === 0) return []
+
+  return [
+    Plot.link(links, {
+      x1: 'x1',
+      y1: 'y1',
+      x2: 'x2',
+      y2: 'y2',
+      stroke: '#888',
+      strokeWidth: 0.8,
+      strokeOpacity: 0.5,
+      strokeDasharray: '4,3',
+    }),
+  ]
+}
