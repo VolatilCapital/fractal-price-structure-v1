@@ -8,12 +8,14 @@ import PlaybackControls from './infrastructure/vue/components/PlaybackControls.v
 import TimeSlider from './infrastructure/vue/components/TimeSlider.vue'
 import FilterPanel from './infrastructure/vue/components/FilterPanel.vue'
 import EventsLog from './infrastructure/vue/components/EventsLog.vue'
+import type { DataSource } from './domain/index.js'
+import { DATA_SOURCES } from './domain/index.js'
 
 const drawer = ref(true)
 const eventsOpen = ref(false)
 
 // Composables
-const { candles, engine, events, isLoading, error, load } = useEngine()
+const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
 const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo } = usePlayback(candles)
 const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setDisplayMode } = useFilters()
 
@@ -37,6 +39,12 @@ const currentDate = computed(() => {
     minute: '2-digit',
   })
 })
+
+// Change data source
+async function changeDataSource(source: DataSource) {
+  stop()
+  await load(source)
+}
 
 // Load data on mount
 onMounted(async () => {
@@ -118,6 +126,25 @@ if (import.meta.env.DEV) {
         Fractal Visualizer
       </v-app-bar-title>
       <v-spacer />
+      <v-btn-toggle
+        :model-value="currentSource.id"
+        mandatory
+        density="compact"
+        color="secondary"
+        class="mr-4"
+        data-testid="data-source-toggle"
+      >
+        <v-btn
+          v-for="source in DATA_SOURCES"
+          :key="source.id"
+          :value="source.id"
+          size="small"
+          @click="source.id !== currentSource.id && changeDataSource(source)"
+          :data-testid="`data-source-${source.id}`"
+        >
+          {{ source.label }}
+        </v-btn>
+      </v-btn-toggle>
       <span class="text-body-2 mr-4" data-testid="current-date">{{ currentDate }}</span>
       <span class="text-body-2 mr-4" data-testid="candle-counter">
         Candle {{ cursorIndex + 1 }} / {{ candles.length }}

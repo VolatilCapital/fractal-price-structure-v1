@@ -18,6 +18,9 @@ export {
   setDirection,
 } from './PlaybackState.js'
 
+export type { DataSource } from './DataSource.js'
+export { DATA_SOURCES, DEFAULT_DATA_SOURCE_ID, findDataSource, getDefaultDataSource } from './DataSource.js'
+
 export type { FilterState, DisplayMode } from './FilterState.js'
 export {
   createFilterState,

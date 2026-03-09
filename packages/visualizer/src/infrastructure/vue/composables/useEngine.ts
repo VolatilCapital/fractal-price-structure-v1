@@ -1,10 +1,12 @@
 /**
  * Reactive wrapper for FractalEngine with computed moves at cursor time.
+ * Supports switching between data sources dynamically.
  */
 import { ref, shallowRef } from 'vue'
 import type { Candle, FractalEngine } from '@fractal-price-structure/core'
 import { FractalEngine as FractalEngineClass } from '@fractal-price-structure/core'
-import type { StructureEvent } from '../../../domain/index.js'
+import type { StructureEvent, DataSource } from '../../../domain/index.js'
+import { getDefaultDataSource } from '../../../domain/index.js'
 import { loadCandles } from '../../../application/index.js'
 import { JsonCandleLoader } from '../../loaders/JsonCandleLoader.js'
 
@@ -14,17 +16,20 @@ export function useEngine() {
   const events = shallowRef<StructureEvent[]>([])
   const isLoading = ref(true)
   const error = ref<string | null>(null)
+  const currentSource = shallowRef<DataSource>(getDefaultDataSource())
 
-  async function load() {
+  async function load(source?: DataSource) {
     isLoading.value = true
     error.value = null
 
+    const dataSource = source ?? currentSource.value
+    currentSource.value = dataSource
+
     try {
-      const loader = new JsonCandleLoader('/fixtures/eurusd-5m.json')
+      const loader = new JsonCandleLoader(dataSource.fixturePath)
       const result = await loadCandles({
         candleLoader: loader,
         engineFactory: () => new FractalEngineClass({ deterministic: true }),
-        maxCandles: 222,
       })
 
       candles.value = result.candles
@@ -44,6 +49,7 @@ export function useEngine() {
     events,
     isLoading,
     error,
+    currentSource,
     load,
   }
 }
