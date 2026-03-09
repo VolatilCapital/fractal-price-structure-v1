@@ -31,6 +31,18 @@ const maxAvailableRang = computed(() => {
   return engine.value.getLayerCount() - 1
 })
 
+// Fractal stats
+const fractalStats = computed(() => {
+  if (!engine.value) return undefined
+  return {
+    totalMoves: engine.value.getAllMoves().length,
+    growing: engine.value.getGrowingMoves().length,
+    reference: engine.value.getReferenceMoves().length,
+    archived: engine.value.getArchivedMoves().length,
+    layerCount: engine.value.getLayerCount(),
+  }
+})
+
 // Current candle info
 const currentCandle = computed(() => {
   if (!candles.value.length) return null
@@ -181,6 +193,7 @@ if (import.meta.env.DEV) {
       <FilterPanel
         :filter-state="filterState"
         :max-available-rang="maxAvailableRang"
+        :stats="fractalStats"
         @toggle-degre="toggleDegre"
         @set-show-sub-structures="setShowSubStructures"
         @set-show-growing="setShowGrowing"

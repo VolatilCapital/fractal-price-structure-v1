@@ -6,9 +6,18 @@
 import type { FilterState, DisplayMode } from '../../../domain/index.js'
 import { STATE_COLORS } from '../../../domain/index.js'
 
+export interface FractalStats {
+  totalMoves: number
+  growing: number
+  reference: number
+  archived: number
+  layerCount: number
+}
+
 const props = defineProps<{
   filterState: FilterState
   maxAvailableRang?: number
+  stats?: FractalStats
 }>()
 
 const emit = defineEmits<{
@@ -195,6 +204,19 @@ function getDegreColor(degre: number): string {
       <div><strong>Rang</strong> = complexité (bottom-up)</div>
       <div><strong>Degré</strong> = hiérarchie (top-down)</div>
     </div>
+
+    <!-- Stats -->
+    <template v-if="stats">
+      <v-divider class="my-4" />
+      <div class="text-caption text-grey mb-2">Statistiques</div>
+      <div class="text-caption stats-grid" data-testid="fractal-stats">
+        <div>Moves</div><div class="text-right">{{ stats.totalMoves }}</div>
+        <div :style="{ color: STATE_COLORS.Growing }">Growing</div><div class="text-right">{{ stats.growing }}</div>
+        <div :style="{ color: STATE_COLORS.Reference }">Reference</div><div class="text-right">{{ stats.reference }}</div>
+        <div :style="{ color: STATE_COLORS.Archived }">Archived</div><div class="text-right">{{ stats.archived }}</div>
+        <div>Couches (rang)</div><div class="text-right">{{ stats.layerCount }}</div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -209,5 +231,11 @@ function getDegreColor(degre: number): string {
   border-radius: 50%;
   margin-right: 8px;
   flex-shrink: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
 }
 </style>
