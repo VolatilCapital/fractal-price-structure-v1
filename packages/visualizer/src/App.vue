@@ -10,6 +10,7 @@ import FilterPanel from './infrastructure/vue/components/FilterPanel.vue'
 import EventsLog from './infrastructure/vue/components/EventsLog.vue'
 
 const drawer = ref(true)
+const eventsOpen = ref(false)
 
 // Composables
 const { candles, engine, events, isLoading, error, load } = useEngine()
@@ -95,6 +96,13 @@ onMounted(() => {
       <span class="text-body-2 mr-4">
         Candle {{ cursorIndex + 1 }} / {{ candles.length }}
       </span>
+      <v-btn
+        :icon="eventsOpen ? 'mdi-chevron-down' : 'mdi-format-list-bulleted'"
+        variant="text"
+        density="compact"
+        class="mr-2"
+        @click="eventsOpen = !eventsOpen"
+      />
     </v-app-bar>
 
     <!-- Filter Panel (Navigation Drawer) -->
@@ -112,92 +120,73 @@ onMounted(() => {
     </v-navigation-drawer>
 
     <!-- Main Content -->
-    <v-main>
+    <v-main class="main-layout">
       <!-- Loading State -->
-      <v-container v-if="isLoading" fluid class="fill-height">
-        <v-row align="center" justify="center">
-          <v-col cols="auto">
-            <v-progress-circular indeterminate color="primary" size="64" />
-            <p class="mt-4 text-center">Loading candles...</p>
-          </v-col>
-        </v-row>
-      </v-container>
+      <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
+        <div class="text-center">
+          <v-progress-circular indeterminate color="primary" size="64" />
+          <p class="mt-4">Loading candles...</p>
+        </div>
+      </div>
 
       <!-- Error State -->
-      <v-container v-else-if="error" fluid class="fill-height">
-        <v-row align="center" justify="center">
-          <v-col cols="auto">
-            <v-alert type="error" prominent>
-              <v-alert-title>Error loading data</v-alert-title>
-              {{ error }}
-            </v-alert>
-          </v-col>
-        </v-row>
-      </v-container>
+      <div v-else-if="error" class="fill-height d-flex align-center justify-center pa-4">
+        <v-alert type="error" prominent>
+          <v-alert-title>Error loading data</v-alert-title>
+          {{ error }}
+        </v-alert>
+      </div>
 
-      <!-- Main Content -->
-      <v-container v-else fluid class="pa-4">
-        <!-- Playback Controls -->
-        <v-row class="mb-2">
-          <v-col cols="12">
-            <PlaybackControls
-              :playback-state="playbackState"
-              @play="play"
-              @pause="pause"
-              @stop="stop"
-              @step-forward="stepForward"
-              @step-backward="stepBackward"
-            />
-          </v-col>
-        </v-row>
+      <!-- Normal layout: flex column, full height -->
+      <div v-else class="content-layout">
+        <!-- Controls strip (compact) -->
+        <div class="controls-strip px-3 pt-2 pb-1 flex-shrink-0">
+          <PlaybackControls
+            :playback-state="playbackState"
+            @play="play"
+            @pause="pause"
+            @stop="stop"
+            @step-forward="stepForward"
+            @step-backward="stepBackward"
+          />
+          <TimeSlider
+            :cursor-index="cursorIndex"
+            :total-candles="candles.length"
+            :candles="candles"
+            @seek="seekTo"
+            class="mt-1"
+          />
+        </div>
 
-        <!-- Time Slider -->
-        <v-row class="mb-2">
-          <v-col cols="12">
-            <TimeSlider
-              :cursor-index="cursorIndex"
-              :total-candles="candles.length"
-              :candles="candles"
-              @seek="seekTo"
-            />
-          </v-col>
-        </v-row>
+        <!-- Chart fills remaining space -->
+        <div class="chart-area flex-grow-1">
+          <PriceChart
+            :candles="candles"
+            :engine="engine"
+            :cursor-time="cursorTime"
+            :cursor-index="cursorIndex"
+            :filter-state="filterState"
+          />
+        </div>
 
-        <!-- Price Chart -->
-        <v-row>
-          <v-col cols="12">
-            <v-card elevation="2">
-              <v-card-text class="pa-0">
-                <PriceChart
-                  :candles="candles"
-                  :engine="engine"
-                  :cursor-time="cursorTime"
-                  :cursor-index="cursorIndex"
-                  :filter-state="filterState"
-                />
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- Events Log -->
-        <v-row class="mt-4">
-          <v-col cols="12">
-            <v-card elevation="2">
-              <v-card-title class="text-body-1">
-                <v-icon icon="mdi-format-list-bulleted" class="mr-2" />
-                Events
-              </v-card-title>
-              <v-card-text class="pa-0">
-                <EventsLog
-                  :events="events"
-                  :cursor-time="cursorTime"
-                />
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
+        <!-- Events bottom panel (collapsible) -->
+        <div class="events-panel">
+          <div class="events-handle" @click="eventsOpen = !eventsOpen">
+            <v-icon size="small" class="mr-2">mdi-format-list-bulleted</v-icon>
+            <span class="text-caption font-weight-medium">Événements</span>
+            <v-spacer />
+            <v-icon size="small">{{ eventsOpen ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
+          </div>
+          <v-expand-transition>
+            <div v-show="eventsOpen" class="events-content">
+              <EventsLog
+                :events="events"
+                :cursor-time="cursorTime"
+              />
+            </div>
+          </v-expand-transition>
+        </div>
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -205,9 +194,49 @@ onMounted(() => {
 <style>
 html, body {
   overflow: hidden;
+  height: 100%;
 }
 
+/* Force v-main to be a full-height flex column */
 .v-main {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+
+.content-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.chart-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.events-panel {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.events-handle {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.events-handle:hover {
+  background: rgba(128, 128, 128, 0.08);
+}
+
+.events-content {
+  height: 240px;
   overflow-y: auto;
 }
 </style>

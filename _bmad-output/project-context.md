@@ -26,7 +26,9 @@ _Critical rules and patterns for implementing code in this project. Focus on uno
 | Biome | Latest | Linting + formatting |
 | big.js | 7.0.1 | Decimal precision for all price calculations |
 | luxon | 3.7.2 | Date/time handling |
-| uuid | 11.1.0 | Entity ID generation (UUID v4) |
+| Vue | 3.5.x | UI framework (visualizer package) |
+| Vuetify | 4.x | UI component library — Material Design 3, no `v-main__wrap` inner wrapper |
+| Vite | 7.x | Build tool (visualizer package) |
 
 ## Critical Implementation Rules
 
