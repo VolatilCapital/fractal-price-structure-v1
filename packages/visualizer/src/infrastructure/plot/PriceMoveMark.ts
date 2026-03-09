@@ -326,11 +326,15 @@ function createRectMarks(params: StateGroupedMoves) {
   }
 
   // Helper to create text labels showing Rang and Degré.
-  // Only shows labels for moves with rang >= 1 (skip individual candle labels).
+  // Uses adaptive filtering: with many moves, only higher-rang labels are shown.
   // Font size scales with rang for visual hierarchy.
   const createTextMark = (moves: PriceMove[], opacity: number = 1) => {
-    // Filter out rang 0 moves — they clutter the chart without adding value
-    const labeledMoves = moves.filter(m => m.rang >= 1)
+    // Adaptive minimum rang threshold based on move count
+    // Few moves (< 300): show rang >= 1
+    // Medium (300-600): show rang >= 2
+    // Many (> 600): show rang >= 3
+    const minRangForLabels = moves.length > 600 ? 3 : moves.length > 300 ? 2 : 1
+    const labeledMoves = moves.filter(m => m.rang >= minRangForLabels)
     if (labeledMoves.length === 0) return null
     return Plot.text(labeledMoves, {
       x: (d: PriceMove) => {
