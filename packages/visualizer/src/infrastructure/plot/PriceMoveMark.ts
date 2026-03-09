@@ -415,11 +415,15 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
 
   const marks: ReturnType<typeof Plot.link>[] = []
 
+  // Scale line stroke by rang — rang 0 thin, higher rangs thicker
+  const rangLineStroke = (d: PriceMove, base: number) =>
+    d.rang === 0 ? Math.max(base * 0.5, 0.5) : Math.min(base + d.rang, base + 4)
+
   // Helper to create line mark for non-Growing moves (full extent)
   const createLineMark = (
     moves: PriceMove[],
     strokeOp: number = 1,
-    stroke: number = strokeWidth
+    _stroke: number = strokeWidth
   ) => {
     if (moves.length === 0) return null
     return Plot.link(moves, {
@@ -428,7 +432,7 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
       x2: (d: PriceMove) => d.timeRange.end,
       y2: (d: PriceMove) => d.polarity === Polarity.Up ? d.priceRange.high : d.priceRange.low,
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
-      strokeWidth: stroke,
+      strokeWidth: (d: PriceMove) => rangLineStroke(d, _stroke),
       strokeOpacity: strokeOp,
     })
   }
@@ -438,7 +442,7 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
   const createProgressiveLineMark = (
     moves: PriceMove[],
     strokeOp: number = 1,
-    stroke: number = strokeWidth
+    _stroke: number = strokeWidth
   ) => {
     if (moves.length === 0) return null
     return Plot.link(moves, {
@@ -447,7 +451,7 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
       x2: (d: PriceMove) => Math.min(d.timeRange.end, cursorTime),
       y2: (d: PriceMove) => getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap),
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
-      strokeWidth: stroke,
+      strokeWidth: (d: PriceMove) => rangLineStroke(d, _stroke),
       strokeOpacity: strokeOp,
     })
   }
