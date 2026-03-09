@@ -19,3 +19,11 @@ export const POLARITY_COLORS = {
 } as const
 
 export type PolarityColorKey = keyof typeof POLARITY_COLORS
+
+/** Colors for reference level boundary lines */
+export const LEVEL_COLORS = {
+  Accroissement: '#29B6F6',  // Light blue - growth/extension boundary
+  Cassure: '#FF9800',         // Orange - invalidation/breakage boundary
+} as const
+
+export type LevelColorKey = keyof typeof LEVEL_COLORS

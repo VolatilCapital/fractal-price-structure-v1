@@ -1,8 +1,8 @@
 export type { VisualizationState } from './VisualizationState.js'
 export { createVisualizationState, setCursorIndex } from './VisualizationState.js'
 
-export type { StateColorKey, PolarityColorKey } from './StateColors.js'
-export { STATE_COLORS, POLARITY_COLORS } from './StateColors.js'
+export type { StateColorKey, PolarityColorKey, LevelColorKey } from './StateColors.js'
+export { STATE_COLORS, POLARITY_COLORS, LEVEL_COLORS } from './StateColors.js'
 
 export type { PlaybackState, PlaybackSpeed } from './PlaybackState.js'
 export {

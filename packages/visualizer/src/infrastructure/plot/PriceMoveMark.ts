@@ -8,7 +8,7 @@ import type { PriceMove } from '@fractal-price-structure/core'
 import { PriceMoveState, Polarity } from '@fractal-price-structure/core'
 import * as Plot from '@observablehq/plot'
 import type { FilterState } from '../../domain/index.js'
-import { STATE_COLORS, POLARITY_COLORS } from '../../domain/index.js'
+import { STATE_COLORS, POLARITY_COLORS, LEVEL_COLORS } from '../../domain/index.js'
 
 export interface PriceMoveMarkOptions {
   moves: PriceMove[]
@@ -33,6 +33,24 @@ const DEFAULT_STROKE_WIDTH = 1
  */
 export function getStateColor(state: PriceMoveState): string {
   return STATE_COLOR_MAP[state] ?? STATE_COLORS.Archived
+}
+
+/**
+ * Get color for the high boundary line of a Reference move.
+ * - Up move: high = accroissement (extension side)
+ * - Down move: high = cassure (invalidation side)
+ */
+export function getHighLineColor(polarity: Polarity): string {
+  return polarity === Polarity.Up ? LEVEL_COLORS.Accroissement : LEVEL_COLORS.Cassure
+}
+
+/**
+ * Get color for the low boundary line of a Reference move.
+ * - Up move: low = cassure (invalidation side)
+ * - Down move: low = accroissement (extension side)
+ */
+export function getLowLineColor(polarity: Polarity): string {
+  return polarity === Polarity.Up ? LEVEL_COLORS.Cassure : LEVEL_COLORS.Accroissement
 }
 
 /**
@@ -163,9 +181,9 @@ function createRectMarks(params: StateGroupedMoves) {
     strokeWidth,
   } = params
 
-  const marks: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.text>)[] = []
+  const marks: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.ruleY> | ReturnType<typeof Plot.text>)[] = []
 
-  // Helper to create rect mark
+  // Helper to create rect mark (for Growing and Archived moves)
   const createRectMark = (
     moves: PriceMove[],
     opacity: number,
@@ -184,6 +202,48 @@ function createRectMarks(params: StateGroupedMoves) {
       strokeWidth: stroke,
       strokeOpacity: strokeOp,
     })
+  }
+
+  // Helper to create Reference level marks:
+  // - Light fill background (direction indicator)
+  // - High horizontal line (accroissement or cassure depending on polarity)
+  // - Low horizontal line (cassure or accroissement depending on polarity)
+  const createReferenceLevelMarks = (moves: PriceMove[], strokeOp: number = 1) => {
+    if (moves.length === 0) return []
+    const result: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.ruleY>)[] = []
+
+    // Background fill: polarity direction color, very low opacity
+    result.push(Plot.rect(moves, {
+      x1: (d: PriceMove) => d.timeRange.start,
+      x2: (d: PriceMove) => d.timeRange.end,
+      y1: (d: PriceMove) => d.priceRange.low,
+      y2: (d: PriceMove) => d.priceRange.high,
+      fill: (d: PriceMove) => getPolarityColor(d.polarity),
+      fillOpacity: 0.08 * strokeOp,
+      stroke: null,
+    }))
+
+    // High boundary line
+    result.push(Plot.ruleY(moves, {
+      y: (d: PriceMove) => d.priceRange.high,
+      x1: (d: PriceMove) => d.timeRange.start,
+      x2: (d: PriceMove) => d.timeRange.end,
+      stroke: (d: PriceMove) => getHighLineColor(d.polarity),
+      strokeWidth: 2,
+      strokeOpacity: strokeOp,
+    }))
+
+    // Low boundary line
+    result.push(Plot.ruleY(moves, {
+      y: (d: PriceMove) => d.priceRange.low,
+      x1: (d: PriceMove) => d.timeRange.start,
+      x2: (d: PriceMove) => d.timeRange.end,
+      stroke: (d: PriceMove) => getLowLineColor(d.polarity),
+      strokeWidth: 2,
+      strokeOpacity: strokeOp,
+    }))
+
+    return result
   }
 
   // Helper to create text labels showing Rang and Degré
@@ -207,14 +267,16 @@ function createRectMarks(params: StateGroupedMoves) {
   }
 
   // Active moves - render in order: Growing (bottom), Archived, Reference (top)
-  // Reference moves get thicker stroke (2px) to stand out when nested inside Growing moves
   const growingMark = createRectMark(activeGrowing, fillOpacity)
   const archivedMark = createRectMark(activeArchived, fillOpacity)
-  const referenceMark = createRectMark(activeReference, fillOpacity, 1, 2)
 
   if (growingMark) marks.push(growingMark)
   if (archivedMark) marks.push(archivedMark)
-  if (referenceMark) marks.push(referenceMark)
+
+  // Reference moves: two horizontal boundary lines + light background
+  for (const m of createReferenceLevelMarks(activeReference)) {
+    marks.push(m)
+  }
 
   // Text labels for active moves
   const allActive = [...activeGrowing, ...activeReference, ...activeArchived]
@@ -224,11 +286,13 @@ function createRectMarks(params: StateGroupedMoves) {
   // Future moves - same order with reduced opacity
   const futureGrowingMark = createRectMark(futureGrowing, fillOpacity * 0.3, 0.3)
   const futureArchivedMark = createRectMark(futureArchived, fillOpacity * 0.3, 0.3)
-  const futureReferenceMark = createRectMark(futureReference, fillOpacity * 0.3, 0.3, 2)
 
   if (futureGrowingMark) marks.push(futureGrowingMark)
   if (futureArchivedMark) marks.push(futureArchivedMark)
-  if (futureReferenceMark) marks.push(futureReferenceMark)
+
+  for (const m of createReferenceLevelMarks(futureReference, 0.3)) {
+    marks.push(m)
+  }
 
   return marks
 }
