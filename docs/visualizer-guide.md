@@ -1,4 +1,6 @@
-# Charte Couleurs — Fractal Visualizer
+# Guide du Fractal Visualizer
+
+## Charte Couleurs
 
 ## Principe fondamental
 
