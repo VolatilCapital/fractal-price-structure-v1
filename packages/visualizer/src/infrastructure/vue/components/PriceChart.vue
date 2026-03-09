@@ -3,7 +3,7 @@
  * Main price chart component using Observable Plot.
  * Renders candlesticks, price moves, and time cursor.
  */
-import { ref, watchEffect, onUnmounted, computed } from 'vue'
+import { ref, watchEffect, onMounted, onUnmounted, computed } from 'vue'
 import * as Plot from '@observablehq/plot'
 import type { Candle, FractalEngine } from '@fractal-price-structure/core'
 import type { FilterState } from '../../../domain/index.js'
@@ -23,6 +23,17 @@ const props = defineProps<{
 }>()
 
 const chartContainer = ref<HTMLDivElement>()
+const containerHeight = ref(500)
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  if (!chartContainer.value) return
+  resizeObserver = new ResizeObserver((entries) => {
+    const h = entries[0]?.contentRect.height
+    if (h && h > 100) containerHeight.value = h
+  })
+  resizeObserver.observe(chartContainer.value)
+})
 
 // Get all moves from engine
 const allMoves = computed(() => {
@@ -59,7 +70,7 @@ watchEffect(() => {
   // Create chart
   const chart = Plot.plot({
     width: chartContainer.value.clientWidth || 1200,
-    height: 500,
+    height: containerHeight.value,
     marginLeft: 60,
     marginRight: 20,
     marginTop: 20,
@@ -70,7 +81,10 @@ watchEffect(() => {
       label: null,
     },
     y: {
-      domain: [dataRange.priceMin * 0.99, dataRange.priceMax * 1.01],
+      domain: (() => {
+        const padding = (dataRange.priceMax - dataRange.priceMin) * 0.1
+        return [dataRange.priceMin - padding, dataRange.priceMax + padding]
+      })(),
       label: 'Price',
       grid: true,
     },
@@ -94,6 +108,7 @@ watchEffect(() => {
 
 // Cleanup on unmount
 onUnmounted(() => {
+  resizeObserver?.disconnect()
   if (chartContainer.value) {
     chartContainer.value.innerHTML = ''
   }
@@ -107,6 +122,6 @@ onUnmounted(() => {
 <style scoped>
 .price-chart {
   width: 100%;
-  min-height: 500px;
+  height: 100%;
 }
 </style>

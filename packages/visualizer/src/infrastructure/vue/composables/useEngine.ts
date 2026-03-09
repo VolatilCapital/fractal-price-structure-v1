@@ -20,11 +20,11 @@ export function useEngine() {
     error.value = null
 
     try {
-      const loader = new JsonCandleLoader('/fixtures/btcusdt-1d.json')
+      const loader = new JsonCandleLoader('/fixtures/eurusd-5m.json')
       const result = await loadCandles({
         candleLoader: loader,
         engineFactory: () => new FractalEngineClass({ deterministic: true }),
-        maxCandles: 50,
+        maxCandles: 222,
       })
 
       candles.value = result.candles

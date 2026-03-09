@@ -19,3 +19,6 @@ dist/
 
 resources/
 packages/visualizer/dist-web/
+
+# Screenshots (captures d'écran non versionnées)
+screenshots/

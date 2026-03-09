@@ -1,16 +1,22 @@
 import type { PriceMove } from "../../domain/price-move/PriceMove.js"
+import type { PriceMoveRepositoryFactory } from "../ports/PriceMoveRepositoryFactory.js"
 import { FractalPriceMoveBuilder } from "./FractalPriceMoveBuilder.js"
 
 /**
  * Construit récursivement plusieurs couches fractales de PriceMove.
  * @param initialMoves - Liste de PriceMove de niveau 0 (souvent issus des bougies).
+ * @param repoFactory - Factory pour créer les repositories (injectée depuis l'infrastructure).
  * @param maxDepth - Nombre de niveaux fractals à construire.
  * @returns Tableau de couches fractales, chaque niveau étant une liste de PriceMove.
  */
-export function buildFractalLevels(initialMoves: PriceMove[], maxDepth = 5): PriceMove[][] {
+export function buildFractalLevels(
+    initialMoves: PriceMove[],
+    repoFactory: PriceMoveRepositoryFactory,
+    maxDepth = 5
+): PriceMove[][] {
     const layers: PriceMove[][] = []
     let current = initialMoves
-    const builder = new FractalPriceMoveBuilder()
+    const builder = new FractalPriceMoveBuilder(repoFactory)
 
     for (let i = 0; i < maxDepth; i++) {
         if (current.length <= 1) break
