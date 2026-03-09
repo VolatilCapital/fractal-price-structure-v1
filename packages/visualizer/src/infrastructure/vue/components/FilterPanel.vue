@@ -8,6 +8,7 @@ import { STATE_COLORS } from '../../../domain/index.js'
 
 const props = defineProps<{
   filterState: FilterState
+  maxAvailableRang?: number
 }>()
 
 const emit = defineEmits<{
@@ -18,6 +19,7 @@ const emit = defineEmits<{
   setShowArchived: [show: boolean]
   setShowUndefinedDegre: [show: boolean]
   setDisplayMode: [mode: DisplayMode]
+  setMaxRang: [maxRang: number | undefined]
 }>()
 
 // Available degre levels (0-5 typically)
@@ -162,6 +164,28 @@ function getDegreColor(degre: number): string {
       hide-details
       data-testid="switch-sub-structures"
     />
+
+    <!-- Rang filter -->
+    <v-divider class="my-4" />
+
+    <div class="text-caption text-grey mb-2">Rang maximum</div>
+    <div class="d-flex align-center ga-2">
+      <v-slider
+        :model-value="filterState.maxRang ?? (maxAvailableRang ?? 25)"
+        @update:model-value="emit('setMaxRang', $event === (maxAvailableRang ?? 25) ? undefined : $event as number)"
+        :min="0"
+        :max="maxAvailableRang ?? 25"
+        :step="1"
+        density="compact"
+        hide-details
+        thumb-label
+        color="primary"
+        data-testid="slider-max-rang"
+      />
+      <span class="text-caption" style="min-width: 32px">
+        {{ filterState.maxRang ?? 'All' }}
+      </span>
+    </div>
 
     <!-- Info -->
     <v-divider class="my-4" />

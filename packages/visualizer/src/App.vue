@@ -19,11 +19,17 @@ const layersOpen = ref(false)
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
 const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo } = usePlayback(candles)
-const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setDisplayMode } = useFilters()
+const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setDisplayMode, setMaxRang } = useFilters()
 
 // Computed
 const cursorTime = computed(() => visualizationState.value.cursorTime)
 const cursorIndex = computed(() => visualizationState.value.cursorIndex)
+
+// Max available rang from engine
+const maxAvailableRang = computed(() => {
+  if (!engine.value) return 0
+  return engine.value.getLayerCount() - 1
+})
 
 // Current candle info
 const currentCandle = computed(() => {
@@ -174,6 +180,7 @@ if (import.meta.env.DEV) {
     <v-navigation-drawer v-model="drawer" width="300">
       <FilterPanel
         :filter-state="filterState"
+        :max-available-rang="maxAvailableRang"
         @toggle-degre="toggleDegre"
         @set-show-sub-structures="setShowSubStructures"
         @set-show-growing="setShowGrowing"
@@ -181,6 +188,7 @@ if (import.meta.env.DEV) {
         @set-show-archived="setShowArchived"
         @set-show-undefined-degre="setShowUndefinedDegre"
         @set-display-mode="setDisplayMode"
+        @set-max-rang="setMaxRang"
       />
     </v-navigation-drawer>
 

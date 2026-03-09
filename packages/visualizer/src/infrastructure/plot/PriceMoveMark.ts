@@ -121,6 +121,11 @@ export function filterMoves(moves: PriceMove[], filterState: FilterState): Price
       return false
     }
 
+    // Filter by maxRang
+    if (filterState.maxRang !== undefined && move.rang > filterState.maxRang) {
+      return false
+    }
+
     return true
   })
 }

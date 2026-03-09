@@ -11,6 +11,7 @@ import {
   setShowArchived as setShowArchivedAction,
   setShowUndefinedDegre as setShowUndefinedDegreAction,
   setDisplayMode as setDisplayModeAction,
+  setMaxRang as setMaxRangAction,
   serializeFilterState,
   deserializeFilterState,
 } from '../../../domain/index.js'
@@ -73,6 +74,10 @@ export function useFilters() {
     filterState.value = setDisplayModeAction(filterState.value, mode)
   }
 
+  function setMaxRang(maxRang: number | undefined) {
+    filterState.value = setMaxRangAction(filterState.value, maxRang)
+  }
+
   return {
     filterState,
     toggleDegre,
@@ -82,5 +87,6 @@ export function useFilters() {
     setShowArchived,
     setShowUndefinedDegre,
     setDisplayMode,
+    setMaxRang,
   }
 }
