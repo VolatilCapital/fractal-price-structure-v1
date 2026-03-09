@@ -253,6 +253,7 @@ if (import.meta.env.DEV) {
             :cursor-time="cursorTime"
             :cursor-index="cursorIndex"
             :filter-state="filterState"
+            :events="events"
           />
         </div>
 

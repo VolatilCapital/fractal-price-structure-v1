@@ -18,6 +18,11 @@ export {
   type FractalLayersMarkOptions,
 } from './FractalLayersMark.js'
 export {
+  createEventHighlightMarks,
+  getActiveEvents,
+  type EventHighlightOptions,
+} from './EventHighlightMark.js'
+export {
   getVisibleCandles,
   getVisibleMoves,
   getOptimizationLevel,

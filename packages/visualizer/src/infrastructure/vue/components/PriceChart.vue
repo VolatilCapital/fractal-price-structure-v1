@@ -7,12 +7,13 @@
 import { ref, watchEffect, onMounted, onUnmounted, computed } from 'vue'
 import * as Plot from '@observablehq/plot'
 import type { Candle, FractalEngine } from '@fractal-price-structure/core'
-import type { FilterState, ZoomState } from '../../../domain/index.js'
+import type { FilterState, ZoomState, StructureEvent } from '../../../domain/index.js'
 import { isZoomed } from '../../../domain/index.js'
 import {
   createCandlestickMarks,
   createPriceMoveMarks,
   createParentChildLinkMarks,
+  createEventHighlightMarks,
   filterMoves,
   createTimeCursorMark,
   getFullDataRange,
@@ -25,6 +26,7 @@ const props = defineProps<{
   cursorTime: number
   cursorIndex: number
   filterState: FilterState
+  events: StructureEvent[]
 }>()
 
 const chartContainer = ref<HTMLDivElement>()
@@ -121,6 +123,12 @@ watchEffect(() => {
       )
     : []
 
+  // Event highlights (flash on structural events at cursor)
+  const eventHighlightMarks = createEventHighlightMarks({
+    events: props.events,
+    cursorTime: props.cursorTime,
+  })
+
   // Create chart
   const chart = Plot.plot({
     width: chartContainer.value.clientWidth || 1200,
@@ -148,6 +156,8 @@ watchEffect(() => {
       ...parentChildMarks,
       // Candlesticks
       ...candlestickMarks,
+      // Event highlights (on top of candles for visibility)
+      ...eventHighlightMarks,
       // Time cursor
       cursorMark,
     ],
