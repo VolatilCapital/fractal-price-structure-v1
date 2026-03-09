@@ -22,3 +22,7 @@ packages/visualizer/dist-web/
 
 # Screenshots (captures d'écran non versionnées)
 screenshots/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+test-results/
