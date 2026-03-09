@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
+import { useTheme } from 'vuetify'
 import { useEngine } from './infrastructure/vue/composables/useEngine.js'
 import { usePlayback } from './infrastructure/vue/composables/usePlayback.js'
 import { useFilters } from './infrastructure/vue/composables/useFilters.js'
@@ -15,6 +16,13 @@ import { DATA_SOURCES } from './domain/index.js'
 const drawer = ref(true)
 const eventsOpen = ref(false)
 const layersOpen = ref(false)
+
+// Theme toggle
+const theme = useTheme()
+const isDark = computed(() => theme.global.current.value.dark)
+function toggleTheme() {
+  theme.global.name.value = isDark.value ? 'light' : 'dark'
+}
 
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
@@ -177,6 +185,15 @@ if (import.meta.env.DEV) {
       <span class="text-body-2 mr-4" data-testid="candle-counter">
         Candle {{ cursorIndex + 1 }} / {{ candles.length }}
       </span>
+      <v-btn
+        :icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
+        variant="text"
+        density="compact"
+        class="mr-1"
+        @click="toggleTheme"
+        :title="isDark ? 'Thème clair' : 'Thème sombre'"
+        data-testid="theme-toggle-btn"
+      />
       <v-btn
         :icon="layersOpen ? 'mdi-layers' : 'mdi-layers-outline'"
         variant="text"
