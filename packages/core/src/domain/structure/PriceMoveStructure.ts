@@ -92,10 +92,11 @@ export class PriceMoveStructure {
 
       if (result === "extended-boundary") {
         // True extension: parent range was updated
-        // New move is NOT added as sub-structure - it extended the parent
+        // M becomes a composante of S (protocole section 4.1)
         this.logger.debug(
           `[EXTEND] Move ${deepestGrowing.id.toString().slice(0, 8)} extended (boundary broken)`
         )
+        deepestGrowing.addSubStructure(priceMove)
         this.repo.save(priceMove)
         return
       }

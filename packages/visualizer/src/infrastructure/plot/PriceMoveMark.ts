@@ -4,7 +4,7 @@
  * - Rectangle: boxes showing high/low price range
  * - Line: diagonal lines showing price movement direction
  */
-import type { PriceMove } from '@fractal-price-structure/core'
+import type { PriceMove, Candle } from '@fractal-price-structure/core'
 import { PriceMoveState, Polarity } from '@fractal-price-structure/core'
 import * as Plot from '@observablehq/plot'
 import type { FilterState } from '../../domain/index.js'
@@ -14,8 +14,34 @@ export interface PriceMoveMarkOptions {
   moves: PriceMove[]
   cursorTime: number
   filterState: FilterState
+  candles: Candle[]
   fillOpacity?: number
   strokeWidth?: number
+}
+
+/**
+ * Get the directional boundary of a Growing move at cursor time.
+ * For Up moves: the progressive high (grows with each extension).
+ * For Down moves: the progressive low (grows downward with each extension).
+ * Uses referenceLevels for exact historical reconstruction.
+ */
+function getGrowingMoveBoundaryAtTime(
+  move: PriceMove,
+  cursorTime: number,
+  candleMap: Map<number, Candle>
+): number {
+  // Find all extensions that occurred by cursor time
+  const pastExtensions = move.referenceLevels.filter(r => r.timestamp <= cursorTime)
+  if (pastExtensions.length > 0) {
+    return pastExtensions[pastExtensions.length - 1].price
+  }
+  // Before first extension: use initial candle's directional boundary
+  const initialCandle = candleMap.get(move.timeRange.start)
+  if (initialCandle) {
+    return move.polarity === Polarity.Up ? initialCandle.high : initialCandle.low
+  }
+  // Fallback to final boundary
+  return move.polarity === Polarity.Up ? move.priceRange.high : move.priceRange.low
 }
 
 // Map PriceMoveState enum to STATE_COLORS keys
@@ -108,9 +134,13 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
     moves,
     cursorTime,
     filterState,
+    candles,
     fillOpacity = DEFAULT_FILL_OPACITY,
     strokeWidth = DEFAULT_STROKE_WIDTH,
   } = options
+
+  // Build candle lookup map for O(1) access by openTime
+  const candleMap = new Map(candles.map(c => [c.openTime, c]))
 
   // Filter moves based on filter state
   const filteredMoves = filterMoves(moves, filterState)
@@ -140,6 +170,8 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
       futureReference,
       futureArchived,
       strokeWidth,
+      cursorTime,
+      candleMap,
     })
   }
 
@@ -152,6 +184,8 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
     futureArchived,
     fillOpacity,
     strokeWidth,
+    cursorTime,
+    candleMap,
   })
 }
 
@@ -164,6 +198,8 @@ interface StateGroupedMoves {
   futureArchived: PriceMove[]
   fillOpacity?: number
   strokeWidth: number
+  cursorTime: number
+  candleMap: Map<number, Candle>
 }
 
 /**
@@ -179,11 +215,13 @@ function createRectMarks(params: StateGroupedMoves) {
     futureArchived,
     fillOpacity = DEFAULT_FILL_OPACITY,
     strokeWidth,
+    cursorTime,
+    candleMap,
   } = params
 
   const marks: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.ruleY> | ReturnType<typeof Plot.text>)[] = []
 
-  // Helper to create rect mark (for Growing and Archived moves)
+  // Helper to create rect mark for non-Growing moves (full extent)
   const createRectMark = (
     moves: PriceMove[],
     opacity: number,
@@ -196,6 +234,34 @@ function createRectMarks(params: StateGroupedMoves) {
       x2: (d: PriceMove) => d.timeRange.end,
       y1: (d: PriceMove) => d.priceRange.low,
       y2: (d: PriceMove) => d.priceRange.high,
+      fill: (d: PriceMove) => getPolarityColor(d.polarity),
+      fillOpacity: opacity,
+      stroke: (d: PriceMove) => getPolarityColor(d.polarity),
+      strokeWidth: stroke,
+      strokeOpacity: strokeOp,
+    })
+  }
+
+  // Helper to create progressive rect mark for active Growing moves.
+  // Clips x2 to cursorTime and animates the directional boundary using referenceLevels.
+  const createProgressiveRectMark = (
+    moves: PriceMove[],
+    opacity: number,
+    strokeOp: number = 1,
+    stroke: number = strokeWidth
+  ) => {
+    if (moves.length === 0) return null
+    return Plot.rect(moves, {
+      x1: (d: PriceMove) => d.timeRange.start,
+      x2: (d: PriceMove) => Math.min(d.timeRange.end, cursorTime),
+      y1: (d: PriceMove) =>
+        d.polarity === Polarity.Up
+          ? d.priceRange.low
+          : getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap),
+      y2: (d: PriceMove) =>
+        d.polarity === Polarity.Up
+          ? getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap)
+          : d.priceRange.high,
       fill: (d: PriceMove) => getPolarityColor(d.polarity),
       fillOpacity: opacity,
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
@@ -246,12 +312,26 @@ function createRectMarks(params: StateGroupedMoves) {
     return result
   }
 
-  // Helper to create text labels showing Rang and Degré
+  // Helper to create text labels showing Rang and Degré.
+  // For Growing moves, centers on the visible (clipped) extent.
   const createTextMark = (moves: PriceMove[], opacity: number = 1) => {
     if (moves.length === 0) return null
     return Plot.text(moves, {
-      x: (d: PriceMove) => (d.timeRange.start + d.timeRange.end) / 2,
-      y: (d: PriceMove) => (d.priceRange.low + d.priceRange.high) / 2,
+      x: (d: PriceMove) => {
+        const x2 = d.state === PriceMoveState.Growing
+          ? Math.min(d.timeRange.end, cursorTime)
+          : d.timeRange.end
+        return (d.timeRange.start + x2) / 2
+      },
+      y: (d: PriceMove) => {
+        const y1 = d.state === PriceMoveState.Growing && d.polarity === Polarity.Down
+          ? getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap)
+          : d.priceRange.low
+        const y2 = d.state === PriceMoveState.Growing && d.polarity === Polarity.Up
+          ? getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap)
+          : d.priceRange.high
+        return (y1 + y2) / 2
+      },
       text: (d: PriceMove) => {
         const rang = `R${d.rang}`
         const degre = d.degre !== undefined ? ` D${d.degre}` : ''
@@ -267,7 +347,7 @@ function createRectMarks(params: StateGroupedMoves) {
   }
 
   // Active moves - render in order: Growing (bottom), Archived, Reference (top)
-  const growingMark = createRectMark(activeGrowing, fillOpacity)
+  const growingMark = createProgressiveRectMark(activeGrowing, fillOpacity)
   const archivedMark = createRectMark(activeArchived, fillOpacity)
 
   if (growingMark) marks.push(growingMark)
@@ -312,11 +392,13 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
     futureReference,
     futureArchived,
     strokeWidth,
+    cursorTime,
+    candleMap,
   } = params
 
   const marks: ReturnType<typeof Plot.link>[] = []
 
-  // Helper to create line mark using Plot.link
+  // Helper to create line mark for non-Growing moves (full extent)
   const createLineMark = (
     moves: PriceMove[],
     strokeOp: number = 1,
@@ -334,9 +416,28 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
     })
   }
 
+  // Helper to create progressive line mark for active Growing moves.
+  // Clips x2 to cursorTime and animates the endpoint using referenceLevels.
+  const createProgressiveLineMark = (
+    moves: PriceMove[],
+    strokeOp: number = 1,
+    stroke: number = strokeWidth
+  ) => {
+    if (moves.length === 0) return null
+    return Plot.link(moves, {
+      x1: (d: PriceMove) => d.timeRange.start,
+      y1: (d: PriceMove) => d.polarity === Polarity.Up ? d.priceRange.low : d.priceRange.high,
+      x2: (d: PriceMove) => Math.min(d.timeRange.end, cursorTime),
+      y2: (d: PriceMove) => getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap),
+      stroke: (d: PriceMove) => getPolarityColor(d.polarity),
+      strokeWidth: stroke,
+      strokeOpacity: strokeOp,
+    })
+  }
+
   // Active moves - render in order: Growing (bottom), Archived, Reference (top)
   // Reference moves get thicker stroke (2px) to stand out
-  const growingMark = createLineMark(activeGrowing, 1, strokeWidth)
+  const growingMark = createProgressiveLineMark(activeGrowing, 1, strokeWidth)
   const archivedMark = createLineMark(activeArchived, 1, strokeWidth)
   const referenceMark = createLineMark(activeReference, 1, strokeWidth + 1)
 

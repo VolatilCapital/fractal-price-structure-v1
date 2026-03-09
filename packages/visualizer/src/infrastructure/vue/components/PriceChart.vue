@@ -61,6 +61,7 @@ watchEffect(() => {
     moves: allMoves.value,
     cursorTime: props.cursorTime,
     filterState: props.filterState,
+    candles: props.candles,
   })
 
   const cursorMark = createTimeCursorMark({
