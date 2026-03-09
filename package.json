@@ -15,7 +15,9 @@
     "clean": "pnpm -r clean",
     "dev": "pnpm --filter @fractal-price-structure/core dev",
     "visualizer:dev": "pnpm --filter @fractal-price-structure/visualizer dev",
-    "visualizer:build": "pnpm --filter @fractal-price-structure/visualizer build:web"
+    "visualizer:build": "pnpm --filter @fractal-price-structure/visualizer build:web",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "keywords": [
     "fractal",
@@ -28,6 +30,7 @@
   "description": "A TypeScript library for building generation-based fractal price structures from candlestick data",
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
+    "@playwright/test": "^1.58.2",
     "@types/node": "^24.9.1",
     "@vitest/coverage-v8": "^4.0.18",
     "rimraf": "^6.1.3",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useEngine } from './infrastructure/vue/composables/useEngine.js'
 import { usePlayback } from './infrastructure/vue/composables/usePlayback.js'
 import { useFilters } from './infrastructure/vue/composables/useFilters.js'
@@ -80,20 +80,46 @@ function handleKeydown(event: KeyboardEvent) {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+
+// Expose state and controls for E2E automation (dev only)
+if (import.meta.env.DEV) {
+  watch(
+    [cursorIndex, cursorTime, playbackState, candles],
+    () => {
+      ;(window as Window & { __visualizer__?: unknown }).__visualizer__ = {
+        get cursorIndex() { return cursorIndex.value },
+        get cursorTime() { return cursorTime.value },
+        get totalCandles() { return candles.value.length },
+        get playbackMode() { return playbackState.value.mode },
+        play,
+        pause,
+        stop,
+        stepForward,
+        stepBackward,
+        seekTo,
+      }
+    },
+    { immediate: true },
+  )
+}
 </script>
 
 <template>
-  <v-app>
+  <v-app data-testid="app">
     <!-- App Bar -->
-    <v-app-bar color="primary" density="compact">
-      <v-app-bar-nav-icon @click="drawer = !drawer" />
+    <v-app-bar color="primary" density="compact" data-testid="app-bar">
+      <v-app-bar-nav-icon @click="drawer = !drawer" data-testid="nav-toggle" />
       <v-app-bar-title>
         <v-icon icon="mdi-chart-line" class="mr-2" />
         Fractal Visualizer
       </v-app-bar-title>
       <v-spacer />
-      <span class="text-body-2 mr-4">{{ currentDate }}</span>
-      <span class="text-body-2 mr-4">
+      <span class="text-body-2 mr-4" data-testid="current-date">{{ currentDate }}</span>
+      <span class="text-body-2 mr-4" data-testid="candle-counter">
         Candle {{ cursorIndex + 1 }} / {{ candles.length }}
       </span>
       <v-btn
@@ -102,6 +128,7 @@ onMounted(() => {
         density="compact"
         class="mr-2"
         @click="eventsOpen = !eventsOpen"
+        data-testid="events-toggle-btn"
       />
     </v-app-bar>
 
@@ -122,7 +149,7 @@ onMounted(() => {
     <!-- Main Content -->
     <v-main class="main-layout">
       <!-- Loading State -->
-      <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
+      <div v-if="isLoading" class="fill-height d-flex align-center justify-center" data-testid="loading-indicator">
         <div class="text-center">
           <v-progress-circular indeterminate color="primary" size="64" />
           <p class="mt-4">Loading candles...</p>
@@ -130,7 +157,7 @@ onMounted(() => {
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="fill-height d-flex align-center justify-center pa-4">
+      <div v-else-if="error" class="fill-height d-flex align-center justify-center pa-4" data-testid="error-state">
         <v-alert type="error" prominent>
           <v-alert-title>Error loading data</v-alert-title>
           {{ error }}

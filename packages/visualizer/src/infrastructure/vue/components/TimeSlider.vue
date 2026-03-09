@@ -40,9 +40,9 @@ const endDate = computed(() => formatDate(props.totalCandles - 1))
 </script>
 
 <template>
-  <v-card elevation="0" class="pa-2">
+  <v-card elevation="0" class="pa-2" data-testid="time-slider">
     <div class="d-flex align-center">
-      <span class="text-caption mr-2">{{ startDate }}</span>
+      <span class="text-caption mr-2" data-testid="time-slider-start">{{ startDate }}</span>
       <v-slider
         v-model="sliderValue"
         :min="0"
@@ -53,12 +53,13 @@ const endDate = computed(() => formatDate(props.totalCandles - 1))
         color="primary"
         track-color="grey-lighten-3"
         class="flex-grow-1"
+        data-testid="time-slider-input"
       >
         <template #thumb-label="{ modelValue }">
           {{ formatDate(modelValue as number) }}
         </template>
       </v-slider>
-      <span class="text-caption ml-2">{{ endDate }}</span>
+      <span class="text-caption ml-2" data-testid="time-slider-end">{{ endDate }}</span>
     </div>
   </v-card>
 </template>

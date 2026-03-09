@@ -116,7 +116,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="chartContainer" class="price-chart"></div>
+  <div ref="chartContainer" class="price-chart" data-testid="price-chart"></div>
 </template>
 
 <style scoped>

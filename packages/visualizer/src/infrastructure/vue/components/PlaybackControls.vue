@@ -34,12 +34,13 @@ const speedLabel = computed(() => PLAYBACK_SPEEDS[props.playbackState.speedIndex
         :disabled="isPlaying"
         @click="emit('stepBackward')"
         aria-label="Step backward"
+        data-testid="btn-step-backward"
       >
         <v-icon>mdi-skip-previous</v-icon>
       </v-btn>
 
       <!-- Stop -->
-      <v-btn icon variant="text" @click="emit('stop')" aria-label="Stop">
+      <v-btn icon variant="text" @click="emit('stop')" aria-label="Stop" data-testid="btn-stop">
         <v-icon>mdi-stop</v-icon>
       </v-btn>
 
@@ -51,6 +52,7 @@ const speedLabel = computed(() => PLAYBACK_SPEEDS[props.playbackState.speedIndex
         size="large"
         @click="isPlaying ? emit('pause') : emit('play')"
         :aria-label="isPlaying ? 'Pause' : 'Play'"
+        data-testid="btn-play-pause"
       >
         <v-icon>{{ isPlaying ? 'mdi-pause' : 'mdi-play' }}</v-icon>
       </v-btn>
@@ -62,12 +64,13 @@ const speedLabel = computed(() => PLAYBACK_SPEEDS[props.playbackState.speedIndex
         :disabled="isPlaying"
         @click="emit('stepForward')"
         aria-label="Step forward"
+        data-testid="btn-step-forward"
       >
         <v-icon>mdi-skip-next</v-icon>
       </v-btn>
 
       <!-- Speed indicator -->
-      <v-chip size="small" variant="outlined" class="ml-2">
+      <v-chip size="small" variant="outlined" class="ml-2" data-testid="speed-chip">
         {{ speedLabel }}
       </v-chip>
     </div>

@@ -43,7 +43,7 @@ function getDegreColor(degre: number): string {
 </script>
 
 <template>
-  <div class="pa-4">
+  <div class="pa-4" data-testid="filter-panel">
     <h3 class="text-subtitle-1 mb-3">
       <v-icon icon="mdi-filter" class="mr-2" />
       Filtres
@@ -58,12 +58,13 @@ function getDegreColor(degre: number): string {
         mandatory
         density="compact"
         color="primary"
+        data-testid="display-mode-toggle"
       >
-        <v-btn value="rectangle" size="small">
+        <v-btn value="rectangle" size="small" data-testid="display-mode-rectangle">
           <v-icon icon="mdi-rectangle-outline" class="mr-1" />
           Rectangle
         </v-btn>
-        <v-btn value="line" size="small">
+        <v-btn value="line" size="small" data-testid="display-mode-line">
           <v-icon icon="mdi-chart-line" class="mr-1" />
           Ligne
         </v-btn>
@@ -84,6 +85,7 @@ function getDegreColor(degre: number): string {
           size="small"
           @click="emit('toggleDegre', degre)"
           class="cursor-pointer"
+          :data-testid="`chip-degre-${degre}`"
         >
           D{{ degre }}
         </v-chip>
@@ -102,6 +104,7 @@ function getDegreColor(degre: number): string {
       density="compact"
       hide-details
       class="mb-1"
+      data-testid="switch-growing"
     >
       <template #label>
         <span class="d-flex align-center">
@@ -118,6 +121,7 @@ function getDegreColor(degre: number): string {
       density="compact"
       hide-details
       class="mb-1"
+      data-testid="switch-reference"
     >
       <template #label>
         <span class="d-flex align-center">
@@ -134,6 +138,7 @@ function getDegreColor(degre: number): string {
       density="compact"
       hide-details
       class="mb-2"
+      data-testid="switch-archived"
     >
       <template #label>
         <span class="d-flex align-center">
@@ -155,6 +160,7 @@ function getDegreColor(degre: number): string {
       color="primary"
       density="compact"
       hide-details
+      data-testid="switch-sub-structures"
     />
 
     <!-- Info -->
