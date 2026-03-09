@@ -136,3 +136,40 @@ Le degré n'est affiché que dans les labels texte et les tooltips.
 ### Tooltips
 
 Survol d'un move affiche : Rang, Degré, Polarité, État, Amplitude %, Timestamps, Sous-structures.
+
+### Hover interactif
+
+Au survol d'un move sur le graphique :
+- Le move survolé est mis en surbrillance (brightness + épaisseur)
+- Son parent et ses enfants directs sont aussi mis en évidence
+- Tous les autres moves sont atténués (opacity 0.2)
+- Aucun re-render Vue : pure manipulation DOM via CSS classes
+
+### Mini-map
+
+Quand le graphique est zoomé, une mini-carte apparaît en bas à droite :
+- Courbe de prix complète en miniature
+- Rectangle blanc indiquant la zone visible
+- Cliquer sur la mini-map déplace la vue principale
+
+### Stack fractale
+
+Panneau drawer droit (bouton arbre dans la barre d'application) :
+- Affiche toutes les structures actives au moment du curseur
+- Organisées par rang (plus profond en haut)
+- Colonnes : Rang, Direction, Prix, Amplitude, Niveau de référence, État, Sous-structures, Degré
+- Résumé en en-tête : total, growing, reference, rang max
+- Utilise `engine.getStack(timestamp)` pour le point-in-time query
+
+### Thème dark/light
+
+Bouton soleil/lune dans la barre d'application pour basculer entre thème sombre et clair.
+
+### URL state
+
+L'état du visualiseur est synchronisé dans les query params de l'URL :
+- `source` : jeu de données actif
+- `cursor` : index de la bougie courante
+- `stack`, `layers`, `events` : panneaux ouverts (1 = ouvert)
+
+Exemple : `?source=eurusd-5m&cursor=150&stack=1`
