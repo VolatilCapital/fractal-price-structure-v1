@@ -224,7 +224,7 @@ if (import.meta.env.DEV) {
         </div>
 
         <!-- Chart fills remaining space -->
-        <div class="chart-area flex-grow-1">
+        <div :class="['chart-area', 'flex-grow-1', { 'chart-area--with-layers': layersOpen }]">
           <PriceChart
             :candles="candles"
             :engine="engine"
@@ -298,17 +298,21 @@ html, body {
 
 .chart-area {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 200px;
   overflow: hidden;
 }
 
+.chart-area--with-layers {
+  flex: 3 1 0;
+}
+
 .layers-panel {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   border-top: 1px solid rgba(128, 128, 128, 0.2);
 }
 
 .layers-content {
-  max-height: 400px;
+  height: 250px;
   overflow-y: auto;
 }
 
