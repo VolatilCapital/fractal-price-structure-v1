@@ -1,6 +1,6 @@
 // Visualization domain
-export type { VisualizationState, PlaybackState, PlaybackSpeed, FilterState, DisplayMode, StateColorKey } from './visualization/index.js'
-export { STATE_COLORS } from './visualization/index.js'
+export type { VisualizationState, PlaybackState, PlaybackSpeed, FilterState, DisplayMode, StateColorKey, PolarityColorKey } from './visualization/index.js'
+export { STATE_COLORS, POLARITY_COLORS } from './visualization/index.js'
 export {
   createVisualizationState,
   setCursorIndex,

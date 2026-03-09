@@ -8,7 +8,7 @@ import type { PriceMove } from '@fractal-price-structure/core'
 import { PriceMoveState, Polarity } from '@fractal-price-structure/core'
 import * as Plot from '@observablehq/plot'
 import type { FilterState } from '../../domain/index.js'
-import { STATE_COLORS } from '../../domain/index.js'
+import { STATE_COLORS, POLARITY_COLORS } from '../../domain/index.js'
 
 export interface PriceMoveMarkOptions {
   moves: PriceMove[]
@@ -25,18 +25,6 @@ const STATE_COLOR_MAP: Record<PriceMoveState, string> = {
   [PriceMoveState.Archived]: STATE_COLORS.Archived,
 }
 
-// Degree colors - distinct colors for each degree level
-const DEGRE_COLORS: string[] = [
-  '#E91E63', // D0 - Pink
-  '#9C27B0', // D1 - Purple
-  '#3F51B5', // D2 - Indigo
-  '#2196F3', // D3 - Blue
-  '#00BCD4', // D4 - Cyan
-  '#009688', // D5 - Teal
-  '#FF5722', // D6 - Deep Orange
-  '#795548', // D7 - Brown
-]
-
 const DEFAULT_FILL_OPACITY = 0.2
 const DEFAULT_STROKE_WIDTH = 1
 
@@ -48,19 +36,11 @@ export function getStateColor(state: PriceMoveState): string {
 }
 
 /**
- * Get color for a move based on its degree.
- * Growing moves (undefined degre) use green, Reference uses degree color.
+ * Get color for a move based on its polarity.
+ * See POLARITY_COLORS for the actual color values.
  */
-export function getMoveColor(move: PriceMove): string {
-  if (move.state === PriceMoveState.Growing) {
-    return STATE_COLORS.Growing
-  }
-  if (move.state === PriceMoveState.Archived) {
-    return STATE_COLORS.Archived
-  }
-  // Reference move - use degree color
-  const degre = move.degre ?? 0
-  return DEGRE_COLORS[degre % DEGRE_COLORS.length]
+export function getPolarityColor(polarity: Polarity): string {
+  return polarity === Polarity.Up ? POLARITY_COLORS.Up : POLARITY_COLORS.Down
 }
 
 /**
@@ -198,9 +178,9 @@ function createRectMarks(params: StateGroupedMoves) {
       x2: (d: PriceMove) => d.timeRange.end,
       y1: (d: PriceMove) => d.priceRange.low,
       y2: (d: PriceMove) => d.priceRange.high,
-      fill: (d: PriceMove) => getStateColor(d.state),
+      fill: (d: PriceMove) => getPolarityColor(d.polarity),
       fillOpacity: opacity,
-      stroke: (d: PriceMove) => getStateColor(d.state),
+      stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: stroke,
       strokeOpacity: strokeOp,
     })
@@ -284,7 +264,7 @@ function createLineMarks(params: Omit<StateGroupedMoves, 'fillOpacity'>) {
       y1: (d: PriceMove) => d.polarity === Polarity.Up ? d.priceRange.low : d.priceRange.high,
       x2: (d: PriceMove) => d.timeRange.end,
       y2: (d: PriceMove) => d.polarity === Polarity.Up ? d.priceRange.high : d.priceRange.low,
-      stroke: (d: PriceMove) => getStateColor(d.state),
+      stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: stroke,
       strokeOpacity: strokeOp,
     })
