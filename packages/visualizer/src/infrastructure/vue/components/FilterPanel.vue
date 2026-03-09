@@ -261,6 +261,20 @@ function getDegreColor(degre: number): string {
       <div class="mt-1 text-grey">Plus le rang est élevé, plus le move englobe de sous-structures</div>
     </div>
 
+    <!-- Keyboard shortcuts -->
+    <v-divider class="my-4" />
+
+    <div class="text-caption text-grey mb-2">Raccourcis clavier</div>
+    <div class="text-caption shortcuts-grid">
+      <kbd>Espace</kbd><span>Play / Pause</span>
+      <kbd>← →</kbd><span>Bougie précédente / suivante</span>
+      <kbd>[ ]</kbd><span>Ralentir / accélérer</span>
+      <kbd>Home End</kbd><span>Début / fin</span>
+      <kbd>Molette</kbd><span>Zoom</span>
+      <kbd>Glisser</kbd><span>Pan horizontal</span>
+      <kbd>Double-clic</kbd><span>Reset zoom</span>
+    </div>
+
     <!-- Stats -->
     <template v-if="stats">
       <v-divider class="my-4" />
@@ -305,6 +319,22 @@ function getDegreColor(degre: number): string {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  align-items: center;
+}
+
+.shortcuts-grid kbd {
+  background: rgba(128, 128, 128, 0.15);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: monospace;
+  white-space: nowrap;
 }
 
 .legend-swatch {

@@ -106,3 +106,31 @@ Le degré n'est affiché que dans les labels texte et les tooltips.
 4. **Gris = passé/inactif** — état Archived, événement Archived
 5. **Plus c'est opaque et épais = plus c'est important** — rang élevé, état actif
 6. **Plus c'est transparent = moins c'est pertinent** — rang bas, état archivé, futur
+
+---
+
+## Interactions
+
+### Raccourcis clavier
+
+| Touche | Action |
+|--------|--------|
+| `Espace` | Play / Pause |
+| `← →` | Bougie précédente / suivante |
+| `[ ]` | Ralentir / accélérer le playback |
+| `Home` `End` | Aller au début / à la fin |
+| `Molette` | Zoom centré sur la souris |
+| `Glisser` | Pan horizontal du graphique |
+| `Double-clic` | Reset zoom |
+
+### Panneau filtres
+
+- **Mode d'affichage** : Rectangle (boîtes) ou Ligne (diagonales)
+- **Niveaux de degré** : Chips cliquables D0-D5
+- **États visibles** : Toggles Growing / Reference / Archived
+- **Options** : Sous-structures, liens parent-enfant, flash événements
+- **Rang maximum** : Slider pour limiter la profondeur visible
+
+### Tooltips
+
+Survol d'un move affiche : Rang, Degré, Polarité, État, Amplitude %, Timestamps, Sous-structures.
