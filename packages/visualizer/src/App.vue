@@ -10,12 +10,14 @@ import TimeSlider from './infrastructure/vue/components/TimeSlider.vue'
 import FilterPanel from './infrastructure/vue/components/FilterPanel.vue'
 import EventsLog from './infrastructure/vue/components/EventsLog.vue'
 import FractalLayersChart from './infrastructure/vue/components/FractalLayersChart.vue'
+import StructureStack from './infrastructure/vue/components/StructureStack.vue'
 import type { DataSource } from './domain/index.js'
 import { DATA_SOURCES } from './domain/index.js'
 
 const drawer = ref(true)
 const eventsOpen = ref(false)
 const layersOpen = ref(false)
+const stackOpen = ref(false)
 
 // Theme toggle
 const theme = useTheme()
@@ -186,6 +188,15 @@ if (import.meta.env.DEV) {
         Candle {{ cursorIndex + 1 }} / {{ candles.length }}
       </span>
       <v-btn
+        :icon="stackOpen ? 'mdi-file-tree' : 'mdi-file-tree-outline'"
+        variant="text"
+        density="compact"
+        class="mr-1"
+        @click="stackOpen = !stackOpen"
+        :title="stackOpen ? 'Masquer la stack fractale' : 'Afficher la stack fractale'"
+        data-testid="stack-toggle-btn"
+      />
+      <v-btn
         :icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
         variant="text"
         density="compact"
@@ -325,6 +336,20 @@ if (import.meta.env.DEV) {
         </div>
       </div>
     </v-main>
+
+    <!-- Structure Stack (right drawer) -->
+    <v-navigation-drawer v-model="stackOpen" location="right" width="420" data-testid="stack-drawer">
+      <div class="d-flex align-center px-3 py-2" style="border-bottom: 1px solid rgba(128,128,128,0.2)">
+        <v-icon size="small" class="mr-2">mdi-file-tree</v-icon>
+        <span class="text-subtitle-2 font-weight-medium">Stack fractale</span>
+        <v-spacer />
+        <v-btn icon="mdi-close" variant="text" density="compact" size="small" @click="stackOpen = false" />
+      </div>
+      <StructureStack
+        :engine="engine"
+        :cursor-time="cursorTime"
+      />
+    </v-navigation-drawer>
   </v-app>
 </template>
 
