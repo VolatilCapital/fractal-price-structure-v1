@@ -215,7 +215,9 @@ function moveTitle(d: PriceMove): string {
   const state = d.state === PriceMoveState.Growing ? 'Growing'
     : d.state === PriceMoveState.Reference ? 'Reference' : 'Archived'
   const degre = d.degre !== undefined ? `D${d.degre}` : '-'
-  const range = `${d.priceRange.low.toFixed(2)} - ${d.priceRange.high.toFixed(2)}`
+  // Auto-detect decimal precision: use enough digits to show price differences
+  const digits = d.priceRange.high < 10 ? 5 : d.priceRange.high < 1000 ? 2 : 0
+  const range = `${d.priceRange.low.toFixed(digits)} - ${d.priceRange.high.toFixed(digits)}`
   const subs = d.subStructures?.length ?? 0
   return `R${d.rang} ${degre} | ${pol} ${state}\n${range}\nSous-structures: ${subs}`
 }
