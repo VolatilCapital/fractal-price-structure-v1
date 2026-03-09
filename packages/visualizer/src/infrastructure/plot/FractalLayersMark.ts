@@ -110,6 +110,7 @@ export function createFractalLayersMarks(options: FractalLayersMarkOptions) {
   if (data.length === 0) return { marks, maxRang }
 
   // Horizontal bars for each move
+  // Fill and stroke use polarity color (blue/red); state is conveyed via opacity
   marks.push(
     Plot.barX(data, {
       x1: (d: LayerDatum) => d.x1,
@@ -117,7 +118,7 @@ export function createFractalLayersMarks(options: FractalLayersMarkOptions) {
       y: (d: LayerDatum) => d.y,
       fill: (d: LayerDatum) => d.color,
       fillOpacity: (d: LayerDatum) => d.opacity * 0.6,
-      stroke: (d: LayerDatum) => d.stateColor,
+      stroke: (d: LayerDatum) => d.color,
       strokeWidth: 1.5,
       strokeOpacity: (d: LayerDatum) => d.opacity,
       insetTop: BAR_PADDING,
