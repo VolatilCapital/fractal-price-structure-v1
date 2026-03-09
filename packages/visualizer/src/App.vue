@@ -4,6 +4,7 @@ import { useTheme } from 'vuetify'
 import { useEngine } from './infrastructure/vue/composables/useEngine.js'
 import { usePlayback } from './infrastructure/vue/composables/usePlayback.js'
 import { useFilters } from './infrastructure/vue/composables/useFilters.js'
+import { useUrlState } from './infrastructure/vue/composables/useUrlState.js'
 import PriceChart from './infrastructure/vue/components/PriceChart.vue'
 import PlaybackControls from './infrastructure/vue/components/PlaybackControls.vue'
 import TimeSlider from './infrastructure/vue/components/TimeSlider.vue'
@@ -75,6 +76,21 @@ async function changeDataSource(source: DataSource) {
   stop()
   await load(source)
 }
+
+function changeDataSourceById(id: string) {
+  const source = DATA_SOURCES.find(s => s.id === id)
+  if (source) changeDataSource(source)
+}
+
+// URL state sync
+const currentSourceId = computed(() => currentSource.id)
+useUrlState({
+  cursorIndex,
+  seekTo,
+  currentSourceId,
+  changeSource: changeDataSourceById,
+  panels: { stack: stackOpen, layers: layersOpen, events: eventsOpen },
+})
 
 // Load data on mount
 onMounted(async () => {
