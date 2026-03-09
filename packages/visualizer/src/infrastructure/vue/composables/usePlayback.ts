@@ -7,6 +7,7 @@ import {
   createPlaybackState,
   createVisualizationState,
   PlaybackMode,
+  PLAYBACK_SPEEDS,
 } from '../../../domain/index.js'
 import type { PlaybackState, VisualizationState } from '../../../domain/index.js'
 import {
@@ -110,6 +111,23 @@ export function usePlayback(candles: ShallowRef<Candle[]>) {
     setState(newState)
   }
 
+  function changeSpeed(speedIndex: number) {
+    const clamped = Math.max(0, Math.min(PLAYBACK_SPEEDS.length - 1, speedIndex))
+    playbackState.value = { ...playbackState.value, speedIndex: clamped }
+    // Restart interval if currently playing to apply new speed
+    if (playbackState.value.mode === PlaybackMode.Playing) {
+      startInterval()
+    }
+  }
+
+  function speedUp() {
+    changeSpeed(playbackState.value.speedIndex + 1)
+  }
+
+  function speedDown() {
+    changeSpeed(playbackState.value.speedIndex - 1)
+  }
+
   // Cleanup on unmount
   onUnmounted(() => {
     stopInterval()
@@ -124,5 +142,8 @@ export function usePlayback(candles: ShallowRef<Candle[]>) {
     stepForward,
     stepBackward,
     seekTo,
+    changeSpeed,
+    speedUp,
+    speedDown,
   }
 }

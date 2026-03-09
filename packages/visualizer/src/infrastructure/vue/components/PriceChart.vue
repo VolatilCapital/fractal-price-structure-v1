@@ -60,6 +60,12 @@ const allMoves = computed(() => {
   return props.engine.getAllMoves()
 })
 
+// Auto-detect candle interval for event flash lookback
+const candleIntervalMs = computed(() => {
+  if (props.candles.length < 2) return 300_000 // default 5min
+  return props.candles[1].openTime - props.candles[0].openTime
+})
+
 // Compute visible time domain (zoom or full)
 const visibleTimeDomain = computed((): [number, number] => {
   const z = zoomState.value
@@ -111,7 +117,7 @@ watchEffect(() => {
     candles: props.candles,
   })
 
-  const cursorMark = createTimeCursorMark({
+  const cursorMarks = createTimeCursorMark({
     cursorTime: props.cursorTime,
   })
 
@@ -124,10 +130,12 @@ watchEffect(() => {
     : []
 
   // Event highlights (flash on structural events at cursor, if enabled)
+  // Lookback = 3 candles so flashes persist visibly during playback
   const eventHighlightMarks = props.filterState.showEventHighlights
     ? createEventHighlightMarks({
         events: props.events,
         cursorTime: props.cursorTime,
+        lookbackMs: candleIntervalMs.value * 3,
       })
     : []
 
@@ -160,8 +168,8 @@ watchEffect(() => {
       ...candlestickMarks,
       // Event highlights (on top of candles for visibility)
       ...eventHighlightMarks,
-      // Time cursor
-      cursorMark,
+      // Time cursor (shadow + foreground)
+      ...cursorMarks,
     ],
     style: {
       background: 'transparent',

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Polarity } from '@fractal-price-structure/core'
-import { getActiveEvents } from './EventHighlightMark.js'
+import { getActiveEvents, eventOpacity } from './EventHighlightMark.js'
 import type { StructureEvent } from '../../domain/index.js'
 
 function makeEvent(overrides: Partial<StructureEvent> & { timestamp: number; eventType: string }): StructureEvent {
@@ -48,5 +48,31 @@ describe('getActiveEvents', () => {
     ]
     const active = getActiveEvents(events, 3000, 1000)
     expect(active).toHaveLength(0)
+  })
+})
+
+describe('eventOpacity', () => {
+  it('returns 0.9 when no lookback', () => {
+    const event = makeEvent({ timestamp: 1000, eventType: 'Created' })
+    expect(eventOpacity(event, 1000, 0)).toBe(0.9)
+  })
+
+  it('returns 0.9 for event exactly at cursor time', () => {
+    const event = makeEvent({ timestamp: 2000, eventType: 'Created' })
+    expect(eventOpacity(event, 2000, 1000)).toBe(0.9)
+  })
+
+  it('fades linearly with age', () => {
+    const event = makeEvent({ timestamp: 1500, eventType: 'Created' })
+    const opacity = eventOpacity(event, 2000, 1000)
+    // age=500, lookback=1000 → 0.9 - 0.5 * 0.75 = 0.525
+    expect(opacity).toBeCloseTo(0.525, 2)
+  })
+
+  it('clamps to minimum 0.15 at max age', () => {
+    const event = makeEvent({ timestamp: 1000, eventType: 'Created' })
+    const opacity = eventOpacity(event, 2000, 1000)
+    // age=1000, lookback=1000 → 0.9 - 1.0 * 0.75 = 0.15
+    expect(opacity).toBeCloseTo(0.15, 2)
   })
 })

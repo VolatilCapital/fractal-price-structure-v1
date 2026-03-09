@@ -47,8 +47,24 @@ export function getActiveEvents(
 }
 
 /**
+ * Compute opacity for an event based on recency.
+ * Events at cursorTime are fully opaque; older events fade linearly.
+ */
+export function eventOpacity(
+  event: StructureEvent,
+  cursorTime: number,
+  lookbackMs: number,
+): number {
+  if (lookbackMs <= 0) return 0.9
+  const age = cursorTime - event.timestamp
+  // Linear fade: 0.9 at age=0, 0.15 at age=lookbackMs
+  return Math.max(0.15, 0.9 - (age / lookbackMs) * 0.75)
+}
+
+/**
  * Create highlight marks for active events.
  * Shows a bright border around the move and a symbol dot at the event location.
+ * With lookback, older events fade out gradually.
  */
 export function createEventHighlightMarks(options: EventHighlightOptions) {
   const { events, cursorTime, lookbackMs = 0 } = options
@@ -58,7 +74,7 @@ export function createEventHighlightMarks(options: EventHighlightOptions) {
 
   const marks: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.text>)[] = []
 
-  // Bright border highlight on affected moves
+  // Bright border highlight on affected moves (opacity fades with age)
   marks.push(Plot.rect(activeEvents, {
     x1: (d: StructureEvent) => d.timeRange.start,
     x2: (d: StructureEvent) => d.timeRange.end,
@@ -67,15 +83,16 @@ export function createEventHighlightMarks(options: EventHighlightOptions) {
     fill: 'none',
     stroke: (d: StructureEvent) => EVENT_COLORS[d.eventType] ?? '#fff',
     strokeWidth: 2.5,
-    strokeOpacity: 0.9,
+    strokeOpacity: (d: StructureEvent) => eventOpacity(d, cursorTime, lookbackMs),
   }))
 
-  // Event type symbol at top-right of the move
+  // Event type symbol at top-right of the move (opacity fades with age)
   marks.push(Plot.text(activeEvents, {
     x: (d: StructureEvent) => d.timeRange.end,
     y: (d: StructureEvent) => d.priceRange.high,
     text: (d: StructureEvent) => EVENT_SYMBOLS[d.eventType] ?? '?',
     fill: (d: StructureEvent) => EVENT_COLORS[d.eventType] ?? '#fff',
+    fillOpacity: (d: StructureEvent) => eventOpacity(d, cursorTime, lookbackMs),
     fontSize: 14,
     fontWeight: 'bold',
     dx: -8,

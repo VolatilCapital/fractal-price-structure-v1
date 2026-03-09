@@ -205,16 +205,28 @@ interface StateGroupedMoves {
 /**
  * Tooltip text for a PriceMove (used by both rect and line marks).
  */
+/**
+ * Format a timestamp as a short date string.
+ */
+function formatTime(ts: number): string {
+  const d = new Date(ts)
+  return d.toLocaleDateString('fr-FR', {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
+
 function moveTitle(d: PriceMove): string {
-  const pol = d.polarity === Polarity.Up ? 'Up' : 'Down'
+  const pol = d.polarity === Polarity.Up ? '▲ Up' : '▼ Down'
   const state = d.state === PriceMoveState.Growing ? 'Growing'
     : d.state === PriceMoveState.Reference ? 'Reference' : 'Archived'
   const degre = d.degre !== undefined ? `D${d.degre}` : '-'
   // Auto-detect decimal precision: use enough digits to show price differences
   const digits = d.priceRange.high < 10 ? 5 : d.priceRange.high < 1000 ? 2 : 0
-  const range = `${d.priceRange.low.toFixed(digits)} - ${d.priceRange.high.toFixed(digits)}`
+  const range = `${d.priceRange.low.toFixed(digits)} → ${d.priceRange.high.toFixed(digits)}`
+  const amplitude = ((d.priceRange.high - d.priceRange.low) / d.priceRange.low * 100).toFixed(2)
   const subs = d.subStructures?.length ?? 0
-  return `R${d.rang} ${degre} | ${pol} ${state}\n${range}\nSous-structures: ${subs}`
+  const time = `${formatTime(d.timeRange.start)} — ${formatTime(d.timeRange.end)}`
+  return `R${d.rang} ${degre} | ${pol} ${state}\n${range} (${amplitude}%)\n${time}\nSous-structures: ${subs}`
 }
 
 /**

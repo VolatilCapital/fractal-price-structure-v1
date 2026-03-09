@@ -18,7 +18,7 @@ const layersOpen = ref(false)
 
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
-const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo } = usePlayback(candles)
+const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo, speedUp, speedDown } = usePlayback(candles)
 const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setShowParentChildLinks, setShowEventHighlights, setDisplayMode, setMaxRang } = useFilters()
 
 // Computed
@@ -101,6 +101,14 @@ function handleKeydown(event: KeyboardEvent) {
     case 'End':
       event.preventDefault()
       seekTo(candles.value.length - 1)
+      break
+    case 'BracketRight':
+      event.preventDefault()
+      speedUp()
+      break
+    case 'BracketLeft':
+      event.preventDefault()
+      speedDown()
       break
   }
 }
@@ -236,6 +244,8 @@ if (import.meta.env.DEV) {
             @stop="stop"
             @step-forward="stepForward"
             @step-backward="stepBackward"
+            @speed-up="speedUp"
+            @speed-down="speedDown"
           />
           <TimeSlider
             :cursor-index="cursorIndex"

@@ -20,6 +20,7 @@ export {
 export {
   createEventHighlightMarks,
   getActiveEvents,
+  eventOpacity,
   type EventHighlightOptions,
 } from './EventHighlightMark.js'
 export {

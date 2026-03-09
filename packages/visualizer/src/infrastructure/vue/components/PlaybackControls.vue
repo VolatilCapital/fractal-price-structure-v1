@@ -17,6 +17,8 @@ const emit = defineEmits<{
   stop: []
   stepForward: []
   stepBackward: []
+  speedUp: []
+  speedDown: []
 }>()
 
 const isPlaying = computed(() => props.playbackState.mode === PlaybackMode.Playing)
@@ -69,10 +71,32 @@ const speedLabel = computed(() => PLAYBACK_SPEEDS[props.playbackState.speedIndex
         <v-icon>mdi-skip-next</v-icon>
       </v-btn>
 
-      <!-- Speed indicator -->
-      <v-chip size="small" variant="outlined" class="ml-2" data-testid="speed-chip">
+      <!-- Speed controls -->
+      <v-btn
+        icon
+        variant="text"
+        size="small"
+        @click="emit('speedDown')"
+        :disabled="props.playbackState.speedIndex <= 0"
+        aria-label="Slower"
+        data-testid="btn-speed-down"
+      >
+        <v-icon size="small">mdi-minus</v-icon>
+      </v-btn>
+      <v-chip size="small" variant="outlined" data-testid="speed-chip">
         {{ speedLabel }}
       </v-chip>
+      <v-btn
+        icon
+        variant="text"
+        size="small"
+        @click="emit('speedUp')"
+        :disabled="props.playbackState.speedIndex >= 3"
+        aria-label="Faster"
+        data-testid="btn-speed-up"
+      >
+        <v-icon size="small">mdi-plus</v-icon>
+      </v-btn>
     </div>
   </v-card>
 </template>
