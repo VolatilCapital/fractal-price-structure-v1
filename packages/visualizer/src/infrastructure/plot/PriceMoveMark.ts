@@ -8,14 +8,13 @@ import type { PriceMove, Candle } from '@fractal-price-structure/core'
 import { PriceMoveState, Polarity } from '@fractal-price-structure/core'
 import * as Plot from '@observablehq/plot'
 import type { FilterState } from '../../domain/index.js'
-import { STATE_COLORS, POLARITY_COLORS, LEVEL_COLORS } from '../../domain/index.js'
+import { STATE_COLORS, POLARITY_COLORS, LEVEL_COLORS, STATE_OPACITY } from '../../domain/index.js'
 
 export interface PriceMoveMarkOptions {
   moves: PriceMove[]
   cursorTime: number
   filterState: FilterState
   candles: Candle[]
-  fillOpacity?: number
   strokeWidth?: number
 }
 
@@ -51,7 +50,6 @@ const STATE_COLOR_MAP: Record<PriceMoveState, string> = {
   [PriceMoveState.Archived]: STATE_COLORS.Archived,
 }
 
-const DEFAULT_FILL_OPACITY = 0.2
 const DEFAULT_STROKE_WIDTH = 1
 
 /**
@@ -140,7 +138,6 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
     cursorTime,
     filterState,
     candles,
-    fillOpacity = DEFAULT_FILL_OPACITY,
     strokeWidth = DEFAULT_STROKE_WIDTH,
   } = options
 
@@ -187,7 +184,6 @@ export function createPriceMoveMarks(options: PriceMoveMarkOptions) {
     futureGrowing,
     futureReference,
     futureArchived,
-    fillOpacity,
     strokeWidth,
     cursorTime,
     candleMap,
@@ -201,7 +197,6 @@ interface StateGroupedMoves {
   futureGrowing: PriceMove[]
   futureReference: PriceMove[]
   futureArchived: PriceMove[]
-  fillOpacity?: number
   strokeWidth: number
   cursorTime: number
   candleMap: Map<number, Candle>
@@ -233,7 +228,6 @@ function createRectMarks(params: StateGroupedMoves) {
     futureGrowing,
     futureReference,
     futureArchived,
-    fillOpacity = DEFAULT_FILL_OPACITY,
     strokeWidth,
     cursorTime,
     candleMap,
@@ -245,15 +239,28 @@ function createRectMarks(params: StateGroupedMoves) {
   const rangStrokeWidth = (d: PriceMove, base: number) =>
     d.rang === 0 ? Math.max(base * 0.5, 0.5) : Math.min(base + d.rang * 0.5, base + 3)
 
-  // Scale fill opacity by rang — rang 0 is very subtle, higher rangs more visible
-  const rangFillOpacity = (d: PriceMove, base: number) =>
-    d.rang === 0 ? base * 0.3 : Math.min(base * (1 + d.rang * 0.2), base * 2)
+  // Get fill opacity from STATE_OPACITY, scaled by rang
+  // Rang 0 is very subtle, higher rangs more visible
+  const stateFillOpacity = (d: PriceMove, futureScale: number = 1) => {
+    const base = d.state === PriceMoveState.Growing ? STATE_OPACITY.Growing.fill
+      : d.state === PriceMoveState.Reference ? STATE_OPACITY.Reference.fill
+      : STATE_OPACITY.Archived.fill
+    const rangScale = d.rang === 0 ? 0.5 : Math.min(1 + d.rang * 0.15, 2)
+    return base * rangScale * futureScale
+  }
+
+  // Get stroke opacity from STATE_OPACITY
+  const stateStrokeOpacity = (d: PriceMove, futureScale: number = 1) => {
+    const base = d.state === PriceMoveState.Growing ? STATE_OPACITY.Growing.stroke
+      : d.state === PriceMoveState.Reference ? STATE_OPACITY.Reference.stroke
+      : STATE_OPACITY.Archived.stroke
+    return base * futureScale
+  }
 
   // Helper to create rect mark for non-Growing moves (full extent)
   const createRectMark = (
     moves: PriceMove[],
-    opacity: number,
-    strokeOp: number = 1,
+    futureScale: number = 1,
     stroke: number = strokeWidth
   ) => {
     if (moves.length === 0) return null
@@ -263,10 +270,10 @@ function createRectMarks(params: StateGroupedMoves) {
       y1: (d: PriceMove) => d.priceRange.low,
       y2: (d: PriceMove) => d.priceRange.high,
       fill: (d: PriceMove) => getPolarityColor(d.polarity),
-      fillOpacity: (d: PriceMove) => rangFillOpacity(d, opacity),
+      fillOpacity: (d: PriceMove) => stateFillOpacity(d, futureScale),
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: (d: PriceMove) => rangStrokeWidth(d, stroke),
-      strokeOpacity: strokeOp,
+      strokeOpacity: (d: PriceMove) => stateStrokeOpacity(d, futureScale),
       title: moveTitle,
     })
   }
@@ -275,8 +282,7 @@ function createRectMarks(params: StateGroupedMoves) {
   // Clips x2 to cursorTime and animates the directional boundary using referenceLevels.
   const createProgressiveRectMark = (
     moves: PriceMove[],
-    opacity: number,
-    strokeOp: number = 1,
+    futureScale: number = 1,
     stroke: number = strokeWidth
   ) => {
     if (moves.length === 0) return null
@@ -292,10 +298,10 @@ function createRectMarks(params: StateGroupedMoves) {
           ? getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap)
           : d.priceRange.high,
       fill: (d: PriceMove) => getPolarityColor(d.polarity),
-      fillOpacity: (d: PriceMove) => rangFillOpacity(d, opacity),
+      fillOpacity: (d: PriceMove) => stateFillOpacity(d, futureScale),
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
       strokeWidth: (d: PriceMove) => rangStrokeWidth(d, stroke),
-      strokeOpacity: strokeOp,
+      strokeOpacity: (d: PriceMove) => stateStrokeOpacity(d, futureScale),
       title: moveTitle,
     })
   }
@@ -385,8 +391,8 @@ function createRectMarks(params: StateGroupedMoves) {
   }
 
   // Active moves - render in order: Growing (bottom), Archived, Reference (top)
-  const growingMark = createProgressiveRectMark(activeGrowing, fillOpacity)
-  const archivedMark = createRectMark(activeArchived, fillOpacity)
+  const growingMark = createProgressiveRectMark(activeGrowing)
+  const archivedMark = createRectMark(activeArchived)
 
   if (growingMark) marks.push(growingMark)
   if (archivedMark) marks.push(archivedMark)
@@ -401,9 +407,9 @@ function createRectMarks(params: StateGroupedMoves) {
   const textMark = createTextMark(allActive)
   if (textMark) marks.push(textMark)
 
-  // Future moves - same order with reduced opacity
-  const futureGrowingMark = createRectMark(futureGrowing, fillOpacity * 0.3, 0.3)
-  const futureArchivedMark = createRectMark(futureArchived, fillOpacity * 0.3, 0.3)
+  // Future moves - same order with reduced opacity (30% of base)
+  const futureGrowingMark = createRectMark(futureGrowing, 0.3)
+  const futureArchivedMark = createRectMark(futureArchived, 0.3)
 
   if (futureGrowingMark) marks.push(futureGrowingMark)
   if (futureArchivedMark) marks.push(futureArchivedMark)

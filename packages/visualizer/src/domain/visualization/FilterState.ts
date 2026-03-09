@@ -25,6 +25,8 @@ export interface FilterState {
   maxRang?: number
   /** Whether to show parent-child connection links on the price chart */
   showParentChildLinks: boolean
+  /** Whether to show event highlight flashes at cursor */
+  showEventHighlights: boolean
 }
 
 export function createFilterState(): FilterState {
@@ -38,6 +40,7 @@ export function createFilterState(): FilterState {
     showUndefinedDegre: true,
     maxRang: undefined,
     showParentChildLinks: false,
+    showEventHighlights: true,
   }
 }
 
@@ -77,6 +80,10 @@ export function setMaxRang(state: FilterState, maxRang: number | undefined): Fil
 
 export function setShowParentChildLinks(state: FilterState, show: boolean): FilterState {
   return { ...state, showParentChildLinks: show }
+}
+
+export function setShowEventHighlights(state: FilterState, show: boolean): FilterState {
+  return { ...state, showEventHighlights: show }
 }
 
 export function setDisplayMode(state: FilterState, displayMode: DisplayMode): FilterState {
@@ -128,6 +135,7 @@ export function serializeFilterState(state: FilterState): string {
     showUndefinedDegre: state.showUndefinedDegre,
     maxRang: state.maxRang,
     showParentChildLinks: state.showParentChildLinks,
+    showEventHighlights: state.showEventHighlights,
   })
 }
 
@@ -147,6 +155,7 @@ export function deserializeFilterState(json: string): FilterState | null {
       showUndefinedDegre: parsed.showUndefinedDegre ?? true,
       maxRang: parsed.maxRang,
       showParentChildLinks: parsed.showParentChildLinks ?? false,
+      showEventHighlights: parsed.showEventHighlights ?? true,
     }
   } catch {
     return null

@@ -11,6 +11,7 @@ import {
   setShowArchived as setShowArchivedAction,
   setShowUndefinedDegre as setShowUndefinedDegreAction,
   setShowParentChildLinks as setShowParentChildLinksAction,
+  setShowEventHighlights as setShowEventHighlightsAction,
   setDisplayMode as setDisplayModeAction,
   setMaxRang as setMaxRangAction,
   serializeFilterState,
@@ -79,6 +80,10 @@ export function useFilters() {
     filterState.value = setShowParentChildLinksAction(filterState.value, show)
   }
 
+  function setShowEventHighlights(show: boolean) {
+    filterState.value = setShowEventHighlightsAction(filterState.value, show)
+  }
+
   function setMaxRang(maxRang: number | undefined) {
     filterState.value = setMaxRangAction(filterState.value, maxRang)
   }
@@ -92,6 +97,7 @@ export function useFilters() {
     setShowArchived,
     setShowUndefinedDegre,
     setShowParentChildLinks,
+    setShowEventHighlights,
     setDisplayMode,
     setMaxRang,
   }

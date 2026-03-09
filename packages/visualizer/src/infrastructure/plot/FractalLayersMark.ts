@@ -60,9 +60,10 @@ export function prepareFractalLayersData(options: FractalLayersMarkOptions): {
   for (const move of filteredMoves) {
     const isFuture = move.timeRange.start > cursorTime
     const baseOpacity = isFuture ? 0.2 : 1.0
+    // State opacity follows the charter: Growing = vivid, Reference = medium, Archived = subtle
     const stateOpacity = move.state === PriceMoveState.Growing ? 1.0
-      : move.state === PriceMoveState.Reference ? 0.8
-      : 0.4
+      : move.state === PriceMoveState.Reference ? 0.7
+      : 0.3
 
     const x2 = move.state === PriceMoveState.Growing
       ? Math.min(move.timeRange.end, cursorTime)

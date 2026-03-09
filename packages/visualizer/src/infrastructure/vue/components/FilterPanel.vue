@@ -28,6 +28,7 @@ const emit = defineEmits<{
   setShowArchived: [show: boolean]
   setShowUndefinedDegre: [show: boolean]
   setShowParentChildLinks: [show: boolean]
+  setShowEventHighlights: [show: boolean]
   setDisplayMode: [mode: DisplayMode]
   setMaxRang: [maxRang: number | undefined]
 }>()
@@ -121,7 +122,10 @@ function getDegreColor(degre: number): string {
       <template #label>
         <span class="d-flex align-center">
           <span class="state-dot" :style="{ backgroundColor: STATE_COLORS.Growing }"></span>
-          Growing (en construction)
+          <span>
+            <strong>Growing</strong>
+            <span class="text-caption text-grey ml-1">en construction, actif</span>
+          </span>
         </span>
       </template>
     </v-switch>
@@ -138,7 +142,10 @@ function getDegreColor(degre: number): string {
       <template #label>
         <span class="d-flex align-center">
           <span class="state-dot" :style="{ backgroundColor: STATE_COLORS.Reference }"></span>
-          Reference (niveau de cassure)
+          <span>
+            <strong>Reference</strong>
+            <span class="text-caption text-grey ml-1">figé, niveau de cassure</span>
+          </span>
         </span>
       </template>
     </v-switch>
@@ -155,7 +162,10 @@ function getDegreColor(degre: number): string {
       <template #label>
         <span class="d-flex align-center">
           <span class="state-dot" :style="{ backgroundColor: STATE_COLORS.Archived }"></span>
-          Archived (historique)
+          <span>
+            <strong>Archived</strong>
+            <span class="text-caption text-grey ml-1">historique, inactif</span>
+          </span>
         </span>
       </template>
     </v-switch>
@@ -186,6 +196,17 @@ function getDegreColor(degre: number): string {
       data-testid="switch-parent-child-links"
     />
 
+    <v-switch
+      :model-value="filterState.showEventHighlights"
+      @update:model-value="emit('setShowEventHighlights', $event as boolean)"
+      label="Flash événements"
+      color="primary"
+      density="compact"
+      hide-details
+      class="mt-1"
+      data-testid="switch-event-highlights"
+    />
+
     <!-- Rang filter -->
     <v-divider class="my-4" />
 
@@ -211,10 +232,33 @@ function getDegreColor(degre: number): string {
     <!-- Info -->
     <v-divider class="my-4" />
 
-    <div class="text-caption text-grey mb-2">Rang vs Degré</div>
+    <div class="text-caption text-grey mb-2">Légende</div>
+    <div class="text-caption legend-section">
+      <div class="legend-item">
+        <span class="legend-swatch" :style="{ backgroundColor: '#42A5F5' }"></span>
+        <span>Haussier (Up)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" :style="{ backgroundColor: '#EF5350' }"></span>
+        <span>Baissier (Down)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line" :style="{ backgroundColor: '#66BB6A' }"></span>
+        <span>Accroissement (extension)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line" :style="{ backgroundColor: '#FFA726' }"></span>
+        <span>Cassure (invalidation)</span>
+      </div>
+    </div>
+
+    <v-divider class="my-4" />
+
+    <div class="text-caption text-grey mb-2">Hiérarchie fractale</div>
     <div class="text-caption">
-      <div><strong>Rang</strong> = complexité (bottom-up)</div>
-      <div><strong>Degré</strong> = hiérarchie (top-down)</div>
+      <div><strong>Rang</strong> = complexité (bottom-up) — épaisseur du trait</div>
+      <div><strong>Degré</strong> = hiérarchie (top-down) — assigné à la terminaison</div>
+      <div class="mt-1 text-grey">Plus le rang est élevé, plus le move englobe de sous-structures</div>
     </div>
 
     <!-- Stats -->
@@ -249,5 +293,32 @@ function getDegreColor(degre: number): string {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 2px 12px;
+}
+
+.legend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.legend-line {
+  width: 14px;
+  height: 3px;
+  border-radius: 1px;
+  flex-shrink: 0;
 }
 </style>

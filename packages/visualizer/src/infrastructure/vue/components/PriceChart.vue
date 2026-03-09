@@ -123,11 +123,13 @@ watchEffect(() => {
       )
     : []
 
-  // Event highlights (flash on structural events at cursor)
-  const eventHighlightMarks = createEventHighlightMarks({
-    events: props.events,
-    cursorTime: props.cursorTime,
-  })
+  // Event highlights (flash on structural events at cursor, if enabled)
+  const eventHighlightMarks = props.filterState.showEventHighlights
+    ? createEventHighlightMarks({
+        events: props.events,
+        cursorTime: props.cursorTime,
+      })
+    : []
 
   // Create chart
   const chart = Plot.plot({

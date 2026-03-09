@@ -14,10 +14,10 @@ export interface CandlestickMarkOptions {
   bearColor?: string
 }
 
-const DEFAULT_WICK_COLOR = '#666'
+const DEFAULT_WICK_COLOR = '#757575'  // Grey 600 — neutral
 const DEFAULT_BODY_WIDTH = 6
-const DEFAULT_BULL_COLOR = '#4CAF50'
-const DEFAULT_BEAR_COLOR = '#F44336'
+const DEFAULT_BULL_COLOR = '#42A5F5'  // Blue 400 — coherent with Up polarity
+const DEFAULT_BEAR_COLOR = '#EF5350'  // Red 400 — coherent with Down polarity
 
 /**
  * Create candlestick marks for Observable Plot.

@@ -7,13 +7,14 @@
  */
 import * as Plot from '@observablehq/plot'
 import type { StructureEvent } from '../../domain/index.js'
+import { EVENT_COLORS as CHART_EVENT_COLORS } from '../../domain/index.js'
 
-/** Event type to highlight color mapping */
+/** Event type to highlight color mapping — from centralized charter */
 const EVENT_COLORS: Record<string, string> = {
-  Created: '#00E676',    // Bright green
-  Extended: '#2196F3',   // Blue
-  Terminated: '#FF9800', // Orange
-  Archived: '#9E9E9E',  // Grey
+  Created: CHART_EVENT_COLORS.Created,
+  Extended: CHART_EVENT_COLORS.Extended,
+  Terminated: CHART_EVENT_COLORS.Terminated,
+  Archived: CHART_EVENT_COLORS.Archived,
 }
 
 /** Event type to symbol mapping for dots */
