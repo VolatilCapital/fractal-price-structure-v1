@@ -226,6 +226,14 @@ function createRectMarks(params: StateGroupedMoves) {
 
   const marks: (ReturnType<typeof Plot.rect> | ReturnType<typeof Plot.ruleY> | ReturnType<typeof Plot.text>)[] = []
 
+  // Scale stroke width by rang — higher rang = thicker border for visual hierarchy
+  const rangStrokeWidth = (d: PriceMove, base: number) =>
+    d.rang === 0 ? Math.max(base * 0.5, 0.5) : Math.min(base + d.rang * 0.5, base + 3)
+
+  // Scale fill opacity by rang — rang 0 is very subtle, higher rangs more visible
+  const rangFillOpacity = (d: PriceMove, base: number) =>
+    d.rang === 0 ? base * 0.3 : Math.min(base * (1 + d.rang * 0.2), base * 2)
+
   // Helper to create rect mark for non-Growing moves (full extent)
   const createRectMark = (
     moves: PriceMove[],
@@ -240,9 +248,9 @@ function createRectMarks(params: StateGroupedMoves) {
       y1: (d: PriceMove) => d.priceRange.low,
       y2: (d: PriceMove) => d.priceRange.high,
       fill: (d: PriceMove) => getPolarityColor(d.polarity),
-      fillOpacity: opacity,
+      fillOpacity: (d: PriceMove) => rangFillOpacity(d, opacity),
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
-      strokeWidth: stroke,
+      strokeWidth: (d: PriceMove) => rangStrokeWidth(d, stroke),
       strokeOpacity: strokeOp,
     })
   }
@@ -268,9 +276,9 @@ function createRectMarks(params: StateGroupedMoves) {
           ? getGrowingMoveBoundaryAtTime(d, cursorTime, candleMap)
           : d.priceRange.high,
       fill: (d: PriceMove) => getPolarityColor(d.polarity),
-      fillOpacity: opacity,
+      fillOpacity: (d: PriceMove) => rangFillOpacity(d, opacity),
       stroke: (d: PriceMove) => getPolarityColor(d.polarity),
-      strokeWidth: stroke,
+      strokeWidth: (d: PriceMove) => rangStrokeWidth(d, stroke),
       strokeOpacity: strokeOp,
     })
   }
@@ -318,10 +326,13 @@ function createRectMarks(params: StateGroupedMoves) {
   }
 
   // Helper to create text labels showing Rang and Degré.
-  // For Growing moves, centers on the visible (clipped) extent.
+  // Only shows labels for moves with rang >= 1 (skip individual candle labels).
+  // Font size scales with rang for visual hierarchy.
   const createTextMark = (moves: PriceMove[], opacity: number = 1) => {
-    if (moves.length === 0) return null
-    return Plot.text(moves, {
+    // Filter out rang 0 moves — they clutter the chart without adding value
+    const labeledMoves = moves.filter(m => m.rang >= 1)
+    if (labeledMoves.length === 0) return null
+    return Plot.text(labeledMoves, {
       x: (d: PriceMove) => {
         const x2 = d.state === PriceMoveState.Growing
           ? Math.min(d.timeRange.end, cursorTime)
@@ -345,7 +356,8 @@ function createRectMarks(params: StateGroupedMoves) {
       fill: 'white',
       stroke: 'black',
       strokeWidth: 0.5,
-      fontSize: 10,
+      fontSize: (d: PriceMove) => Math.min(8 + d.rang * 2, 18),
+      fontWeight: 'bold',
       textAnchor: 'middle',
       opacity,
     })
