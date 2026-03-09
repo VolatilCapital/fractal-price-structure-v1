@@ -11,6 +11,12 @@ export {
 } from './PriceMoveMark.js'
 export { createTimeCursorMark, type TimeCursorMarkOptions } from './TimeCursorMark.js'
 export {
+  createFractalLayersMarks,
+  prepareFractalLayersData,
+  computeLayersChartHeight,
+  type FractalLayersMarkOptions,
+} from './FractalLayersMark.js'
+export {
   getVisibleCandles,
   getVisibleMoves,
   getOptimizationLevel,

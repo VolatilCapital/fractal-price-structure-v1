@@ -8,11 +8,13 @@ import PlaybackControls from './infrastructure/vue/components/PlaybackControls.v
 import TimeSlider from './infrastructure/vue/components/TimeSlider.vue'
 import FilterPanel from './infrastructure/vue/components/FilterPanel.vue'
 import EventsLog from './infrastructure/vue/components/EventsLog.vue'
+import FractalLayersChart from './infrastructure/vue/components/FractalLayersChart.vue'
 import type { DataSource } from './domain/index.js'
 import { DATA_SOURCES } from './domain/index.js'
 
 const drawer = ref(true)
 const eventsOpen = ref(false)
+const layersOpen = ref(false)
 
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
@@ -150,6 +152,15 @@ if (import.meta.env.DEV) {
         Candle {{ cursorIndex + 1 }} / {{ candles.length }}
       </span>
       <v-btn
+        :icon="layersOpen ? 'mdi-layers' : 'mdi-layers-outline'"
+        variant="text"
+        density="compact"
+        class="mr-1"
+        @click="layersOpen = !layersOpen"
+        :title="layersOpen ? 'Masquer les couches fractales' : 'Afficher les couches fractales'"
+        data-testid="layers-toggle-btn"
+      />
+      <v-btn
         :icon="eventsOpen ? 'mdi-chevron-down' : 'mdi-format-list-bulleted'"
         variant="text"
         density="compact"
@@ -223,6 +234,26 @@ if (import.meta.env.DEV) {
           />
         </div>
 
+        <!-- Fractal Layers panel (collapsible) -->
+        <div class="layers-panel">
+          <div class="panel-handle" @click="layersOpen = !layersOpen">
+            <v-icon size="small" class="mr-2">mdi-layers</v-icon>
+            <span class="text-caption font-weight-medium">Couches fractales (Rang)</span>
+            <v-spacer />
+            <v-icon size="small">{{ layersOpen ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
+          </div>
+          <v-expand-transition>
+            <div v-show="layersOpen" class="layers-content">
+              <FractalLayersChart
+                :candles="candles"
+                :engine="engine"
+                :cursor-time="cursorTime"
+                :filter-state="filterState"
+              />
+            </div>
+          </v-expand-transition>
+        </div>
+
         <!-- Events bottom panel (collapsible) -->
         <div class="events-panel">
           <div class="events-handle" @click="eventsOpen = !eventsOpen">
@@ -271,11 +302,22 @@ html, body {
   overflow: hidden;
 }
 
+.layers-panel {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.layers-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .events-panel {
   flex-shrink: 0;
   border-top: 1px solid rgba(128, 128, 128, 0.2);
 }
 
+.panel-handle,
 .events-handle {
   display: flex;
   align-items: center;
@@ -285,6 +327,7 @@ html, body {
   transition: background 0.15s;
 }
 
+.panel-handle:hover,
 .events-handle:hover {
   background: rgba(128, 128, 128, 0.08);
 }
