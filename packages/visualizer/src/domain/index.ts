@@ -1,5 +1,5 @@
 // Visualization domain
-export type { VisualizationState, PlaybackState, PlaybackSpeed, FilterState, DisplayMode, StateColorKey, PolarityColorKey, LevelColorKey, DataSource } from './visualization/index.js'
+export type { VisualizationState, PlaybackState, PlaybackSpeed, FilterState, DisplayMode, StateColorKey, PolarityColorKey, LevelColorKey, DataSource, ZoomState } from './visualization/index.js'
 export { STATE_COLORS, POLARITY_COLORS, LEVEL_COLORS } from './visualization/index.js'
 export {
   createVisualizationState,
@@ -31,6 +31,11 @@ export {
   isMoveVisible,
   serializeFilterState,
   deserializeFilterState,
+  createZoomState,
+  resetZoom,
+  isZoomed,
+  zoomAtPoint,
+  pan,
 } from './visualization/index.js'
 
 // Events domain

@@ -37,3 +37,12 @@ export {
   serializeFilterState,
   deserializeFilterState,
 } from './FilterState.js'
+
+export type { ZoomState } from './ZoomState.js'
+export {
+  createZoomState,
+  resetZoom,
+  isZoomed,
+  zoomAtPoint,
+  pan,
+} from './ZoomState.js'
