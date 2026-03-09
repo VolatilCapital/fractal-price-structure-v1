@@ -25,6 +25,7 @@ import {
   applyHighlightClasses,
   buildMoveIndex,
 } from '../../plot/HoverDecorator.js'
+import MiniMap from './MiniMap.vue'
 
 const props = defineProps<{
   candles: Candle[]
@@ -257,6 +258,14 @@ function handleDoubleClick() {
   resetZoom()
 }
 
+// Mini-map: pan to a center time
+function handlePanTo(centerTime: number) {
+  const [tMin, tMax] = visibleTimeDomain.value
+  const halfSpan = (tMax - tMin) / 2
+  const timeDelta = centerTime - (tMin + halfSpan)
+  panBy(timeDelta)
+}
+
 onMounted(() => {
   window.addEventListener('mouseup', handleMouseUp)
   window.addEventListener('mousemove', handleMouseMove)
@@ -275,22 +284,41 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    ref="chartContainer"
-    class="price-chart"
-    data-testid="price-chart"
-    @wheel="handleWheel"
-    @mousedown="handleMouseDown"
-    @dblclick="handleDoubleClick"
-  >
-  </div>
-  <div v-if="checkZoomed()" class="zoom-indicator" @click="resetZoom">
-    <v-icon size="small" class="mr-1">mdi-magnify-minus</v-icon>
-    Reset zoom
+  <div class="chart-wrapper">
+    <div
+      ref="chartContainer"
+      class="price-chart"
+      data-testid="price-chart"
+      @wheel="handleWheel"
+      @mousedown="handleMouseDown"
+      @dblclick="handleDoubleClick"
+    >
+    </div>
+    <div v-if="checkZoomed()" class="zoom-indicator" @click="resetZoom">
+      <v-icon size="small" class="mr-1">mdi-magnify-minus</v-icon>
+      Reset zoom
+    </div>
+    <MiniMap
+      v-if="checkZoomed()"
+      :candles="candles"
+      :full-time-min="dataRange.timeMin"
+      :full-time-max="dataRange.timeMax"
+      :full-price-min="dataRange.priceMin"
+      :full-price-max="dataRange.priceMax"
+      :view-time-min="visibleTimeDomain[0]"
+      :view-time-max="visibleTimeDomain[1]"
+      @pan-to="handlePanTo"
+    />
   </div>
 </template>
 
 <style scoped>
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .price-chart {
   width: 100%;
   height: 100%;
