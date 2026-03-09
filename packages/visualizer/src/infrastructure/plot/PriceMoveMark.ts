@@ -302,23 +302,23 @@ function createRectMarks(params: StateGroupedMoves) {
       stroke: null,
     }))
 
-    // High boundary line
+    // High boundary line — thickness scales with rang
     result.push(Plot.ruleY(moves, {
       y: (d: PriceMove) => d.priceRange.high,
       x1: (d: PriceMove) => d.timeRange.start,
       x2: (d: PriceMove) => d.timeRange.end,
       stroke: (d: PriceMove) => getHighLineColor(d.polarity),
-      strokeWidth: 2,
+      strokeWidth: (d: PriceMove) => Math.min(1.5 + d.rang * 0.5, 5),
       strokeOpacity: strokeOp,
     }))
 
-    // Low boundary line
+    // Low boundary line — thickness scales with rang
     result.push(Plot.ruleY(moves, {
       y: (d: PriceMove) => d.priceRange.low,
       x1: (d: PriceMove) => d.timeRange.start,
       x2: (d: PriceMove) => d.timeRange.end,
       stroke: (d: PriceMove) => getLowLineColor(d.polarity),
-      strokeWidth: 2,
+      strokeWidth: (d: PriceMove) => Math.min(1.5 + d.rang * 0.5, 5),
       strokeOpacity: strokeOp,
     }))
 
