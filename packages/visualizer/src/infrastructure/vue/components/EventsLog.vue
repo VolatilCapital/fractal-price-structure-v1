@@ -5,6 +5,7 @@
  */
 import { computed } from 'vue'
 import type { StructureEvent, EventType } from '../../../domain/index.js'
+import { EVENT_COLORS } from '../../../domain/index.js'
 
 const props = defineProps<{
   events: StructureEvent[]
@@ -16,20 +17,9 @@ const sortedEvents = computed(() => {
   return [...props.events].sort((a, b) => b.timestamp - a.timestamp).slice(0, 100) // Limit to 100 events
 })
 
-// Get color for event type
+// Get color for event type — uses centralized EVENT_COLORS from charter
 function getEventColor(type: EventType): string {
-  switch (type) {
-    case 'Created':
-      return 'blue'
-    case 'Extended':
-      return 'green'
-    case 'Terminated':
-      return 'orange'
-    case 'Archived':
-      return 'grey'
-    default:
-      return 'grey'
-  }
+  return EVENT_COLORS[type] ?? EVENT_COLORS.Archived
 }
 
 // Get icon for event type
