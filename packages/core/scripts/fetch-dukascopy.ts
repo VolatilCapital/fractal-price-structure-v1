@@ -75,8 +75,10 @@ async function saveFixture(candles: Candle[], from: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const from = process.argv[2] ?? '2026-03-09';
-  const to = process.argv[3] ?? '2026-03-10';
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const from = process.argv[2] ?? today;
+  const to = process.argv[3] ?? tomorrow;
 
   const candles = await fetchEurUsd5m(from, to);
   console.log(`Fetched ${candles.length} candles`);
