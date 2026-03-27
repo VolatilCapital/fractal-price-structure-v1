@@ -31,8 +31,9 @@ function getGrowingMoveBoundaryAtTime(
 ): number {
   // Find all extensions that occurred by cursor time
   const pastExtensions = move.referenceLevels.filter(r => r.timestamp <= cursorTime)
-  if (pastExtensions.length > 0) {
-    return pastExtensions[pastExtensions.length - 1].price
+  const lastExtension = pastExtensions[pastExtensions.length - 1]
+  if (lastExtension !== undefined) {
+    return lastExtension.price
   }
   // Before first extension: use initial candle's directional boundary
   const initialCandle = candleMap.get(move.timeRange.start)

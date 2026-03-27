@@ -115,9 +115,11 @@ export function getFullDataRange(candles: Candle[]): {
     if (candle.high > priceMax) priceMax = candle.high
   }
 
+  const firstCandle = candles[0]
+  const lastCandle = candles[candles.length - 1]
   return {
-    timeMin: candles[0].openTime,
-    timeMax: candles[candles.length - 1].openTime,
+    timeMin: firstCandle !== undefined ? firstCandle.openTime : 0,
+    timeMax: lastCandle !== undefined ? lastCandle.openTime : 0,
     priceMin,
     priceMax,
   }

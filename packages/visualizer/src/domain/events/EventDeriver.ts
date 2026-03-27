@@ -54,6 +54,7 @@ export function deriveEvents(
 
   for (let i = 0; i < candles.length; i++) {
     const candle = candles[i]
+    if (candle === undefined) continue
     const candleTime = candle.openTime
 
     // Add this candle to the engine

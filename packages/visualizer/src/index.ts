@@ -442,7 +442,8 @@ if (process.argv[1]?.includes('visualizer')) {
   visualizer.printTree(3, { mode: 'protocol' });
 
   // Show point-in-time query example
-  const midTime = candles[25].openTime;
+  const midCandle = candles[25]
+  const midTime = midCandle !== undefined ? midCandle.openTime : 0;
   visualizer.printStateAt(midTime, { mode: 'detailed' });
 
   console.log();

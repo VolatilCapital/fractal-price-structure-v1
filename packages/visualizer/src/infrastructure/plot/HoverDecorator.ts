@@ -68,9 +68,11 @@ export function decorateMoveElements(
     const priceMatch = text.match(/([\d.]+)\s*→\s*([\d.]+)/)
     if (!priceMatch) continue
 
-    const rang = parseInt(match[1])
+    const rangStr = match[1]
     const low = priceMatch[1]
     const high = priceMatch[2]
+    if (rangStr === undefined || low === undefined || high === undefined) continue
+    const rang = parseInt(rangStr)
 
     // Find matching move
     for (const m of moves) {

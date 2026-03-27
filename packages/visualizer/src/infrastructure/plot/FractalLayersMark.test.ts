@@ -68,8 +68,8 @@ describe('FractalLayersMark', () => {
         filterState: createFilterState(),
         candles: [],
       })
-      expect(result.data[0].y).toBe(0)
-      expect(result.data[1].y).toBe(2)
+      expect(result.data[0]!.y).toBe(0)
+      expect(result.data[1]!.y).toBe(2)
       expect(result.maxRang).toBe(2)
     })
 
@@ -88,7 +88,7 @@ describe('FractalLayersMark', () => {
         filterState: createFilterState(),
         candles: [],
       })
-      expect(result.data[0].x2).toBe(3000)
+      expect(result.data[0]!.x2).toBe(3000)
     })
 
     it('should create parent-child links when parentStructure exists', () => {
@@ -111,8 +111,8 @@ describe('FractalLayersMark', () => {
         candles: [],
       })
       expect(result.parentChildLinks).toHaveLength(1)
-      expect(result.parentChildLinks[0].childY).toBe(0)
-      expect(result.parentChildLinks[0].parentY).toBe(1)
+      expect(result.parentChildLinks[0]!.childY).toBe(0)
+      expect(result.parentChildLinks[0]!.parentY).toBe(1)
     })
 
     it('should reduce opacity for future moves', () => {
@@ -130,7 +130,7 @@ describe('FractalLayersMark', () => {
         filterState: createFilterState(),
         candles: [],
       })
-      expect(result.data[0].opacity).toBeLessThan(0.5)
+      expect(result.data[0]!.opacity).toBeLessThan(0.5)
     })
   })
 

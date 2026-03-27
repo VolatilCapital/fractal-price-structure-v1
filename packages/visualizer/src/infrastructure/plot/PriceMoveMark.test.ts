@@ -93,11 +93,11 @@ describe('prepareParentChildLinks', () => {
     const links = prepareParentChildLinks([parent, child], 6000)
     expect(links).toHaveLength(1)
     // Child midpoint
-    expect(links[0].x1).toBe(2500)
-    expect(links[0].y1).toBe(110)
+    expect(links[0]!.x1).toBe(2500)
+    expect(links[0]!.y1).toBe(110)
     // Parent midpoint
-    expect(links[0].x2).toBe(3000)
-    expect(links[0].y2).toBe(110)
+    expect(links[0]!.x2).toBe(3000)
+    expect(links[0]!.y2).toBe(110)
   })
 
   it('skips moves whose start is after cursorTime', () => {

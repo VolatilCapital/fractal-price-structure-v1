@@ -30,12 +30,13 @@ export function usePlayback(candles: ShallowRef<Candle[]>) {
 
   // Initialize visualization state when candles are loaded
   watch(candles, (newCandles) => {
-    if (newCandles.length > 0) {
+    const lastCandle = newCandles[newCandles.length - 1]
+    if (newCandles.length > 0 && lastCandle !== undefined) {
       visualizationState.value = {
         ...visualizationState.value,
         totalCandles: newCandles.length,
         cursorIndex: newCandles.length - 1,
-        cursorTime: newCandles[newCandles.length - 1].openTime,
+        cursorTime: lastCandle.openTime,
       }
     }
   }, { immediate: true })

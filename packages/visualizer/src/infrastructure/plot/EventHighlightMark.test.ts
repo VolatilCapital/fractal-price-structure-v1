@@ -28,7 +28,7 @@ describe('getActiveEvents', () => {
     ]
     const active = getActiveEvents(events, 2000)
     expect(active).toHaveLength(1)
-    expect(active[0].eventType).toBe('Extended')
+    expect(active[0]!.eventType).toBe('Extended')
   })
 
   it('returns events within lookback window', () => {
