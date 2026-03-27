@@ -1,6 +1,6 @@
 import type { Candle } from "./domain/candle/Candle.js"
 import type { PriceMove } from "./domain/price-move/PriceMove.js"
-import type { Logger } from "./application/ports/Logger.js"
+import type { Logger } from "./domain/logger/Logger.js"
 import type {
   CandleResult,
   BatchIngestionResult,

@@ -1,4 +1,4 @@
-import type { Logger } from '../../application/ports/Logger.js';
+import type { Logger } from '../../domain/logger/Logger.js';
 
 /**
  * Console-based logger implementation.

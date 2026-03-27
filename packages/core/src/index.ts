@@ -40,6 +40,6 @@ export { BuildPriceMovesFromCandles } from './application/use-cases/BuildPriceMo
 export { buildRecursiveFractalRoots } from './application/use-cases/BuildRecursiveFractal.js';
 
 // Logging
-export type { Logger } from './application/ports/Logger.js';
-export { NoopLogger, noopLogger } from './application/ports/Logger.js';
+export type { Logger } from './domain/logger/Logger.js';
+export { NoopLogger, noopLogger } from './domain/logger/Logger.js';
 export { ConsoleLogger } from './infrastructure/logging/ConsoleLogger.js';
