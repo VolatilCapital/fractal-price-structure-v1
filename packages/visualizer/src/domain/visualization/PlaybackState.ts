@@ -3,16 +3,18 @@
  * Pure TypeScript - no Vue imports.
  */
 
-export enum PlaybackMode {
-  Playing = 'playing',
-  Paused = 'paused',
-  Stopped = 'stopped',
-}
+export const PlaybackMode = {
+  Playing: 'playing',
+  Paused: 'paused',
+  Stopped: 'stopped',
+} as const;
+export type PlaybackMode = (typeof PlaybackMode)[keyof typeof PlaybackMode];
 
-export enum PlaybackDirection {
-  Forward = 'forward',
-  Backward = 'backward',
-}
+export const PlaybackDirection = {
+  Forward: 'forward',
+  Backward: 'backward',
+} as const;
+export type PlaybackDirection = (typeof PlaybackDirection)[keyof typeof PlaybackDirection];
 
 export interface PlaybackSpeed {
   label: string

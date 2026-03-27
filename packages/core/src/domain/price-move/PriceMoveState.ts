@@ -5,8 +5,9 @@
  * Reference: Structure terminée servant de référence (niveaux de support/résistance)
  * Archived: Structure archivée pour optimisation mémoire
  */
-export enum PriceMoveState {
-  Growing = "growing",
-  Reference = "reference",
-  Archived = "archived",
-}
+export const PriceMoveState = {
+  Growing: "growing",
+  Reference: "reference",
+  Archived: "archived",
+} as const;
+export type PriceMoveState = (typeof PriceMoveState)[keyof typeof PriceMoveState];

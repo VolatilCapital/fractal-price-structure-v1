@@ -6,10 +6,14 @@ import type { CandleRepository } from '../../domain/candle/CandleRepository.js';
 import { BinanceCandleApi } from '../api/BinanceCandleApi.js';
 
 export class CachedCandleRepository implements CandleRepository {
-  constructor(private cacheDir: string) {}
+  readonly #cacheDir: string;
+
+  constructor(cacheDir: string) {
+    this.#cacheDir = cacheDir;
+  }
 
   async getCandles(symbol: string, interval: string, limit: number): Promise<Candle[]> {
-    const cachePath = path.join(this.cacheDir, `${symbol}-${interval}.json`);
+    const cachePath = path.join(this.#cacheDir, `${symbol}-${interval}.json`);
     const today = DateTime.utc().toISODate();
 
     try {

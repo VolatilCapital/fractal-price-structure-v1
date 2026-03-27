@@ -218,10 +218,10 @@ function printMoveTree(move: PriceMove, indent = 0, maxDepth = 5, options: Displ
  * Debug visualizer for FractalEngine
  */
 export class DebugVisualizer {
-  private engine: FractalEngine;
+  readonly #engine: FractalEngine;
 
   constructor(engine?: FractalEngine) {
-    this.engine =
+    this.#engine =
       engine ??
       new FractalEngine({
         logger: new ConsoleLogger(),
@@ -233,15 +233,15 @@ export class DebugVisualizer {
    * Get the underlying engine
    */
   getEngine(): FractalEngine {
-    return this.engine;
+    return this.#engine;
   }
 
   /**
    * Load candles into the engine
    */
   loadCandles(candles: Candle[]): void {
-    this.engine.clear();
-    this.engine.buildFromCandles(candles);
+    this.#engine.clear();
+    this.#engine.buildFromCandles(candles);
   }
 
   /**
@@ -249,7 +249,7 @@ export class DebugVisualizer {
    */
   printStats(): void {
     printHeader('STRUCTURE STATISTICS');
-    const stats = this.engine.getMemoryStats();
+    const stats = this.#engine.getMemoryStats();
 
     console.log(`  Total Moves:      ${Colors.bright}${stats.totalMoves}${Colors.reset}`);
     console.log(`  Active Moves:     ${Colors.green}${stats.activeMoves}${Colors.reset}`);
@@ -265,7 +265,7 @@ export class DebugVisualizer {
    */
   printActiveMoves(options: DisplayOptions = {}): void {
     printHeader('ACTIVE MOVES');
-    const moves = this.engine.getActiveMoves();
+    const moves = this.#engine.getActiveMoves();
 
     if (moves.length === 0) {
       console.log(`  ${Colors.dim}No active moves${Colors.reset}`);
@@ -282,7 +282,7 @@ export class DebugVisualizer {
    */
   printLayers(options: DisplayOptions = {}): void {
     printHeader('FRACTAL LAYERS');
-    const layers = this.engine.getLayers();
+    const layers = this.#engine.getLayers();
 
     if (layers.length === 0) {
       console.log(`  ${Colors.dim}No layers${Colors.reset}`);
@@ -310,7 +310,7 @@ export class DebugVisualizer {
    */
   printTree(maxDepth = 5, options: DisplayOptions = {}): void {
     printHeader('MOVE TREE');
-    const allMoves = this.engine.getAllMoves();
+    const allMoves = this.#engine.getAllMoves();
     const roots = allMoves.filter((m) => !m.parentStructure);
 
     if (roots.length === 0) {
@@ -332,7 +332,7 @@ export class DebugVisualizer {
    */
   printStateAt(timestamp: number, options: DisplayOptions = {}): void {
     printHeader(`STATE AT ${new Date(timestamp).toISOString()}`);
-    const stack = this.engine.getStack(timestamp);
+    const stack = this.#engine.getStack(timestamp);
 
     if (stack.length === 0) {
       console.log(`  ${Colors.dim}No moves active at this timestamp${Colors.reset}`);
@@ -352,7 +352,7 @@ export class DebugVisualizer {
    */
   printValidation(): void {
     printHeader('STRUCTURE VALIDATION');
-    const result = this.engine.validate();
+    const result = this.#engine.validate();
 
     if (result.valid) {
       console.log(`  ${Colors.green}✓ Structure is valid${Colors.reset}`);

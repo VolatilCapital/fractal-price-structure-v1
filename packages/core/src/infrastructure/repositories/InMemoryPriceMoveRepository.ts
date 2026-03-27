@@ -4,18 +4,18 @@ import type { PriceMoveRepository } from '../../domain/structure/PriceMoveReposi
 import { PriceMoveState } from '../../domain/price-move/PriceMoveState.js';
 
 export class InMemoryPriceMoveRepository implements PriceMoveRepository {
-  private moves: Map<string, PriceMove> = new Map();
+  readonly #moves: Map<string, PriceMove> = new Map();
 
   save(priceMove: PriceMove): void {
-    this.moves.set(priceMove.id.toString(), priceMove);
+    this.#moves.set(priceMove.id.toString(), priceMove);
   }
 
   findById(id: PriceMoveId): PriceMove | undefined {
-    return this.moves.get(id.toString());
+    return this.#moves.get(id.toString());
   }
 
   findAll(): PriceMove[] {
-    return Array.from(this.moves.values());
+    return Array.from(this.#moves.values());
   }
 
   /**
@@ -44,12 +44,12 @@ export class InMemoryPriceMoveRepository implements PriceMoveRepository {
   removeArchived(): number {
     const archived = this.findArchived();
     for (const move of archived) {
-      this.moves.delete(move.id.toString());
+      this.#moves.delete(move.id.toString());
     }
     return archived.length;
   }
 
   clear(): void {
-    this.moves.clear();
+    this.#moves.clear();
   }
 }

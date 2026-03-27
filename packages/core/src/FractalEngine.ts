@@ -53,16 +53,16 @@ export interface FractalEngineOptions {
  * ```
  */
 export class FractalEngine {
-  private readonly structure: PriceMoveStructure
-  private readonly deterministic: boolean
+  readonly #structure: PriceMoveStructure
+  readonly #deterministic: boolean
 
   constructor(options: FractalEngineOptions = {}) {
     const repo = new InMemoryPriceMoveRepository()
-    this.structure = new PriceMoveStructure(repo)
-    this.deterministic = options.deterministic ?? false
+    this.#structure = new PriceMoveStructure(repo)
+    this.#deterministic = options.deterministic ?? false
 
     if (options.logger) {
-      this.structure.setLogger(options.logger)
+      this.#structure.setLogger(options.logger)
     }
   }
 
@@ -78,7 +78,7 @@ export class FractalEngine {
    * @throws CandleIngestionError if the candle is invalid
    */
   addCandle(candle: Candle): PriceMove {
-    return this.structure.addCandle(candle)
+    return this.#structure.addCandle(candle)
   }
 
   /**
@@ -89,7 +89,7 @@ export class FractalEngine {
    * @returns Result indicating success with the move, or failure with the error
    */
   tryAddCandle(candle: Candle): CandleResult {
-    return this.structure.tryAddCandle(candle)
+    return this.#structure.tryAddCandle(candle)
   }
 
   /**
@@ -100,10 +100,10 @@ export class FractalEngine {
    * @throws CandleIngestionError if any candle is invalid
    */
   buildFromCandles(candles: readonly Candle[]): PriceMove[] {
-    if (this.deterministic) {
-      return this.structure.buildFromCandlesDeterministic(candles)
+    if (this.#deterministic) {
+      return this.#structure.buildFromCandlesDeterministic(candles)
     }
-    return this.structure.buildFromCandles(candles)
+    return this.#structure.buildFromCandles(candles)
   }
 
   /**
@@ -114,7 +114,7 @@ export class FractalEngine {
    * @returns Result with moves, errors, and statistics
    */
   tryBuildFromCandles(candles: readonly Candle[]): BatchIngestionResult {
-    return this.structure.tryBuildFromCandles(candles)
+    return this.#structure.tryBuildFromCandles(candles)
   }
 
   // ============================================
@@ -126,7 +126,7 @@ export class FractalEngine {
    * Growing moves are those that can still be extended.
    */
   getGrowingMoves(): PriceMove[] {
-    return this.structure.getGrowingMoves()
+    return this.#structure.getGrowingMoves()
   }
 
   /**
@@ -134,7 +134,7 @@ export class FractalEngine {
    * Reference moves serve as support/resistance levels.
    */
   getReferenceMoves(): PriceMove[] {
-    return this.structure.getReferenceMoves()
+    return this.#structure.getReferenceMoves()
   }
 
   /**
@@ -142,7 +142,7 @@ export class FractalEngine {
    * Archived moves are kept for historical analysis.
    */
   getArchivedMoves(): PriceMove[] {
-    return this.structure.getArchivedMoves()
+    return this.#structure.getArchivedMoves()
   }
 
   /**
@@ -150,7 +150,7 @@ export class FractalEngine {
    * Degre represents the complexity of the sub-structure.
    */
   getStructuresByDegre(degre: number): PriceMove[] {
-    return this.structure.getStructuresByDegre(degre)
+    return this.#structure.getStructuresByDegre(degre)
   }
 
   // ============================================
@@ -162,21 +162,21 @@ export class FractalEngine {
    * Returns all currently active moves, sorted by generation.
    */
   getActiveMoves(): PriceMove[] {
-    return this.structure.getActiveMoves()
+    return this.#structure.getActiveMoves()
   }
 
   /**
    * Returns all moves (growing, reference, and archived).
    */
   getAllMoves(): PriceMove[] {
-    return this.structure.getAllMoves()
+    return this.#structure.getAllMoves()
   }
 
   /**
    * Returns the number of fractal layers (rang levels) in the structure.
    */
   getLayerCount(): number {
-    return this.structure.getLayerCount()
+    return this.#structure.getLayerCount()
   }
 
   /**
@@ -184,14 +184,14 @@ export class FractalEngine {
    * Layer 0 contains root moves, layer 1 contains their children, etc.
    */
   getLayers(): FractalLayer[] {
-    return this.structure.getLayers()
+    return this.#structure.getLayers()
   }
 
   /**
    * Returns moves at a specific rang level.
    */
   getLayer(level: number): FractalLayer {
-    return this.structure.getLayer(level)
+    return this.#structure.getLayer(level)
   }
 
   /**
@@ -199,7 +199,7 @@ export class FractalEngine {
    * Checks parent-child relationships are bidirectional and consistent.
    */
   validate(): { valid: boolean; errors: string[] } {
-    return this.structure.validateStructure()
+    return this.#structure.validateStructure()
   }
 
   // ============================================
@@ -218,7 +218,7 @@ export class FractalEngine {
    * @returns Array of moves that were active at the given timestamp, sorted by rang
    */
   getStack(timestamp: number): PriceMove[] {
-    return this.structure.getStack(timestamp)
+    return this.#structure.getStack(timestamp)
   }
 
   /**
@@ -230,7 +230,7 @@ export class FractalEngine {
    * @returns The active move at that rang and timestamp, or undefined if none
    */
   getMove(rang: number, timestamp: number): PriceMove | undefined {
-    return this.structure.getMove(rang, timestamp)
+    return this.#structure.getMove(rang, timestamp)
   }
 
   // ============================================
@@ -242,14 +242,14 @@ export class FractalEngine {
    * Useful for debugging and logging.
    */
   formatActiveMoves(): string {
-    return this.structure.formatActiveMoves()
+    return this.#structure.formatActiveMoves()
   }
 
   /**
    * Logs the current active moves using the configured logger.
    */
   logActiveMoves(): void {
-    this.structure.logActiveMoves()
+    this.#structure.logActiveMoves()
   }
 
   /**
@@ -267,14 +267,14 @@ export class FractalEngine {
     maxChildCount: number
     layerCount: number
   } {
-    return this.structure.getMemoryStats()
+    return this.#structure.getMemoryStats()
   }
 
   /**
    * Logs memory statistics using the configured logger.
    */
   logMemoryStats(): void {
-    this.structure.logMemoryStats()
+    this.#structure.logMemoryStats()
   }
 
   // ============================================
@@ -289,7 +289,7 @@ export class FractalEngine {
    * @returns Number of moves removed
    */
   pruneClosedMoves(beforeTimestamp: number): number {
-    return this.structure.pruneClosedMoves(beforeTimestamp)
+    return this.#structure.pruneClosedMoves(beforeTimestamp)
   }
 
   /**
@@ -299,13 +299,13 @@ export class FractalEngine {
    * @returns Number of structures archived
    */
   archiveOrphanedStructures(beforeTimestamp: number): number {
-    return this.structure.archiveOrphanedStructures(beforeTimestamp)
+    return this.#structure.archiveOrphanedStructures(beforeTimestamp)
   }
 
   /**
    * Clears all moves and resets the engine to empty state.
    */
   clear(): void {
-    this.structure.clear()
+    this.#structure.clear()
   }
 }

@@ -121,7 +121,7 @@ export class PriceMove {
         : candidate.priceRange.high // For Down: reference = high of extending move
 
       // Add reference level for the extending move
-      this.addReferenceLevel(candidate)
+      this.#addReferenceLevel(candidate)
 
       return "extended-boundary"
     }
@@ -150,7 +150,7 @@ export class PriceMove {
     }
     this.state = PriceMoveState.Reference
     this.terminatedAt = timestamp
-    this.calculateDegre()
+    this.#calculateDegre()
   }
 
   /**
@@ -195,7 +195,7 @@ export class PriceMove {
    * Propage aussi le recalcul vers les sous-structures qui ont terminé
    * avant que ce parent n'ait son degré défini.
    */
-  private calculateDegre(): void {
+  #calculateDegre(): void {
     if (this.parentStructure && this.parentStructure.degre !== undefined) {
       this.degre = this.parentStructure.degre + 1
     } else {
@@ -204,14 +204,14 @@ export class PriceMove {
     }
 
     // Propagate to terminated children that may have incorrect degre
-    this.propagateDegreToChildren()
+    this.#propagateDegreToChildren()
   }
 
   /**
    * Propage le recalcul du degré vers les sous-structures terminées.
    * Nécessaire car les enfants peuvent terminer avant leur parent.
    */
-  private propagateDegreToChildren(): void {
+  #propagateDegreToChildren(): void {
     for (const child of this.subStructures) {
       if (child.state !== PriceMoveState.Growing && child.degre !== undefined) {
         // Child already terminated, recalculate its degre based on this parent
@@ -219,7 +219,7 @@ export class PriceMove {
         if (child.degre !== expectedDegre) {
           child.degre = expectedDegre
           // Recursively propagate to grandchildren
-          child.propagateDegreToChildren()
+          child.#propagateDegreToChildren()
         }
       }
     }
@@ -228,7 +228,7 @@ export class PriceMove {
   /**
    * Ajoute un niveau de référence basé sur le candidat qui a étendu la structure.
    */
-  private addReferenceLevel(candidate: PriceMove): void {
+  #addReferenceLevel(candidate: PriceMove): void {
     const level: ReferenceLevel = {
       price: this.polarity === Polarity.Up
         ? candidate.priceRange.high

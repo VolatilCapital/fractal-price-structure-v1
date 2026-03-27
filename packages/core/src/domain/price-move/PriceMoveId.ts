@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto"
 
 export class PriceMoveId {
-  constructor(private readonly value: string) {}
+  readonly #value: string;
+
+  constructor(value: string) {
+    this.#value = value;
+  }
 
   /**
    * Creates a new PriceMoveId with a random UUID.
@@ -34,10 +38,10 @@ export class PriceMoveId {
   }
 
   public toString(): string {
-    return this.value
+    return this.#value
   }
 
   public equals(other: PriceMoveId): boolean {
-    return this.value === other.value
+    return this.#value === other.toString()
   }
 }
