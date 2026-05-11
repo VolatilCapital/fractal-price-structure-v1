@@ -1,6 +1,6 @@
 import type { PriceMove } from "../../domain/price-move/PriceMove.js"
 import { PriceMoveStructure } from "../orchestrator/PriceMoveStructure.js"
-import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory.js"
+import { createPriceMoveFromCandle } from "../../domain/price-move/PriceMoveFactory.js"
 
 export interface FractalLayer {
     level: number
@@ -38,7 +38,7 @@ export function buildFractalLayersFromMoves(
                 close: move.priceRange.high,
                 volume: 0
             }
-            const newMove = PriceMoveFactory.fromCandle(pseudoCandle)
+            const newMove = createPriceMoveFromCandle(pseudoCandle)
             structure.add(newMove)
         }
 

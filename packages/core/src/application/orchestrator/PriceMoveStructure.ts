@@ -2,7 +2,7 @@ import type { PriceMove } from "../../domain/price-move/PriceMove.js"
 import type { PriceMoveRepository } from "../ports/PriceMoveRepository.js"
 import type { Candle } from "../../domain/candle/Candle.js"
 import { validateCandle } from "../../domain/candle/Candle.js"
-import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory.js"
+import { createPriceMoveFromCandle, createPriceMoveFromCandleWithIndex } from "../../domain/price-move/PriceMoveFactory.js"
 import type { FractalLayer } from "../../domain/structure/FractalLayer.js"
 import type { Logger } from "../../domain/logger/Logger.js"
 import { noopLogger } from "../../domain/logger/Logger.js"
@@ -566,7 +566,7 @@ export class PriceMoveStructure {
     }
 
     // Create PriceMove from candle
-    const move = PriceMoveFactory.fromCandle(candle)
+    const move = createPriceMoveFromCandle(candle)
 
     // Add to structure (uses existing logic)
     this.add(move)
@@ -706,7 +706,7 @@ export class PriceMoveStructure {
       }
 
       // Create PriceMove with deterministic ID
-      const move = PriceMoveFactory.fromCandleWithIndex(candle, i)
+      const move = createPriceMoveFromCandleWithIndex(candle, i)
 
       // Add to structure
       this.add(move)

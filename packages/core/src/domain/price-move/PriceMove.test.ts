@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { PriceMove } from "./PriceMove.js"
-import { PriceMoveFactory } from "./PriceMoveFactory.js"
+import { createPriceMoveFromCandle } from "./PriceMoveFactory.js"
 import { Polarity } from "./Polarity.js"
 import { PriceMoveState } from "./PriceMoveState.js"
 import { PriceMoveId } from "./PriceMoveId.js"
@@ -36,31 +36,31 @@ function createMove(overrides: {
 }
 
 describe("PriceMove Entity", () => {
-  describe("creation via PriceMoveFactory", () => {
+  describe("creation via createPriceMoveFromCandle", () => {
     it("should have Up polarity when close > open", () => {
       const candle = createCandle({ open: 100, close: 110 })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.polarity).toBe(Polarity.Up)
     })
 
     it("should have Up polarity when close == open (edge case)", () => {
       const candle = createCandle({ open: 100, close: 100 })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.polarity).toBe(Polarity.Up)
     })
 
     it("should have Down polarity when close < open", () => {
       const candle = createCandle({ open: 110, close: 100 })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.polarity).toBe(Polarity.Down)
     })
 
     it("should set correct timeRange from candle", () => {
       const candle = createCandle({ openTime: 5000, closeTime: 6000 })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.timeRange.start).toBe(5000)
       expect(move.timeRange.end).toBe(6000)
@@ -68,7 +68,7 @@ describe("PriceMove Entity", () => {
 
     it("should set correct priceRange from candle low/high", () => {
       const candle = createCandle({ low: 80, high: 120 })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.priceRange.low).toBe(80)
       expect(move.priceRange.high).toBe(120)
@@ -76,8 +76,8 @@ describe("PriceMove Entity", () => {
 
     it("should generate unique id (UUID)", () => {
       const candle = createCandle()
-      const move1 = PriceMoveFactory.fromCandle(candle)
-      const move2 = PriceMoveFactory.fromCandle(candle)
+      const move1 = createPriceMoveFromCandle(candle)
+      const move2 = createPriceMoveFromCandle(candle)
 
       expect(move1.id.toString()).not.toBe(move2.id.toString())
       expect(move1.id.toString()).toMatch(
@@ -87,7 +87,7 @@ describe("PriceMove Entity", () => {
 
     it("should start in Growing state", () => {
       const candle = createCandle()
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.state).toBe(PriceMoveState.Growing)
       expect(move.isGrowing()).toBe(true)
@@ -102,7 +102,7 @@ describe("PriceMove Entity", () => {
         low: 0.000000005,
         high: 0.00000003,
       })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.polarity).toBe(Polarity.Up)
       expect(move.priceRange.low).toBe(0.000000005)
@@ -116,7 +116,7 @@ describe("PriceMove Entity", () => {
         low: 999000,
         high: 1001000,
       })
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.polarity).toBe(Polarity.Down)
       expect(move.priceRange.low).toBe(999000)
@@ -127,7 +127,7 @@ describe("PriceMove Entity", () => {
   describe("immutability", () => {
     it("should have readonly id", () => {
       const candle = createCandle()
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       // TypeScript readonly check - id cannot be reassigned
       // This is a compile-time check, but we verify the property exists
@@ -138,7 +138,7 @@ describe("PriceMove Entity", () => {
   describe("initial state", () => {
     it("should have empty subStructures array", () => {
       const candle = createCandle()
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.subStructures).toEqual([])
       expect(move.childMoves).toEqual([]) // Legacy alias
@@ -146,14 +146,14 @@ describe("PriceMove Entity", () => {
 
     it("should have empty referenceLevels array", () => {
       const candle = createCandle()
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.referenceLevels).toEqual([])
     })
 
     it("should have undefined parentStructure", () => {
       const candle = createCandle()
-      const move = PriceMoveFactory.fromCandle(candle)
+      const move = createPriceMoveFromCandle(candle)
 
       expect(move.parentStructure).toBeUndefined()
       expect(move.englobingMove).toBeUndefined() // Legacy alias

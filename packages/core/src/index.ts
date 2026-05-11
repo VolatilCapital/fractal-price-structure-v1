@@ -16,7 +16,7 @@ export { PriceMove, type CandidateResult } from './domain/price-move/PriceMove.j
 export { Polarity } from './domain/price-move/Polarity.js';
 export { PriceMoveState } from './domain/price-move/PriceMoveState.js';
 export { PriceMoveId } from './domain/price-move/PriceMoveId.js';
-export { PriceMoveFactory } from './domain/price-move/PriceMoveFactory.js';
+export { createPriceMoveFromCandle, createPriceMoveFromCandleWithIndex } from './domain/price-move/PriceMoveFactory.js';
 export type { ReferenceLevel } from './domain/price-move/ReferenceLevel.js';
 export {
   PriceMoveStructure,

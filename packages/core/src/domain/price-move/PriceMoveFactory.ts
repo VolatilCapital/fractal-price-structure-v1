@@ -36,12 +36,3 @@ export function createPriceMoveFromCandleWithIndex(candle: Candle, index: number
     polarity,
   })
 }
-
-/**
- * @deprecated Use createPriceMoveFromCandle and createPriceMoveFromCandleWithIndex instead.
- * Kept for backward compatibility.
- */
-export const PriceMoveFactory = {
-  fromCandle: createPriceMoveFromCandle,
-  fromCandleWithIndex: createPriceMoveFromCandleWithIndex,
-}
