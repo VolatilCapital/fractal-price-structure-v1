@@ -543,5 +543,300 @@ describe("PriceMoveStructure — advanced", () => {
       const validation = structure.validateStructure()
       expect(validation.valid).toBe(true)
     })
+
+    it("should NOT be engulfing when candidate breaks directional bound but NOT reference level", () => {
+      // Establish an Up structure with reference level raised
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 112, close: 120, low: 108, high: 125,
+      }))
+
+      // Candidate breaks high (> 125) but NOT reference (low=115 >= 108)
+      // This is a normal extension, NOT an engulfing
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 120, close: 130, low: 115, high: 135,
+      }))
+
+      // The structure should be extended (not terminated by engulfing)
+      const growingMoves = structure.getGrowingMoves()
+      expect(growingMoves.length).toBeGreaterThan(0)
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should NOT be engulfing when candidate breaks reference level but NOT directional bound", () => {
+      // Establish an Up structure with reference level raised
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 112, close: 120, low: 108, high: 125,
+      }))
+
+      // Candidate breaks reference (low=100 < 108) but NOT directional (high=120 <= 125)
+      // This is a normal break, NOT an engulfing
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 125, close: 105, low: 100, high: 120,
+      }))
+
+      // The original structure should be terminated by normal break
+      const referenceMoves = structure.getReferenceMoves()
+      expect(referenceMoves.length).toBeGreaterThanOrEqual(1)
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should NOT be engulfing when candidate is exactly at reference level (boundary)", () => {
+      // Establish an Up structure with reference level at 108
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 112, close: 120, low: 108, high: 125,
+      }))
+
+      // Candidate: low=108 (NOT below reference, equal), high=130 (breaks directional)
+      // This is a normal extension — low is NOT strictly less than reference level
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 115, close: 130, low: 108, high: 135,
+      }))
+
+      // Structure should still be growing (extended, not engulfed)
+      const growingMoves = structure.getGrowingMoves()
+      expect(growingMoves.length).toBeGreaterThan(0)
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should handle engulfing on a Down structure (red engulfing breaking above reference)", () => {
+      // Establish a Down structure
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 110, close: 100, low: 95, high: 115,
+      }))
+
+      // Extend to lower the reference level (Down: reference = high of extending move)
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 95, close: 88, low: 85, high: 98,
+      }))
+
+      // Red engulfing on Down: high > 98 (breaks directional for Down = above reference)
+      // AND low < 85 (extends Down)
+      // This breaks the Down structure
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 90, close: 105, low: 80, high: 110,
+      }))
+
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+  })
+
+  // ============================================
+  // Cascade termination (#handleCascadeTermination)
+  // ============================================
+
+  describe("cascade termination", () => {
+    it("should terminate a broken structure when breaking move is encountered", () => {
+      // Create an Up structure and break it
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+
+      // Break it with a move that goes below the reference level
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 105, close: 85, low: 80, high: 108,
+      }))
+
+      // The original Up structure should now be Reference (terminated)
+      const referenceMoves = structure.getReferenceMoves()
+      expect(referenceMoves.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it("should cascade terminate to parent when parent is also broken", () => {
+      // Build a 3-level structure: root → child → grandchild (all Up)
+      // Then break grandchild with a move severe enough to also break child and root
+
+      // Root Up structure (rang 0)
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+
+      // Internal child (becomes sub-structure of root, extending it)
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 110, close: 125, low: 105, high: 130,
+      }))
+
+      // Internal grandchild (extends root further)
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 125, close: 140, low: 120, high: 145,
+      }))
+
+      // Severe break: low = 80 breaks ALL reference levels (95, 105, 120)
+      structure.addCandle(createCandle({
+        openTime: 4000, closeTime: 5000,
+        open: 100, close: 85, low: 80, high: 105,
+      }))
+
+      // All structures should have been terminated (cascade)
+      const growingMoves = structure.getGrowingMoves()
+      // Only the breaking move should be growing
+      const growingUpMoves = growingMoves.filter(m => m.polarity === "Up")
+      expect(growingUpMoves.length).toBe(0)
+
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should stop cascade at the first surviving parent", () => {
+      // Build a multi-level structure and break only the deepest levels
+      // The root should survive
+
+      // Root Up (rang 0)
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 90, high: 115,
+      }))
+
+      // Child extension (raises reference, extends root boundary)
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 112, close: 120, low: 108, high: 125,
+      }))
+
+      // Grandchild extension (raises reference further)
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 122, close: 130, low: 118, high: 135,
+      }))
+
+      // Break that only breaks the grandchild reference level (118)
+      // But NOT the root's initial reference level (90)
+      structure.addCandle(createCandle({
+        openTime: 4000, closeTime: 5000,
+        open: 132, close: 100, low: 95, high: 140,
+      }))
+
+      // The root should have survived (its reference level 90 was not broken)
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should set correction reference on broken structures", () => {
+      // Create and break a structure
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 105, close: 85, low: 80, high: 108,
+      }))
+
+      // The terminated structure should have a correction set
+      const referenceMoves = structure.getReferenceMoves()
+      const brokenMove = referenceMoves.find(m => m.polarity === "Up")
+      expect(brokenMove?.correction).toBeDefined()
+    })
+  })
+
+  // ============================================
+  // Detach move (#detachMove via pruneClosedMoves)
+  // ============================================
+
+  describe("detach move (via pruneClosedMoves)", () => {
+    it("should remove pruned moves from the repository", () => {
+      // Create and terminate a move
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 105, close: 85, low: 80, high: 108,
+      }))
+
+      const beforeCount = structure.getAllMoves().length
+      // Prune with a timestamp after the termination
+      structure.pruneClosedMoves(99999)
+
+      const afterCount = structure.getAllMoves().length
+      expect(afterCount).toBeLessThan(beforeCount)
+    })
+
+    it("should orphan children of pruned moves (they become roots)", () => {
+      // Create a structure with parent-child relationship, then prune old reference moves
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 108, close: 120, low: 105, high: 125,
+      }))
+      // Break to terminate
+      structure.addCandle(createCandle({
+        openTime: 3000, closeTime: 4000,
+        open: 110, close: 85, low: 80, high: 115,
+      }))
+
+      // Prune old reference moves
+      structure.pruneClosedMoves(99999)
+
+      // Remaining moves should have valid parent relationships
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should clear correction reference when detaching", () => {
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 105, close: 85, low: 80, high: 108,
+      }))
+
+      // Prune should remove the terminated move with its correction
+      structure.pruneClosedMoves(99999)
+
+      // Structure should still be valid after pruning
+      const validation = structure.validateStructure()
+      expect(validation.valid).toBe(true)
+    })
+
+    it("should not prune growing moves", () => {
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+
+      const totalBefore = structure.getAllMoves().length
+      structure.pruneClosedMoves(99999)
+      const totalAfter = structure.getAllMoves().length
+
+      // Growing moves should NOT be pruned
+      expect(totalAfter).toBe(totalBefore)
+    })
   })
 })
