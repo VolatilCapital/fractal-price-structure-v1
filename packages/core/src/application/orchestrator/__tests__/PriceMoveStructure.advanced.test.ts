@@ -148,12 +148,12 @@ describe("PriceMoveStructure — advanced", () => {
       expect(formatted.toLowerCase()).toContain("up")
     })
 
-    it("should contain generation/rang bracket in formatted output", () => {
+    it("should contain rang bracket in formatted output", () => {
       structure.addCandle(createCandle())
 
       const formatted = structure.formatActiveMoves()
 
-      expect(formatted).toContain("[Gen")
+      expect(formatted).toContain("[Rang")
     })
 
     it("should list one entry per growing move", () => {

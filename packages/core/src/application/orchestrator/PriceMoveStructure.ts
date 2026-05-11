@@ -389,7 +389,7 @@ export class PriceMoveStructure {
         const pol = m.polarity.padEnd(4)
         const low = m.priceRange.low.toFixed(2)
         const high = m.priceRange.high.toFixed(2)
-        return `  [Gen ${rang}] ${pol} [${low}-${high}] (id: ${id})`
+        return `  [Rang ${rang}] ${pol} [${low}-${high}] (id: ${id})`
       })
       .join("\n")
   }

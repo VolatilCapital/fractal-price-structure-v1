@@ -12,7 +12,7 @@ export function buildRecursiveFractalRoots(roots: PriceMove[], maxLevels: number
 
     const nextLevelMoves: PriceMove[] = []
     for (const move of moves) {
-      nextLevelMoves.push(...move.childMoves)
+      nextLevelMoves.push(...move.subStructures)
     }
 
     buildLayer(nextLevelMoves, level + 1)

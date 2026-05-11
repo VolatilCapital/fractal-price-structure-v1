@@ -212,10 +212,12 @@ export class PriceMove {
    * Nécessaire car les enfants peuvent terminer avant leur parent.
    */
   #propagateDegreToChildren(): void {
+    if (this.degre === undefined) return
+    const expectedDegre = this.degre + 1
+
     for (const child of this.subStructures) {
       if (child.state !== PriceMoveState.Growing && child.degre !== undefined) {
         // Child already terminated, recalculate its degre based on this parent
-        const expectedDegre = this.degre! + 1
         if (child.degre !== expectedDegre) {
           child.degre = expectedDegre
           // Recursively propagate to grandchildren
