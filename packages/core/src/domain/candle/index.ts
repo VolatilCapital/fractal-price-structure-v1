@@ -6,4 +6,4 @@
 export type { Candle, CandleValidationResult } from "./Candle.js"
 export { isCandle, validateCandle } from "./Candle.js"
 export { CandleFactory, InvalidCandleError } from "./CandleFactory.js"
-export type { CandleRepository } from "./CandleRepository.js"
+export type { CandleRepository } from "../../application/ports/CandleRepository.js"

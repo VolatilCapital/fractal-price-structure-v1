@@ -23,7 +23,7 @@ export {
   CandleIngestionError,
   type CandleResult,
   type BatchIngestionResult,
-} from './domain/structure/PriceMoveStructure.js';
+} from './application/orchestrator/PriceMoveStructure.js';
 export type { FractalLayer } from './domain/structure/FractalLayer.js';
 
 // Shared types

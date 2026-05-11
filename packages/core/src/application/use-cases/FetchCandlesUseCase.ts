@@ -1,4 +1,4 @@
-import type { CandleRepository } from "../../domain/candle/CandleRepository.js"
+import type { CandleRepository } from "../ports/CandleRepository.js"
 import type { Candle } from "../../domain/candle/Candle.js"
 
 export class FetchCandlesUseCase {

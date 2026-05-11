@@ -4,9 +4,9 @@ import type { Logger } from "./domain/logger/Logger.js"
 import type {
   CandleResult,
   BatchIngestionResult,
-} from "./domain/structure/PriceMoveStructure.js"
+} from "./application/orchestrator/PriceMoveStructure.js"
 import type { FractalLayer } from "./domain/structure/FractalLayer.js"
-import { PriceMoveStructure } from "./domain/structure/PriceMoveStructure.js"
+import { PriceMoveStructure } from "./application/orchestrator/PriceMoveStructure.js"
 import { InMemoryPriceMoveRepository } from "./infrastructure/repositories/InMemoryPriceMoveRepository.js"
 
 /**

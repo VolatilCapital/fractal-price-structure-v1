@@ -1,13 +1,12 @@
-import type { PriceMove } from "../price-move/PriceMove.js"
-import type { PriceMoveRepository } from "./PriceMoveRepository.js"
-import { PriceMoveRules } from "../price-move/PriceMoveRules.js"
-import type { Candle } from "../candle/Candle.js"
-import { validateCandle } from "../candle/Candle.js"
-import { PriceMoveFactory } from "../price-move/PriceMoveFactory.js"
-import type { FractalLayer } from "./FractalLayer.js"
-import type { Logger } from "../logger/Logger.js"
-import { noopLogger } from "../logger/Logger.js"
-import { Polarity } from "../price-move/Polarity.js"
+import type { PriceMove } from "../../domain/price-move/PriceMove.js"
+import type { PriceMoveRepository } from "../ports/PriceMoveRepository.js"
+import type { Candle } from "../../domain/candle/Candle.js"
+import { validateCandle } from "../../domain/candle/Candle.js"
+import { PriceMoveFactory } from "../../domain/price-move/PriceMoveFactory.js"
+import type { FractalLayer } from "../../domain/structure/FractalLayer.js"
+import type { Logger } from "../../domain/logger/Logger.js"
+import { noopLogger } from "../../domain/logger/Logger.js"
+import { Polarity } from "../../domain/price-move/Polarity.js"
 import { Price } from "../../shared/Price.js"
 
 /**
@@ -643,7 +642,9 @@ export class PriceMoveStructure {
     const errors: CandleIngestionError[] = []
 
     for (let i = 0; i < candles.length; i++) {
-      const result = this.tryAddCandle(candles[i])
+      const candle = candles[i]
+      if (!candle) continue
+      const result = this.tryAddCandle(candle)
       if (result.success) {
         moves.push(result.move)
       } else {
@@ -690,6 +691,7 @@ export class PriceMoveStructure {
 
     for (let i = 0; i < candles.length; i++) {
       const candle = candles[i]
+      if (!candle) continue
 
       // Validate candle before processing
       const validation = validateCandle(candle)

@@ -1,5 +1,5 @@
 import type { PriceMove } from "../../domain/price-move/PriceMove.js"
-import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure.js"
+import { PriceMoveStructure } from "../orchestrator/PriceMoveStructure.js"
 import type { PriceMoveRepositoryFactory } from "../ports/PriceMoveRepositoryFactory.js"
 
 export class FractalPriceMoveBuilder {

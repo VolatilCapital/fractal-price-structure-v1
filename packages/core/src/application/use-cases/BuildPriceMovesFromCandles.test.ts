@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { BuildPriceMovesFromCandles } from "./BuildPriceMovesFromCandles.js"
-import { PriceMoveStructure } from "../../domain/structure/PriceMoveStructure.js"
+import { PriceMoveStructure } from "../orchestrator/PriceMoveStructure.js"
 import { InMemoryPriceMoveRepository } from "../../infrastructure/repositories/InMemoryPriceMoveRepository.js"
 import { Polarity } from "../../domain/price-move/Polarity.js"
 import type { Candle } from "../../domain/candle/Candle.js"

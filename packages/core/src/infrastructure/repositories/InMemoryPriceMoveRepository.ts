@@ -1,6 +1,6 @@
 import type { PriceMove } from '../../domain/price-move/PriceMove.js';
 import type { PriceMoveId } from '../../domain/price-move/PriceMoveId.js';
-import type { PriceMoveRepository } from '../../domain/structure/PriceMoveRepository.js';
+import type { PriceMoveRepository } from '../../application/ports/PriceMoveRepository.js';
 import { PriceMoveState } from '../../domain/price-move/PriceMoveState.js';
 
 export class InMemoryPriceMoveRepository implements PriceMoveRepository {

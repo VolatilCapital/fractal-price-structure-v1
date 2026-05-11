@@ -1,6 +1,6 @@
-import type { PriceMove } from "../price-move/PriceMove.js"
-import type { PriceMoveId } from "../price-move/PriceMoveId.js"
-import type { PriceMoveState } from "../price-move/PriceMoveState.js"
+import type { PriceMove } from "../../domain/price-move/PriceMove.js"
+import type { PriceMoveId } from "../../domain/price-move/PriceMoveId.js"
+import type { PriceMoveState } from "../../domain/price-move/PriceMoveState.js"
 
 export interface PriceMoveRepository {
   save(priceMove: PriceMove): void

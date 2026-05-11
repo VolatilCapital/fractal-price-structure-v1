@@ -1,6 +1,6 @@
 import { CachedCandleRepository } from "./infrastructure/repositories/CachedCandleRepository.js"
 import { InMemoryPriceMoveRepository } from "./infrastructure/repositories/InMemoryPriceMoveRepository.js"
-import { PriceMoveStructure } from "./domain/structure/PriceMoveStructure.js"
+import { PriceMoveStructure } from "./application/orchestrator/PriceMoveStructure.js"
 import { BuildPriceMovesFromCandles } from "./application/use-cases/BuildPriceMovesFromCandles.js"
 import type { PriceMove } from "./domain/price-move/PriceMove.js"
 import { PriceMoveLoggerFile } from "./infrastructure/adapters/PriceMoveLoggerFile.js"

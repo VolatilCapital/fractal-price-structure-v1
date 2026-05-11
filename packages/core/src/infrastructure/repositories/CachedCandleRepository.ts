@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DateTime } from 'luxon';
 import type { Candle } from '../../domain/candle/Candle.js';
-import type { CandleRepository } from '../../domain/candle/CandleRepository.js';
+import type { CandleRepository } from '../../application/ports/CandleRepository.js';
 import { BinanceCandleApi } from '../api/BinanceCandleApi.js';
 
 export class CachedCandleRepository implements CandleRepository {

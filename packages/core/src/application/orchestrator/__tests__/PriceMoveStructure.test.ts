@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { PriceMoveStructure, CandleIngestionError } from "./PriceMoveStructure.js"
-import { InMemoryPriceMoveRepository } from "../../infrastructure/repositories/InMemoryPriceMoveRepository.js"
-import { Polarity } from "../price-move/Polarity.js"
-import { PriceMoveState } from "../price-move/PriceMoveState.js"
-import type { Candle } from "../candle/Candle.js"
-import type { PriceMoveRepository } from "./PriceMoveRepository.js"
+import { PriceMoveStructure, CandleIngestionError } from "../PriceMoveStructure.js"
+import { InMemoryPriceMoveRepository } from "../../../infrastructure/repositories/InMemoryPriceMoveRepository.js"
+import { Polarity } from "../../../domain/price-move/Polarity.js"
+import { PriceMoveState } from "../../../domain/price-move/PriceMoveState.js"
+import type { Candle } from "../../../domain/candle/Candle.js"
+import type { PriceMoveRepository } from "../../ports/PriceMoveRepository.js"
 
 function createCandle(overrides: Partial<Candle> = {}): Candle {
   return {

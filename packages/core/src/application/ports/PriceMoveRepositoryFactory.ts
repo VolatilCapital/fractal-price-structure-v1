@@ -1,4 +1,4 @@
-import type { PriceMoveRepository } from "../../domain/structure/PriceMoveRepository.js"
+import type { PriceMoveRepository } from "./PriceMoveRepository.js"
 
 /**
  * Port — factory for creating PriceMoveRepository instances.
