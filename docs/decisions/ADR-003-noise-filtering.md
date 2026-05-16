@@ -1,71 +1,66 @@
-# ADR-003 — Filtrage du bruit / définition d'un mouvement significatif
+# ADR-003 — Filtrage / exploitabilité des structures produites
 
 ## État
 Proposed
 
 ## Contexte
 
-Aujourd'hui, **chaque bougie produit un PriceMove**. La conséquence empirique (cf. `memory/MEMORY.md`) :
+Aujourd'hui, **chaque bougie produit un PriceMove**. Conséquence empirique (`memory/MEMORY.md`) :
 
-> ~76% des moves sont des racines sans parent — c'est structurellement attendu (chaque bougie crée un move indépendant).
+> ~76% des moves sont des racines sans parent — chaque bougie crée un move indépendant.
 
-Sur `btcusdt-1d.json` (1000 bougies), on obtient 25 rangs de profondeur. Sur `eurusd-5m.json` (216 bougies), 4 rangs. Le système est saturé de mouvements minuscules (1 tick, 1 bougie) qui polluent la lecture fractale.
+Sur les fixtures actuelles, la sortie est saturée de mouvements de rang 0 qui rendent la lecture difficile. La question : comment exposer une vue exploitable sans dévier du protocole ?
 
-Le protocole (`protocole-construction.md`) **ne définit pas de seuil de signification**. La règle "trois cas de figure" (dépassement même sens / opposé / aucun) traite n'importe quel mouvement de prix, quelle que soit son amplitude.
+**Cadrage strict** (cf. mémoire `feedback_no_invented_heuristics`) : aucune heuristique externe (ATR, seuils en %, indicateurs techniques, volatilité). Tout filtrage doit être **intrinsèque à la structure produite par le protocole**, dérivable uniquement des cassures et des highs/lows des bougies.
 
-**Symptôme** : Les indicateurs techniques bâtis sur cette structure devraient distinguer "structure macro" et "bruit micro", mais aujourd'hui les deux sont mélangés dans le même flux.
+**Contrainte d'usage** : le système doit servir aussi bien le temps réel que le backtest, et produire des résultats *cohérents en échelle* sur 1m / 1h / 1d (invariance fractale).
 
-## Options
+## Options (toutes dérivables strictement du protocole)
 
-### A. Statu quo — pas de filtrage interne
-- ✅ Algorithme indépendant de toute heuristique.
-- ✅ Toute l'information de marché est préservée — c'est au consommateur de filtrer en aval.
-- ❌ Sortie inutilisable telle quelle pour des signaux.
-- ❌ Coût mémoire / CPU linéaire en nombre de bougies, même pour du bruit.
+### A. Statu quo — aucun filtre dans le noyau ni dans l'API
+- Le consommateur trie en aval selon ses besoins.
+- ✅ Library 100% neutre.
+- ❌ Sortie inexploitable sur 1m sans travail externe.
 
-### B. Seuil d'amplitude minimum (ATR-based)
-- Avant ingestion, calculer l'ATR(N) sur les `lookback` dernières bougies. Ignorer toute bougie dont l'amplitude `high - low` est inférieure à `k * ATR` (k ~ 0.2–0.5).
-- ✅ Adaptatif à la volatilité de chaque marché.
-- ✅ Conserve l'algorithmique du protocole.
-- ❌ Introduit un état temporel externe (fenêtre ATR).
-- ❌ Choix de k arbitraire, à régler par actif.
+### B. Filtre par **rang** en lecture
+- Ajouter `engine.getStructuresAtMinRang(N)` et `engine.getStructuresAtRangRange(min, max)`.
+- Le rang = profondeur d'imbrication structurelle, intrinsèque (calculé depuis `subStructures`).
+- ✅ **Invariance d'échelle** : un même seuil donne le même type d'objet sur 1m, 1h, 1d.
+- ✅ Aucune nouvelle notion introduite — le rang existe déjà.
+- ⚠️ Le rang dépend de la profondeur de l'historique : un même actif sur 200 vs 10 000 bougies ne donne pas les mêmes valeurs absolues de rang max.
 
-### C. Seuil d'amplitude en pourcentage du prix
-- Ignorer toute bougie dont `(high - low) / midPrice < seuil` (ex. 0.05%).
-- ✅ Simple, sans état temporel.
-- ❌ Pas adaptatif à la volatilité du marché ; un seuil unique conviendra à un actif mais pas à un autre.
+### C. Filtre par **état** en lecture (Reference uniquement)
+- API existante : `engine.getReferenceMoves()` retourne déjà les structures terminées (stables).
+- ✅ Sépare "en construction" de "validé".
+- ❌ Ne diminue pas le bruit en lui-même — toutes les bougies terminées sont là aussi.
 
-### D. Agrégation pré-ingestion (timeframe coarsening)
-- Fusionner les bougies micro avant de les passer à FractalEngine. Au lieu de filtrer, on diminue la résolution.
-- ✅ Conserve toute l'information dans une représentation moins granulaire.
-- ✅ Cohérent avec la philosophie "fractal" — c'est l'utilisateur qui choisit son échelle d'entrée.
-- ❌ Décale le problème : le consommateur doit choisir la timeframe ; pas de filtrage automatique adaptatif.
+### D. Filtre combiné **rang ≥ N ET état = Reference**
+- Ne renvoyer que les structures terminées de rang significatif.
+- ✅ Signaux les plus "fiables" pour un usage trading.
+- ⚠️ Plus restrictif — perd les structures en cours de formation (problème pour le temps réel).
 
-### E. Filtrage post-construction (par `rang`)
-- Construire l'arbre complet, puis exposer une API qui ne retourne que les structures de rang ≥ N.
-- ✅ Zéro coût pour l'algorithme central.
-- ✅ Le rang capture déjà une notion de complexité — c'est un proxy de "signification structurelle".
-- ❌ Le rang dépend de la durée de l'historique : un rang 3 sur 200 bougies n'est pas comparable à un rang 3 sur 10 000 bougies.
-
-### F. Hybride D + E — paramétrer en entrée *et* en sortie
-- Le consommateur choisit la timeframe (coarsening si nécessaire) ET un filtre `minRang` en lecture.
-- ✅ Sépare clairement les responsabilités.
-- ✅ N'ajoute aucune heuristique dans le noyau.
+### E. Exposer aussi le **move en cours de formation**
+- Complément aux options B/D : `engine.getCurrentFormingMoves()` retourne les Growing au sommet de chaque rang, pour anticipation temps réel.
+- ✅ Permet de suivre une structure dès qu'elle dépasse rang N, avant qu'elle ne se finalise.
+- Combinable avec B/D.
 
 ## Recommandation
 
-**Option F (hybride D+E)** comme philosophie : le noyau reste indépendant de tout seuil, et les deux leviers naturels (timeframe en entrée, rang en sortie) sont déjà disponibles.
+**Option B (filtre par rang en lecture) + Option E (move en cours)**.
 
-Le visualizer expose **déjà** un filtre `maxRang` (cf. `MEMORY.md` "Filtre maxRang : Slider dans FilterPanel"). Étendre avec un `minRang` côté lecture serait trivial.
+Justification :
+- Le **rang** est l'invariant fractal natif. Il dérive uniquement du protocole (cassures + subStructures), donc strictement conforme au cadrage.
+- L'invariance d'échelle est préservée : tu peux relancer sur 1m, 1h, 1d, et un filtre `minRang=N` donne « le même genre d'objet » à chaque fois, simplement à des résolutions temporelles différentes.
+- L'option E répond au besoin temps réel : pouvoir suivre une structure qui *vient* d'atteindre rang N sans attendre sa terminaison.
+- Le noyau reste strictement neutre — aucune règle nouvelle dans `protocole-construction.md`.
+- L'option C (état) reste exploitable en parallèle via l'API existante `getReferenceMoves()`.
 
-Avant d'ajouter quoi que ce soit dans le noyau, **mesurer** : sur les deux fixtures, quelle est la distribution des amplitudes des moves rang 0 vs rang ≥ 1 ? Si les moves rang ≥ 1 absorbent déjà l'essentiel du signal utile, l'option F est suffisante. Sinon, considérer l'option B comme couche de pré-traitement *optionnelle*.
-
-L'option A (statu quo) doit être préservée comme **comportement par défaut** : la library reste neutre.
+**Action de préalable** : avant de fixer un `minRang` par défaut dans le visualizer, produire une étude empirique de la distribution des rangs sur les fixtures `eurusd-5m.json` et `btcusdt-1d.json` (durée moyenne d'un move par rang, nombre de moves par rang). Cela informe la valeur seuil pertinente *par observation*, pas par devination.
 
 ## Conséquences si tranché
 
-- **Doc** : Ajouter un chapitre "Signal vs bruit" dans `protocole-construction.md` qui dit explicitement « le protocole ne définit pas de seuil. Le filtrage est une responsabilité du consommateur via le choix de timeframe et le filtrage par rang. »
-- **Code** : Ajouter `getStructuresByRangRange(minRang, maxRang)` sur FractalEngine.
-- **Visualizer** : Étendre `FilterPanel` avec un slider `minRang`.
-- **Étude empirique** : produire un rapport `docs/empirical/rang-distribution.md` qui montre la distribution des amplitudes par rang sur les fixtures.
-- **Optionnel** : adapter une couche `PreFilteringPipeline` (option B ou D) en option externe à FractalEngine, jamais dans le noyau.
+- **Doc** : section "Filtrage par rang et invariance d'échelle" ajoutée dans `protocole-construction.md` ou `specification-fractale.md` (à décider).
+- **Code API** : `getStructuresAtMinRang(N)`, `getStructuresAtRangRange(min, max)`, `getCurrentFormingMoves()` sur `FractalEngine`.
+- **Visualizer** : ajouter un slider `minRang` à côté du `maxRang` existant.
+- **Étude empirique** : script `tools/rang-distribution.ts` qui produit un rapport markdown dans `docs/empirical/rang-distribution.md`.
+- **Mémoire** : mettre à jour `MEMORY.md` une fois l'étude faite (remplacer "0 moves Archived" et "76% racines" par des stats actualisées et liées à un filtre `minRang` par défaut).
