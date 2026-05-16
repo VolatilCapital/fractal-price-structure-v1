@@ -584,7 +584,7 @@ describe("PriceMoveStructure — advanced", () => {
       // This is a normal break, NOT an engulfing
       structure.addCandle(createCandle({
         openTime: 3000, closeTime: 4000,
-        open: 125, close: 105, low: 100, high: 120,
+        open: 120, close: 105, low: 100, high: 120,
       }))
 
       // The original structure should be terminated by normal break
@@ -754,7 +754,7 @@ describe("PriceMoveStructure — advanced", () => {
 
       // The terminated structure should have a correction set
       const referenceMoves = structure.getReferenceMoves()
-      const brokenMove = referenceMoves.find(m => m.polarity === "Up")
+      const brokenMove = referenceMoves.find(m => m.polarity === "up")
       expect(brokenMove?.correction).toBeDefined()
     })
   })

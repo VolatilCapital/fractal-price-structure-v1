@@ -249,7 +249,7 @@ describe("FractalEngine", () => {
 
       const formatted = engine.formatActiveMoves()
 
-      expect(formatted).toContain("[Gen")
+      expect(formatted).toContain("[Rang")
       expect(formatted).toContain("(id:")
     })
   })

@@ -1087,7 +1087,7 @@ describe("PriceMoveStructure", () => {
       structure.addCandle(candle)
       const result = structure.formatActiveMoves()
 
-      expect(result).toContain("[Gen 0]")
+      expect(result).toContain("[Rang 0]")
       expect(result).toContain("up")
       expect(result).toContain("[95.00-115.00]")
       expect(result).toContain("(id:")
@@ -1119,7 +1119,7 @@ describe("PriceMoveStructure", () => {
 
       expect(lines.length).toBeGreaterThan(0)
       for (const line of lines) {
-        expect(line).toMatch(/\[Gen \d\]/)
+        expect(line).toMatch(/\[Rang \d\]/)
         expect(line).toMatch(/(up|down)/)
       }
     })
