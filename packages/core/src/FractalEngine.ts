@@ -153,6 +153,37 @@ export class FractalEngine {
     return this.#structure.getStructuresByDegre(degre)
   }
 
+  /**
+   * Returns moves whose `rangContrasted` is ≥ `minRangContrasted` (ADR-007).
+   *
+   * `rangContrasted` reflects the depth of fractal nesting counting ONLY
+   * opposite-polarity sub-structures (corrections imbriquées). Use this filter
+   * to discard pure unidirectional runs and keep only structurally rich moves.
+   */
+  getStructuresAtMinRangContrasted(minRangContrasted: number): PriceMove[] {
+    return this.#structure
+      .getAllMoves()
+      .filter((m) => m.rangContrasted >= minRangContrasted)
+  }
+
+  /**
+   * Returns moves whose `rangContrasted` is within [min, max] inclusive.
+   */
+  getStructuresAtRangContrastedRange(min: number, max: number): PriceMove[] {
+    return this.#structure
+      .getAllMoves()
+      .filter((m) => m.rangContrasted >= min && m.rangContrasted <= max)
+  }
+
+  /**
+   * Returns the currently growing moves at each rangContrasted level, useful
+   * for real-time signal anticipation (a structure that has just reached
+   * rangContrasted N is "forming" at that depth).
+   */
+  getCurrentFormingMoves(): PriceMove[] {
+    return this.#structure.getGrowingMoves()
+  }
+
   // ============================================
   // Structure Queries - Legacy API (deprecated)
   // ============================================

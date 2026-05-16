@@ -176,6 +176,49 @@ describe("FractalEngine", () => {
     })
   })
 
+  describe("getStructuresAtMinRangContrasted (ADR-007)", () => {
+    it("should return [] for an empty engine", () => {
+      expect(engine.getStructuresAtMinRangContrasted(0)).toEqual([])
+      expect(engine.getStructuresAtMinRangContrasted(1)).toEqual([])
+    })
+
+    it("should keep rangContrasted = 0 on a pure unidirectional down run", () => {
+      // 4 down candles each breaking the previous low — no opposite-polarity child.
+      engine.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 110, close: 100, high: 115, low: 95 }),
+        createCandle({ openTime: 2000, closeTime: 3000, open: 100, close: 90, high: 100, low: 85 }),
+        createCandle({ openTime: 3000, closeTime: 4000, open: 90, close: 80, high: 90, low: 75 }),
+        createCandle({ openTime: 4000, closeTime: 5000, open: 80, close: 70, high: 80, low: 65 }),
+      ])
+      const all = engine.getAllMoves()
+      // rang likely climbs to ≥ 2 here, but rangContrasted should stay 0 everywhere.
+      for (const m of all) {
+        expect(m.rangContrasted).toBe(0)
+      }
+    })
+
+    it("should bump rangContrasted to ≥ 1 once an opposite-polarity sub-structure is added", () => {
+      // 1) down move → 2) deeper down (extension) → 3) up candle that fits inside as internal sub.
+      engine.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 110, close: 100, high: 115, low: 95 }),
+        createCandle({ openTime: 2000, closeTime: 3000, open: 100, close: 92, high: 100, low: 90 }),
+        // internal up sub (does not break parent low, does not break high)
+        createCandle({ openTime: 3000, closeTime: 4000, open: 93, close: 98, high: 99, low: 92 }),
+      ])
+      const all = engine.getAllMoves()
+      const someContrasted = all.find((m) => m.rangContrasted >= 1)
+      expect(someContrasted).toBeDefined()
+    })
+
+    it("getStructuresAtMinRangContrasted(0) should return all moves", () => {
+      engine.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 110, close: 100, high: 115, low: 95 }),
+        createCandle({ openTime: 2000, closeTime: 3000, open: 100, close: 90, high: 100, low: 85 }),
+      ])
+      expect(engine.getStructuresAtMinRangContrasted(0)).toEqual(engine.getAllMoves())
+    })
+  })
+
   describe("getLayers", () => {
     it("should return empty for empty engine", () => {
       expect(engine.getLayers()).toEqual([])

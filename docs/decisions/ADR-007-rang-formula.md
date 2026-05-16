@@ -1,7 +1,7 @@
 # ADR-007 — Formule de calcul du `rang` : compter ou non les extensions homopolarisées
 
 ## État
-Proposed
+Accepted (2026-05-16) — Option C appliquée. `rang` inchangé, `rangContrasted` ajouté en complément.
 
 ## Contexte
 

@@ -24,6 +24,17 @@ export class PriceMove {
   /** Rang: profondeur dans la hiérarchie fractale (0 pour les racines) */
   public rang: number
 
+  /**
+   * Rang contrasted (ADR-007): profondeur d'imbrication fractale ne comptant
+   * que les sub-structures de POLARITÉ OPPOSÉE (= corrections imbriquées).
+   * Reflète l'invariant fractal au sens du protocole §5.3, sans inflation par
+   * les extensions homopolarisées.
+   *   = 0 si aucune sub-structure
+   *   = max(sub.rangContrasted pour sub de polarité opposée) + 1
+   *   = max(sub.rangContrasted) sans incrément si toutes les subs sont même polarité
+   */
+  public rangContrasted: number = 0
+
   /** Degré: calculé à la terminaison, représente la complexité de la sous-structure */
   public degre?: number
 
@@ -187,6 +198,36 @@ export class PriceMove {
   }
 
   /**
+   * Recalcule le rangContrasted (ADR-007) — profondeur d'imbrication par
+   * sub-structure de polarité opposée. Propage vers le parent si la valeur
+   * change.
+   */
+  public recalculateRangContrasted(): void {
+    const oldValue = this.rangContrasted
+
+    if (this.subStructures.length === 0) {
+      this.rangContrasted = 0
+    } else {
+      const opposite = this.subStructures.filter(
+        (s) => s.polarity !== this.polarity
+      )
+      if (opposite.length === 0) {
+        // Pas de correction directe : on hérite du max des subs sans incrémenter
+        this.rangContrasted = Math.max(
+          ...this.subStructures.map((s) => s.rangContrasted)
+        )
+      } else {
+        this.rangContrasted =
+          Math.max(...opposite.map((s) => s.rangContrasted)) + 1
+      }
+    }
+
+    if (this.rangContrasted !== oldValue && this.parentStructure) {
+      this.parentStructure.recalculateRangContrasted()
+    }
+  }
+
+  /**
    * Calcule le degré à la terminaison.
    * Le degré représente la position hiérarchique par rapport au parent.
    * degré(structure) = degré(parent) + 1
@@ -250,6 +291,7 @@ export class PriceMove {
       this.subStructures.push(sub)
       sub.parentStructure = this
       this.recalculateRang()
+      this.recalculateRangContrasted()
     }
   }
 
