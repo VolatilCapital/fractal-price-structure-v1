@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+<rect x="0" y="0" width="1100" height="620" fill="#fafafa"/>
+<rect x="70" y="30" width="810" height="540" fill="white" stroke="#666" stroke-width="0.5"/>
+<line x1="70" y1="570" x2="880" y2="570" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="573" text-anchor="end" fill="#666">1.14424</text>
+<line x1="70" y1="480" x2="880" y2="480" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="483" text-anchor="end" fill="#666">1.14449</text>
+<line x1="70" y1="390" x2="880" y2="390" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="393" text-anchor="end" fill="#666">1.14474</text>
+<line x1="70" y1="300" x2="880" y2="300" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="303" text-anchor="end" fill="#666">1.14499</text>
+<line x1="70" y1="210" x2="880" y2="210" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="213" text-anchor="end" fill="#666">1.14524</text>
+<line x1="70" y1="120" x2="880" y2="120" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="123" text-anchor="end" fill="#666">1.14549</text>
+<line x1="70" y1="30" x2="880" y2="30" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="33" text-anchor="end" fill="#666">1.14574</text>
+<text x="204.99969999966666" y="584" text-anchor="middle" fill="#666">01:00</text>
+<text x="204.99969999966666" y="598" text-anchor="middle" fill="#666" font-size="9">#0</text>
+<text x="475" y="584" text-anchor="middle" fill="#666">01:05</text>
+<text x="475" y="598" text-anchor="middle" fill="#666" font-size="9">#1</text>
+<text x="745.0003000003333" y="584" text-anchor="middle" fill="#666">01:10</text>
+<text x="745.0003000003333" y="598" text-anchor="middle" fill="#666" font-size="9">#2</text>
+<line x1="204.99969999966666" y1="67.24137931037501" x2="204.99969999966666" y2="317.9045092837745" stroke="#ef5350" stroke-width="1"/>
+<rect x="123.99960999956666" y="128.11671087535143" width="162.0001800002" height="153.97877984079452" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
+<line x1="475" y1="282.09549071614595" x2="475" y2="425.33156498666" stroke="#ef5350" stroke-width="1"/>
+<rect x="393.9999099999" y="289.25729442971937" width="162.0001800002" height="128.91246684344674" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
+<line x1="745.0003000003333" y1="371.618037135257" x2="745.0003000003333" y2="532.758620689625" stroke="#ef5350" stroke-width="1"/>
+<rect x="664.0002100002332" y="418.1697612731661" width="162.0001800002" height="64.4562334217631" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
+<rect x="610.0006000006667" y="371.618037135257" width="269.99939999933326" height="161.140583554368" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
+<text x="613.0006000006667" y="369.618037135257" fill="#2e7d32" font-weight="600">r=0 00000002</text>
+<rect x="340.00030000033337" y="282.09549071614595" width="539.9996999996666" height="250.66312997347904" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
+<text x="343.00030000033337" y="280.09549071614595" fill="#2e7d32" font-weight="600">r=1 00000001</text>
+<rect x="70" y="67.24137931037501" width="539.9996999996667" height="358.090185676285" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
+<text x="73" y="65.24137931037501" fill="#2e7d32" font-weight="600">r=2 00000000</text>
+<line x1="70" y1="282.09549071614595" x2="880" y2="282.09549071614595" stroke="#7b1fa2" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="876" y="278.09549071614595" text-anchor="end" fill="#7b1fa2" font-weight="600">ref top r=2 : 1.14504</text>
+<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 3/8</text>
+<text x="900" y="52" fill="#444">Bougie #2 @ 01:10:00</text>
+<text x="900" y="66" fill="#444" font-size="10">O=1.14466 H=1.14479</text>
+<text x="900" y="78" fill="#444" font-size="10">L=1.14434 C=1.14448</text>
+<text x="900" y="96" font-weight="600" fill="#222">État des PriceMoves</text>
+<rect x="900" y="101" width="14" height="10" fill="none" stroke="#2e7d32" stroke-width="1.2"/>
+<text x="920" y="110" fill="#444">growing</text>
+<rect x="900" y="115" width="14" height="10" fill="none" stroke="#ef6c00" stroke-width="1.2"/>
+<text x="920" y="124" fill="#444">reference</text>
+<rect x="900" y="129" width="14" height="10" fill="none" stroke="#9e9e9e" stroke-width="1.2"/>
+<text x="920" y="138" fill="#444">archived</text>
+<text x="900" y="158" font-weight="600" fill="#222">Polarité (remplissage)</text>
+<rect x="900" y="163" width="14" height="10" fill="#1976d2" fill-opacity="0.25"/>
+<text x="920" y="172" fill="#444">up</text>
+<rect x="900" y="177" width="14" height="10" fill="#c62828" fill-opacity="0.25"/>
+<text x="920" y="186" fill="#444">down</text>
+<text x="900" y="208" font-weight="600" fill="#222">3 moves connus</text>
+<text x="900" y="222" fill="#444">rang max : 2</text>
+<text x="900" y="236" fill="#444" font-size="10">growing=3 reference=0</text>
+</svg>

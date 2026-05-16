@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+<rect x="0" y="0" width="1100" height="620" fill="#fafafa"/>
+<rect x="70" y="30" width="810" height="540" fill="white" stroke="#666" stroke-width="0.5"/>
+<line x1="70" y1="570" x2="880" y2="570" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="573" text-anchor="end" fill="#666">1.14456</text>
+<line x1="70" y1="480.00000000003445" x2="880" y2="480.00000000003445" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="483.00000000003445" text-anchor="end" fill="#666">1.14475</text>
+<line x1="70" y1="389.99999999996555" x2="880" y2="389.99999999996555" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="392.99999999996555" text-anchor="end" fill="#666">1.14495</text>
+<line x1="70" y1="300" x2="880" y2="300" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="303" text-anchor="end" fill="#666">1.14514</text>
+<line x1="70" y1="210.00000000003445" x2="880" y2="210.00000000003445" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="213.00000000003445" text-anchor="end" fill="#666">1.14533</text>
+<line x1="70" y1="119.99999999996555" x2="880" y2="119.99999999996555" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="122.99999999996555" text-anchor="end" fill="#666">1.14553</text>
+<line x1="70" y1="30" x2="880" y2="30" stroke="#eee" stroke-width="0.5"/>
+<text x="64" y="33" text-anchor="end" fill="#666">1.14572</text>
+<text x="272.4996624994375" y="584" text-anchor="middle" fill="#666">01:00</text>
+<text x="272.4996624994375" y="598" text-anchor="middle" fill="#666" font-size="9">#0</text>
+<text x="677.5003375005624" y="584" text-anchor="middle" fill="#666">01:05</text>
+<text x="677.5003375005624" y="598" text-anchor="middle" fill="#666" font-size="9">#1</text>
+<line x1="272.4996624994375" y1="67.24137931038047" x2="272.4996624994375" y2="393.10344827584777" stroke="#ef5350" stroke-width="1"/>
+<rect x="150.9994599991" y="146.37931034486144" width="243.000405000675" height="200.17241379306245" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
+<line x1="677.5003375005624" y1="346.5517241379239" x2="677.5003375005624" y2="532.7586206896195" stroke="#ef5350" stroke-width="1"/>
+<rect x="556.0001350002249" y="355.8620689655707" width="243.000405000675" height="167.58620689650542" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
+<rect x="475.000675001125" y="346.5517241379239" width="404.999324998875" height="186.20689655169565" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
+<text x="478.000675001125" y="344.5517241379239" fill="#2e7d32" font-weight="600">r=0 00000001</text>
+<rect x="70" y="67.24137931038047" width="810" height="465.51724137923907" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
+<text x="73" y="65.24137931038047" fill="#2e7d32" font-weight="600">r=1 00000000</text>
+<line x1="70" y1="346.5517241379239" x2="880" y2="346.5517241379239" stroke="#7b1fa2" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="876" y="342.5517241379239" text-anchor="end" fill="#7b1fa2" font-weight="600">ref top r=1 : 1.14504</text>
+<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 2/8</text>
+<text x="900" y="52" fill="#444">Bougie #1 @ 01:05:00</text>
+<text x="900" y="66" fill="#444" font-size="10">O=1.14502 H=1.14504</text>
+<text x="900" y="78" fill="#444" font-size="10">L=1.14464 C=1.14466</text>
+<text x="900" y="96" font-weight="600" fill="#222">État des PriceMoves</text>
+<rect x="900" y="101" width="14" height="10" fill="none" stroke="#2e7d32" stroke-width="1.2"/>
+<text x="920" y="110" fill="#444">growing</text>
+<rect x="900" y="115" width="14" height="10" fill="none" stroke="#ef6c00" stroke-width="1.2"/>
+<text x="920" y="124" fill="#444">reference</text>
+<rect x="900" y="129" width="14" height="10" fill="none" stroke="#9e9e9e" stroke-width="1.2"/>
+<text x="920" y="138" fill="#444">archived</text>
+<text x="900" y="158" font-weight="600" fill="#222">Polarité (remplissage)</text>
+<rect x="900" y="163" width="14" height="10" fill="#1976d2" fill-opacity="0.25"/>
+<text x="920" y="172" fill="#444">up</text>
+<rect x="900" y="177" width="14" height="10" fill="#c62828" fill-opacity="0.25"/>
+<text x="920" y="186" fill="#444">down</text>
+<text x="900" y="208" font-weight="600" fill="#222">2 moves connus</text>
+<text x="900" y="222" fill="#444">rang max : 1</text>
+<text x="900" y="236" fill="#444" font-size="10">growing=2 reference=0</text>
+</svg>

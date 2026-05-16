@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Construction progressive de la structure fractale — EURUSD-5m</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 1180px; margin: 24px auto; padding: 0 16px; color: #222; background: #f5f5f5; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p.intro { color: #555; line-height: 1.5; }
+  .legend { background: white; padding: 12px 16px; border-radius: 6px; margin: 16px 0 24px; border: 1px solid #ddd; font-size: 14px; line-height: 1.6; }
+  .legend code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .step { background: white; padding: 8px 12px 16px; margin-bottom: 24px; border-radius: 6px; border: 1px solid #ddd; }
+  .step h2 { font-size: 16px; margin: 8px 0 8px; }
+  .step .muted { color: #888; font-weight: 400; font-size: 14px; }
+  .step img { width: 100%; height: auto; display: block; }
+</style>
+</head>
+<body>
+<h1>Construction progressive de la structure fractale</h1>
+<p class="intro">Fixture : <code>eurusd-5m.json</code> · 8 bougies · construction <em>from scratch</em> à chaque étape via <code>FractalEngine.buildFromCandles</code>.</p>
+<div class="legend">
+  <strong>Comment lire chaque SVG :</strong><br/>
+  • Chandeliers compacts au centre (vert = up, rouge = down).<br/>
+  • Rectangles superposés = <strong>PriceMove</strong>s, dimensionnés en <code>priceRange × timeRange</code>.<br/>
+  • Couleur de contour : vert <em>growing</em>, orange <em>reference</em>, gris <em>archived</em>.<br/>
+  • Remplissage léger : bleu si <em>up</em>, rouge si <em>down</em>.<br/>
+  • Étiquette de chaque rectangle : <code>r=&lt;rang&gt; &lt;id8&gt;</code>.<br/>
+  • Ligne pointillée violette : <code>currentReferenceLevel</code> du PriceMove de rang max.
+</div>
+
+    <section class="step">
+      <h2>Étape 1 <span class="muted">— 1 bougie ingérée</span></h2>
+      <img src="step-01.svg" alt="step-01.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 2 <span class="muted">— 2 bougies ingérées</span></h2>
+      <img src="step-02.svg" alt="step-02.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 3 <span class="muted">— 3 bougies ingérées</span></h2>
+      <img src="step-03.svg" alt="step-03.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 4 <span class="muted">— 4 bougies ingérées</span></h2>
+      <img src="step-04.svg" alt="step-04.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 5 <span class="muted">— 5 bougies ingérées</span></h2>
+      <img src="step-05.svg" alt="step-05.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 6 <span class="muted">— 6 bougies ingérées</span></h2>
+      <img src="step-06.svg" alt="step-06.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 7 <span class="muted">— 7 bougies ingérées</span></h2>
+      <img src="step-07.svg" alt="step-07.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 8 <span class="muted">— 8 bougies ingérées</span></h2>
+      <img src="step-08.svg" alt="step-08.svg" loading="lazy"/>
+    </section>
+</body>
+</html>
