@@ -18,13 +18,6 @@ export class InMemoryPriceMoveRepository implements PriceMoveRepository {
     return Array.from(this.#moves.values());
   }
 
-  /**
-   * @deprecated Use findGrowing() instead
-   */
-  findActive(): PriceMove[] {
-    return this.findGrowing();
-  }
-
   findByState(state: PriceMoveState): PriceMove[] {
     return this.findAll().filter((m) => m.state === state);
   }

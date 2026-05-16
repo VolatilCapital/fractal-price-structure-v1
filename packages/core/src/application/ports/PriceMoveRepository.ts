@@ -7,9 +7,6 @@ export interface PriceMoveRepository {
   findById(id: PriceMoveId): PriceMove | undefined
   findAll(): PriceMove[]
 
-  /** @deprecated Use findGrowing() instead */
-  findActive(): PriceMove[]
-
   /** Find moves by state */
   findByState(state: PriceMoveState): PriceMove[]
 
