@@ -26,3 +26,6 @@ screenshots/
 # Playwright MCP artifacts
 .playwright-mcp/
 test-results/
+
+# Claude Code TTS audio cache (not versioned)
+.claude/audio/

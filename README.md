@@ -33,7 +33,8 @@ import { FractalEngine, ConsoleLogger } from '@fractal-price-structure/core';
 // Create engine with optional logging
 const engine = new FractalEngine({
   logger: new ConsoleLogger(),
-  deterministic: true  // for reproducible IDs
+  deterministic: true,  // for reproducible IDs
+  autoArchive: false,   // ADR-001: archive Reference descendants on parent terminate (default false)
 });
 
 // Define candles
@@ -67,10 +68,13 @@ A PriceMove represents a directional price movement with:
 - **Polarity**: `Up` (`"up"`) or `Down` (`"down"`).
 - **PriceRange / TimeRange**: low–high price boundaries and start–end timestamps.
 - **State**: `Growing` (can still extend) → `Reference` (terminated, used as level for parent invalidation) → `Archived` (no longer relevant for detection — eligible for memory reclamation).
-- **Rang**: bottom-up complexity level — higher rang = more nested sub-structures.
+- **Rang**: bottom-up complexity level — counts every sub-structure, including same-polarity extensions.
+- **rangContrasted** (ADR-007): true fractal nesting depth — only counts opposite-polarity sub-structures (corrections imbriquées per protocole §5.3). Bounded across timeframes; recommended for filtering exploitable structures.
 - **Degré**: top-down hierarchy position — assigned when the structure terminates.
 - **currentReferenceLevel**: dynamic invalidation threshold — opposite bound of the last extending candidate (protocol §3.3).
 - **subStructures / parentStructure**: hierarchical relations within the fractal tree.
+- **breakingMove** (ADR-004): the candidate that terminated this structure (formerly `correction`, kept as deprecated alias).
+- **isImpulsion() / isCorrection()** (ADR-004): derived helpers — true if same / opposite polarity as immediate parent.
 
 ### Extension & Invalidation (protocol §3)
 
@@ -113,6 +117,11 @@ engine.getLayer(level)                      // FractalLayer at specific rang
 engine.getLayerCount()                      // number of rang levels
 engine.validate()                           // { valid: boolean, errors: string[] }
 
+// Filtering by fractal nesting depth (ADR-007)
+engine.getStructuresAtMinRangContrasted(N)        // PriceMove[] with rangContrasted ≥ N
+engine.getStructuresAtRangContrastedRange(min, max) // PriceMove[] within range
+engine.getCurrentFormingMoves()                   // growing moves — real-time signal anticipation
+
 // Legacy (deprecated)
 engine.getActiveMoves()                     // alias for getGrowingMoves()
 
@@ -149,16 +158,20 @@ interface PriceMove {
   id: PriceMoveId;
   polarity: Polarity;                // 'up' | 'down'
   state: PriceMoveState;             // 'growing' | 'reference' | 'archived'
-  rang: number;                      // bottom-up complexity level
+  rang: number;                      // bottom-up complexity, all sub-structures counted
+  rangContrasted: number;            // true fractal nesting depth (only opposite-polarity subs — ADR-007)
   degre?: number;                    // top-down hierarchy position (set on terminate)
   timeRange: TimeRange;
   priceRange: PriceRange;
   currentReferenceLevel: number;     // dynamic invalidation threshold (protocol §3.3)
   subStructures: PriceMove[];        // nested moves
   parentStructure?: PriceMove;       // parent in the fractal tree
-  correction?: PriceMove;            // breaking move that terminated this one
+  breakingMove?: PriceMove;          // the move that terminated this structure (ADR-004; legacy alias: `correction`)
   terminatedAt?: number;             // timestamp when Growing → Reference
   archivedAt?: number;               // timestamp when Reference → Archived
+  // Derived analytical helpers (ADR-004):
+  isImpulsion(): boolean;            // same polarity as immediate parent
+  isCorrection(): boolean;           // opposite polarity from immediate parent
 }
 
 interface FractalLayer {
@@ -227,6 +240,14 @@ pnpm format
 # Run the debug visualizer
 pnpm --filter @fractal-price-structure/visualizer dev
 ```
+
+## Architecture Decisions
+
+All key trade-offs are documented as ADRs in [`docs/decisions/`](docs/decisions/README.md). The 2026-05-16 BMAD audit produced seven ADRs (ADR-001 to ADR-007), all in **Accepted** status. See in particular:
+
+- [`docs/empirical/rang-mechanism.md`](docs/empirical/rang-mechanism.md) — synthesis of the `rang` inflation investigation that led to `rangContrasted`.
+- [`docs/empirical/progressive/index.html`](docs/empirical/progressive/) — progressive visual (one SVG per candle) showing both `rang` and `rangContrasted` side by side.
+- Reproducible empirical scripts in [`tools/`](tools/) — `rang-distribution.ts`, `rang-trace.ts`, `candle-trace.ts`, `rang-contrasted.ts`, `render-progressive.ts`.
 
 ## License
 

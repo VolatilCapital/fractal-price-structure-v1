@@ -16,7 +16,8 @@ import { FractalEngine, ConsoleLogger } from '@fractal-price-structure/core';
 // Create engine with optional logging
 const engine = new FractalEngine({
   logger: new ConsoleLogger(),
-  deterministic: true  // for reproducible IDs
+  deterministic: true,  // for reproducible IDs
+  autoArchive: false,   // ADR-001: archive Reference descendants when parent terminates (default false)
 });
 
 // Add candles
@@ -26,6 +27,9 @@ engine.buildFromCandles(candles);
 const growingMoves = engine.getGrowingMoves();
 const layers = engine.getLayers();
 const stats = engine.getMemoryStats();
+
+// Filter by fractal nesting depth (ADR-007)
+const richMoves = engine.getStructuresAtMinRangContrasted(2);  // keep moves with ≥ 2 levels of opposite-polarity nesting
 ```
 
 ## Commands (pnpm monorepo)
@@ -102,6 +106,11 @@ engine.getLayer(level)                      // FractalLayer at specific level
 engine.getLayerCount()                      // number of rang levels
 engine.validate()                           // { valid: boolean, errors: string[] }
 
+// Filtering by fractal nesting depth (ADR-007)
+engine.getStructuresAtMinRangContrasted(N)  // PriceMove[] with rangContrasted ≥ N
+engine.getStructuresAtRangContrastedRange(min, max) // PriceMove[] within range
+engine.getCurrentFormingMoves()             // alias for getGrowingMoves(), useful for real-time signal anticipation
+
 // Legacy (deprecated)
 engine.getActiveMoves()                     // Use getGrowingMoves() instead
 
@@ -123,19 +132,30 @@ engine.clear()                              // reset to empty state
 
 ### Key Types
 - `Candle` - Input: { openTime, closeTime, open, high, low, close, volume }
-- `PriceMove` - Output: polarity, priceRange, timeRange, state, rang, degre?, currentReferenceLevel, subStructures, parentStructure?
+- `PriceMove` - Output: polarity, priceRange, timeRange, state, rang, rangContrasted, degre?, currentReferenceLevel, subStructures, parentStructure?, breakingMove?
 - `FractalLayer` - { level: number, moves: PriceMove[] }
 - `Logger` - { debug, info, warn, error } interface
 
 ### Key Properties
-- **rang** - Complexity level (bottom-up): higher rang = more sub-structures
-- **degre** - Hierarchy level (top-down): assigned when structure terminates
-- **currentReferenceLevel** - Dynamic invalidation threshold (opposite bound of last extending move)
+- **rang** - Complexity level (bottom-up): higher rang = more sub-structures (counts all sub-structures, even same-polarity extensions).
+- **rangContrasted** (ADR-007) - True fractal nesting depth: only counts sub-structures of OPPOSITE polarity (corrections imbriquées per protocole §5.3). Use this for filtering — invariant across timeframes.
+- **degre** - Hierarchy level (top-down): assigned when structure terminates.
+- **currentReferenceLevel** - Dynamic invalidation threshold (opposite bound of last extending move).
+- **breakingMove** (ADR-004) - The candidate that terminated this structure (formerly `correction`, kept as deprecated alias for back-compat).
+
+### Derived helpers on PriceMove (ADR-004)
+- `move.isImpulsion()` — true if same polarity as immediate parent.
+- `move.isCorrection()` — true if opposite polarity from immediate parent.
+- Root moves return false for both.
 
 ### PriceMove States
 - **Growing**: Active structure, can still be extended by new price action
 - **Reference**: Terminated, serves as reference level for detecting parent invalidation
 - **Archived**: No longer relevant for structure detection, can be freed from memory
+
+State transitions (ADR-001):
+- `Growing → Reference` — triggered automatically when a candidate breaks the `currentReferenceLevel` (cascade termination via PriceMoveStructure).
+- `Reference → Archived` — by default, requires an explicit `engine.archiveOrphanedStructures(t)` call. When the engine is built with `{ autoArchive: true }`, this transition fires automatically as soon as the parent of a Reference move terminates.
 
 ### Point-in-Time Query Example
 ```typescript
@@ -150,6 +170,22 @@ const rang0MoveAtTime = engine.getMove(0, timestamp);
 // A move was active at T if it started before T and wasn't terminated yet
 // move.wasActiveAt(timestamp) helper available on PriceMove
 ```
+
+## Architecture Decisions
+
+All major arbitrations from the 2026-05-16 BMAD audit are documented as ADRs in `docs/decisions/`:
+
+| ADR | Subject | Status |
+|-----|---------|--------|
+| ADR-001 | `Reference → Archived` automatic transition | Accepted (opt-in via `{ autoArchive: true }`) |
+| ADR-002 | Engulfing candle: causal link via `breakingMove` | Accepted |
+| ADR-003 | Noise filtering: `minRangContrasted` filter (API + visualizer slider) | Accepted |
+| ADR-004 | `correction` → `breakingMove` rename + `isImpulsion`/`isCorrection` helpers | Accepted |
+| ADR-005 | Export JSON schema: replace zombie `originIds` with real protocol fields | Accepted |
+| ADR-006 | Legacy `/src/` root removed | Accepted |
+| ADR-007 | `rangContrasted` complementary metric (option C — no breaking change to `rang`) | Accepted |
+
+Empirical study supporting ADR-007 (with reproducible scripts in `tools/`): `docs/empirical/rang-mechanism.md`.
 
 ## TypeScript Configuration
 
