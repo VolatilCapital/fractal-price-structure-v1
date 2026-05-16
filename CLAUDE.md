@@ -45,31 +45,38 @@ const stats = engine.getMemoryStats();
 
 ## Architecture
 
-The project follows a clean/hexagonal architecture pattern:
+The project follows a clean/hexagonal architecture pattern. All source lives under
+`packages/core/src/` (and `packages/visualizer/src/` for the UI):
 
-### Domain Layer (`src/domain/`)
-- **PriceMove** - Core entity representing a directional price movement with polarity (Up/Down), time range, price range, and hierarchical relationships (childMoves, englobingMove)
-- **PriceMoveStructure** - Manages active PriceMoves and handles their lifecycle (extension, invalidation, englobment)
-- **FractalLayer** - Represents a level in the fractal hierarchy (level 0 = candles, level 1+ = aggregated PriceMoves)
+### Domain Layer (`packages/core/src/domain/`)
+- **PriceMove** (`domain/price-move/`) - Core entity representing a directional price movement with polarity (Up/Down), time range, price range, state (Growing/Reference/Archived), `rang`, `degre`, `currentReferenceLevel`, and hierarchical relationships via `subStructures` / `parentStructure`.
+- **FractalLayer** (`domain/structure/`) - Represents a level in the fractal hierarchy, grouped by `rang`.
+- **Candle**, **Logger** - cross-cutting domain types.
 
-### Application Layer (`src/application/use-cases/`)
-- **BuildPriceMovesFromCandles** - Converts raw candles into PriceMoves and adds them to the structure
-- **BuildRecursiveFractal** - Builds fractal layers by traversing the PriceMove tree from roots
+### Application Layer (`packages/core/src/application/`)
+- **PriceMoveStructure** (`application/orchestrator/`) - Domain service that owns the lifecycle of PriceMoves (extension, invalidation, engulfing handling, cascade termination).
+- **Ports** (`application/ports/`) - Hexagonal ports such as `PriceMoveRepository`, `CandleRepository`.
+- **Use Cases** (`application/use-cases/`)
+  - **BuildPriceMovesFromCandles** - Converts raw candles into PriceMoves and adds them to the structure.
+  - **BuildRecursiveFractal** (`buildRecursiveFractalRoots`) - Builds fractal layers by traversing the PriceMove tree from roots.
+  - **FractalPriceMoveBuilder** - Builds higher-rang layers from a list of moves.
 
-### Infrastructure Layer (`src/infrastructure/`)
-- **BinanceCandleApi** - Fetches klines from Binance REST API
-- **CachedCandleRepository** - Caches candle data locally in `.cache/` directory
-- **InMemoryPriceMoveRepository** - In-memory storage for PriceMoves
-- **PriceMoveTreeFilePrinter** / **FractalLayerExporter** - Export results to `.logs/` directory
+### Infrastructure Layer (`packages/core/src/infrastructure/`)
+- **BinanceCandleApi**, **CachedCandleRepository** (`repositories/`) - Candle ingestion + on-disk cache (`.cache/`).
+- **InMemoryPriceMoveRepository** (`repositories/`) - In-memory storage for PriceMoves.
+- **PriceMoveTreeFilePrinter** / **PriceMoveExporter** / **FractalLayerExporter** (`adapters/`, `exporters/`) - Export results to `.logs/`.
+- **ConsoleLogger** (`logging/`) - Default Logger implementation.
 
 ### Key Concepts
 
-**PriceMove Extension Logic** (`PriceMove.tryExtendWith`):
-- A move can be extended if a candidate breaks its directional boundary (high for Up, low for Down)
-- A move is invalidated/closed if the candidate breaks the opposite boundary
-- Internal children are moves that fit within the parent's price/time range without extending or invalidating
+**PriceMove Extension Logic** (`PriceMove.processCandidate`):
+- Returns one of `'extended-boundary' | 'extended-internal' | 'broken'` (see protocol §3.1–3.3).
+- A move is extended (boundary) if a candidate's *priceToTest* (high for Up, low for Down) breaks its directional boundary — `priceRange` and `timeRange` grow, and `currentReferenceLevel` is reset to the opposite bound of the extending candidate.
+- A move is invalidated (`'broken'`) if the candidate breaks the **reference level** (`currentReferenceLevel`), not the global priceRange. This is the dynamic invalidation rule of protocol §3.2.
+- A move stays untouched (`'extended-internal'`) if neither boundary nor reference is broken — the candidate becomes a `subStructure`.
+- Engulfing candles (protocol §10) — candidates that break both the directional bound AND the reference level — are handled separately in `PriceMoveStructure.#handleEngulfingCandle`.
 
-**Fractal Layers**: Built recursively from root PriceMoves (those without an englobingMove), collecting childMoves at each depth level.
+**Fractal Layers**: Built recursively from root PriceMoves (those without a `parentStructure`), collecting `subStructures` at each depth level.
 
 ## Public API
 
@@ -100,16 +107,17 @@ engine.getActiveMoves()                     // Use getGrowingMoves() instead
 
 // Point-in-Time Queries (historical analysis)
 engine.getStack(timestamp)                  // PriceMove[] active at timestamp
-engine.getMove(generation, timestamp)       // PriceMove | undefined at gen+time
+engine.getMove(rang, timestamp)             // PriceMove | undefined at rang+time
 
 // Debug
-engine.formatActiveMoves()                  // human-readable string
+engine.formatActiveMoves()                  // human-readable string ("[Rang N] ...")
 engine.logActiveMoves()                     // logs via configured logger
 engine.getMemoryStats()                     // memory usage statistics
 engine.logMemoryStats()                     // logs stats via logger
 
 // Memory Management
-engine.pruneClosedMoves(beforeTimestamp)    // remove old closed moves
+engine.pruneClosedMoves(beforeTimestamp)    // remove old Reference/Archived moves
+engine.archiveOrphanedStructures(beforeTimestamp) // Reference → Archived for moves older than ts (no Growing descendants)
 engine.clear()                              // reset to empty state
 ```
 
@@ -137,9 +145,9 @@ engine.buildFromCandles(candles);
 // Query what the structure looked like at a specific moment
 const timestamp = 1704067500000; // Unix ms
 const stackAtTime = engine.getStack(timestamp);
-const gen0MoveAtTime = engine.getMove(0, timestamp);
+const rang0MoveAtTime = engine.getMove(0, timestamp);
 
-// A move was active at T if it started before T and wasn't closed yet
+// A move was active at T if it started before T and wasn't terminated yet
 // move.wasActiveAt(timestamp) helper available on PriceMove
 ```
 
