@@ -29,3 +29,6 @@ test-results/
 
 # Claude Code TTS audio cache (not versioned)
 .claude/audio/
+
+# TypeScript composite project incremental cache
+*.tsbuildinfo

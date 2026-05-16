@@ -33,6 +33,7 @@ export {
   setShowParentChildLinks,
   setShowEventHighlights,
   setMaxRang,
+  setMinRangContrasted,
   setDisplayMode,
   isMoveVisible,
   serializeFilterState,
