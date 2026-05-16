@@ -165,6 +165,31 @@ export class PriceMove {
   }
 
   /**
+   * Archive cette structure ET récursivement toutes ses sub-structures en
+   * état Reference (protocole §13.3 : "Reference → Archived quand la
+   * structure parente est terminée").
+   *
+   * Utilisé par PriceMoveStructure quand `autoArchive` est activé sur le
+   * FractalEngine. Idempotent — appel sur un move déjà Archived est no-op.
+   *
+   * @param timestamp Horodatage de l'archivage.
+   * @returns Le nombre de moves passés en Archived par cette opération.
+   */
+  public archiveReferenceDescendants(timestamp: number): number {
+    let archived = 0
+    for (const sub of this.subStructures) {
+      if (sub.isReference()) {
+        sub.archive(timestamp)
+        archived++
+      }
+      // Récurser : un descendant peut lui aussi avoir des descendants Reference
+      // (la cascade de terminaison peut avoir laissé plusieurs niveaux en Reference).
+      archived += sub.archiveReferenceDescendants(timestamp)
+    }
+    return archived
+  }
+
+  /**
    * Archive cette structure (Reference → Archived).
    * Utilisé pour l'optimisation mémoire.
    */

@@ -1,7 +1,7 @@
 # ADR-001 — Transition `Reference → Archived` automatique ?
 
 ## État
-Proposed
+Accepted (2026-05-16) — Variante prudente de l'option C : opt-in via `new FractalEngine({ autoArchive: true })`, par défaut désactivé pour préserver le comportement existant.
 
 ## Contexte
 

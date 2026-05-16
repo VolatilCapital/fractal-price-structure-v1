@@ -25,6 +25,20 @@ export interface FractalEngineOptions {
    * Defaults to false (random UUIDs).
    */
   deterministic?: boolean
+
+  /**
+   * Whether to automatically archive descendants of a terminated structure
+   * (Reference → Archived) per protocole §13.3 (cf. ADR-001).
+   *
+   * When false (default), Reference moves persist indefinitely until the
+   * consumer explicitly calls `archiveOrphanedStructures(beforeTimestamp)`.
+   * When true, every time a structure transitions Growing → Reference
+   * (terminate / cascade), its Reference sub-structures are immediately
+   * archived recursively.
+   *
+   * Defaults to false to preserve historical behavior.
+   */
+  autoArchive?: boolean
 }
 
 /**
@@ -58,7 +72,9 @@ export class FractalEngine {
 
   constructor(options: FractalEngineOptions = {}) {
     const repo = new InMemoryPriceMoveRepository()
-    this.#structure = new PriceMoveStructure(repo)
+    this.#structure = new PriceMoveStructure(repo, {
+      autoArchive: options.autoArchive ?? false,
+    })
     this.#deterministic = options.deterministic ?? false
 
     if (options.logger) {

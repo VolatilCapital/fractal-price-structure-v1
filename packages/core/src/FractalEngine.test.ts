@@ -176,6 +176,33 @@ describe("FractalEngine", () => {
     })
   })
 
+  describe("autoArchive option (ADR-001)", () => {
+    it("should NOT auto-archive sub-structures by default", () => {
+      const e = new FractalEngine({ deterministic: true })
+      // Build a small parent-child chain that cascades on a break.
+      e.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 100, close: 110, high: 115, low: 95 }),
+        createCandle({ openTime: 2000, closeTime: 3000, open: 110, close: 120, high: 125, low: 108 }),
+        // Engulfing red candle: breaks both directional bound and reference
+        createCandle({ openTime: 3000, closeTime: 4000, open: 122, close: 80, high: 125, low: 75 }),
+      ])
+      // Default: no archived moves yet (consumer must explicitly call archiveOrphanedStructures).
+      expect(e.getArchivedMoves().length).toBe(0)
+    })
+
+    it("should auto-archive Reference descendants on terminate when autoArchive=true", () => {
+      const e = new FractalEngine({ deterministic: true, autoArchive: true })
+      e.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 100, close: 110, high: 115, low: 95 }),
+        createCandle({ openTime: 2000, closeTime: 3000, open: 110, close: 120, high: 125, low: 108 }),
+        createCandle({ openTime: 3000, closeTime: 4000, open: 122, close: 80, high: 125, low: 75 }),
+      ])
+      // With autoArchive on, at least one of the cascade-terminated descendants
+      // should have transitioned Reference → Archived.
+      expect(e.getArchivedMoves().length).toBeGreaterThan(0)
+    })
+  })
+
   describe("getStructuresAtMinRangContrasted (ADR-007)", () => {
     it("should return [] for an empty engine", () => {
       expect(engine.getStructuresAtMinRangContrasted(0)).toEqual([])

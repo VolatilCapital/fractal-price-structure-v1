@@ -44,13 +44,26 @@ export interface BatchIngestionResult {
   successCount: number
 }
 
+/**
+ * Configuration options for PriceMoveStructure.
+ */
+export interface PriceMoveStructureOptions {
+  /**
+   * Whether to auto-archive Reference sub-structures when their parent
+   * terminates (protocole §13.3, ADR-001). Default false.
+   */
+  autoArchive?: boolean
+}
+
 export class PriceMoveStructure {
   #growingMoves: Set<PriceMove> = new Set()
   #logger: Logger = noopLogger
   readonly #repo: PriceMoveRepository
+  readonly #autoArchive: boolean
 
-  constructor(repo: PriceMoveRepository) {
+  constructor(repo: PriceMoveRepository, options: PriceMoveStructureOptions = {}) {
     this.#repo = repo
+    this.#autoArchive = options.autoArchive ?? false
   }
 
   /**
@@ -278,9 +291,12 @@ export class PriceMoveStructure {
    * Returns the surviving parent (the first parent that wasn't broken), or undefined.
    */
   #handleCascadeTermination(brokenStructure: PriceMove, breakingMove: PriceMove): PriceMove | undefined {
+    const ts = breakingMove.timeRange.start
+
     // Terminate the broken structure
-    brokenStructure.terminate(breakingMove.timeRange.start)
+    brokenStructure.terminate(ts)
     this.#growingMoves.delete(brokenStructure)
+    this.#maybeAutoArchive(brokenStructure, ts)
 
     // Set the breaking move as the correction
     brokenStructure.correction = breakingMove
@@ -293,9 +309,10 @@ export class PriceMoveStructure {
         this.#logger.debug(
           `[CASCADE] Parent ${current.id.toString().slice(0, 8)} also broken`
         )
-        current.terminate(breakingMove.timeRange.start)
+        current.terminate(ts)
         current.correction = breakingMove
         this.#growingMoves.delete(current)
+        this.#maybeAutoArchive(current, ts)
         current = current.parentStructure
       } else {
         // Parent survived (absorbed the breaking move via extension or internal)
@@ -308,6 +325,20 @@ export class PriceMoveStructure {
 
     // No surviving parent found
     return undefined
+  }
+
+  /**
+   * Auto-archive Reference descendants of a just-terminated structure
+   * (protocole §13.3 / ADR-001). No-op when autoArchive is disabled.
+   */
+  #maybeAutoArchive(terminated: PriceMove, timestamp: number): void {
+    if (!this.#autoArchive) return
+    const archivedCount = terminated.archiveReferenceDescendants(timestamp)
+    if (archivedCount > 0) {
+      this.#logger.debug(
+        `[AUTO-ARCHIVE] ${archivedCount} sub-structures de ${terminated.id.toString().slice(0, 8)} passées Reference → Archived`
+      )
+    }
   }
 
   /**
