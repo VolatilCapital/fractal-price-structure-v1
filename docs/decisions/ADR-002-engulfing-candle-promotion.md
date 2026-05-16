@@ -1,7 +1,7 @@
 # ADR-002 — Bougie englobante : nouvelle structure attachée au parent (promotion §12.4) ?
 
 ## État
-Proposed
+Accepted (2026-05-16) — Option C entérinée : le lien de causalité est porté par `target.breakingMove` (anciennement `correction`, cf. ADR-004), qui est déjà assigné à l'engulfing candidate dans `#handleEngulfingCandle` (PriceMoveStructure.ts:233). La nouvelle structure reste une racine indépendante en termes de `parentStructure`, ce qui simplifie la traversée et respecte l'invariant "parent terminé ne reprend pas Growing".
 
 ## Contexte
 
