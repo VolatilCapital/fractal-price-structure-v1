@@ -14,7 +14,7 @@ Ces ADRs ont été produits par l'audit BMAD du 2026-05-16. Tant qu'ils sont en 
 |-----|-------|------|
 | [ADR-001](./ADR-001-reference-to-archived-transition.md) | Transition automatique `Reference → Archived` lors de la terminaison du parent | Proposed |
 | [ADR-002](./ADR-002-engulfing-candle-promotion.md) | Bougie englobante : nouvelle structure orpheline ou attachée au parent (promotion §12.4) | Proposed |
-| [ADR-003](./ADR-003-noise-filtering.md) | Filtrage du bruit / définition d'un mouvement significatif | Proposed |
+| [ADR-003](./ADR-003-noise-filtering.md) | Filtrage du bruit / définition d'un mouvement significatif | **Accepted** |
 | [ADR-004](./ADR-004-impulsion-correction-terminology.md) | Statut de "Impulsion / Correction" dans le protocole | Proposed |
 | [ADR-005](./ADR-005-export-json-schema.md) | Schéma JSON exporté (champs `originIds` zombies) | Proposed |
 | [ADR-006](./ADR-006-legacy-src-root.md) | Sort du dossier `/src/` racine pré-monorepo | **Accepted** |

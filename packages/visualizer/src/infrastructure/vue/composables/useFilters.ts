@@ -14,6 +14,7 @@ import {
   setShowEventHighlights as setShowEventHighlightsAction,
   setDisplayMode as setDisplayModeAction,
   setMaxRang as setMaxRangAction,
+  setMinRangContrasted as setMinRangContrastedAction,
   serializeFilterState,
   deserializeFilterState,
 } from '../../../domain/index.js'
@@ -88,6 +89,10 @@ export function useFilters() {
     filterState.value = setMaxRangAction(filterState.value, maxRang)
   }
 
+  function setMinRangContrasted(minRangContrasted: number | undefined) {
+    filterState.value = setMinRangContrastedAction(filterState.value, minRangContrasted)
+  }
+
   return {
     filterState,
     toggleDegre,
@@ -100,5 +105,6 @@ export function useFilters() {
     setShowEventHighlights,
     setDisplayMode,
     setMaxRang,
+    setMinRangContrasted,
   }
 }

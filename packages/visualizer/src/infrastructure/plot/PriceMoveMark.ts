@@ -125,6 +125,11 @@ export function filterMoves(moves: PriceMove[], filterState: FilterState): Price
       return false
     }
 
+    // Filter by minRangContrasted (ADR-007)
+    if (filterState.minRangContrasted !== undefined && move.rangContrasted < filterState.minRangContrasted) {
+      return false
+    }
+
     return true
   })
 }

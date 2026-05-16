@@ -1,7 +1,7 @@
 # ADR-003 — Filtrage / exploitabilité des structures produites
 
 ## État
-Proposed
+Accepted (2026-05-16) — Options B + E appliquées, avec utilisation de `rangContrasted` (ADR-007) plutôt que de `rang` comme métrique de filtrage.
 
 ## Contexte
 

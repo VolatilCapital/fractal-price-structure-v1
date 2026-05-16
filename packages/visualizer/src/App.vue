@@ -30,7 +30,7 @@ function toggleTheme() {
 // Composables
 const { candles, engine, events, isLoading, error, currentSource, load } = useEngine()
 const { playbackState, visualizationState, play, pause, stop, stepForward, stepBackward, seekTo, speedUp, speedDown, toggleDirection } = usePlayback(candles)
-const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setShowParentChildLinks, setShowEventHighlights, setDisplayMode, setMaxRang } = useFilters()
+const { filterState, toggleDegre, setShowSubStructures, setShowGrowing, setShowReference, setShowArchived, setShowUndefinedDegre, setShowParentChildLinks, setShowEventHighlights, setDisplayMode, setMaxRang, setMinRangContrasted } = useFilters()
 
 // Computed
 const cursorTime = computed(() => visualizationState.value.cursorTime)
@@ -40,6 +40,14 @@ const cursorIndex = computed(() => visualizationState.value.cursorIndex)
 const maxAvailableRang = computed(() => {
   if (!engine.value) return 0
   return engine.value.getLayerCount() - 1
+})
+
+// Max available rangContrasted across all moves (ADR-007)
+const maxAvailableRangContrasted = computed(() => {
+  if (!engine.value) return 0
+  const all = engine.value.getAllMoves()
+  if (all.length === 0) return 0
+  return all.reduce((m, x) => Math.max(m, x.rangContrasted), 0)
 })
 
 // Fractal stats
@@ -245,6 +253,7 @@ if (import.meta.env.DEV) {
       <FilterPanel
         :filter-state="filterState"
         :max-available-rang="maxAvailableRang"
+        :max-available-rang-contrasted="maxAvailableRangContrasted"
         :stats="fractalStats"
         @toggle-degre="toggleDegre"
         @set-show-sub-structures="setShowSubStructures"
@@ -256,6 +265,7 @@ if (import.meta.env.DEV) {
         @set-show-event-highlights="setShowEventHighlights"
         @set-display-mode="setDisplayMode"
         @set-max-rang="setMaxRang"
+        @set-min-rang-contrasted="setMinRangContrasted"
       />
     </v-navigation-drawer>
 

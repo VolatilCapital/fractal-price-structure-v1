@@ -23,6 +23,12 @@ export interface FilterState {
   showUndefinedDegre: boolean
   /** Maximum rang level to display (undefined = all) */
   maxRang?: number
+  /**
+   * Minimum rangContrasted level to display (undefined = no minimum).
+   * `rangContrasted` is the fractal nesting depth counting only opposite-polarity
+   * sub-structures (cf. ADR-007) — useful to filter out unidirectional runs.
+   */
+  minRangContrasted?: number
   /** Whether to show parent-child connection links on the price chart */
   showParentChildLinks: boolean
   /** Whether to show event highlight flashes at cursor */
@@ -39,6 +45,7 @@ export function createFilterState(): FilterState {
     showArchived: false,
     showUndefinedDegre: true,
     maxRang: undefined,
+    minRangContrasted: undefined,
     showParentChildLinks: false,
     showEventHighlights: true,
   }
@@ -78,6 +85,10 @@ export function setMaxRang(state: FilterState, maxRang: number | undefined): Fil
   return { ...state, maxRang }
 }
 
+export function setMinRangContrasted(state: FilterState, minRangContrasted: number | undefined): FilterState {
+  return { ...state, minRangContrasted }
+}
+
 export function setShowParentChildLinks(state: FilterState, show: boolean): FilterState {
   return { ...state, showParentChildLinks: show }
 }
@@ -95,12 +106,15 @@ export function setDisplayMode(state: FilterState, displayMode: DisplayMode): Fi
  * @param degre - The degre of the move (undefined for Growing moves)
  * @param rang - The rang of the move
  * @param isArchived - Whether the move is archived
+ * @param rangContrasted - The rangContrasted of the move (ADR-007). Optional;
+ *   when omitted the minRangContrasted filter is bypassed.
  */
 export function isMoveVisible(
   state: FilterState,
   degre: number | undefined,
   rang: number,
-  isArchived: boolean
+  isArchived: boolean,
+  rangContrasted?: number
 ): boolean {
   // Check archived filter
   if (isArchived && !state.showArchived) {
@@ -109,6 +123,15 @@ export function isMoveVisible(
 
   // Check rang filter
   if (state.maxRang !== undefined && rang > state.maxRang) {
+    return false
+  }
+
+  // Check minRangContrasted filter (ADR-007)
+  if (
+    state.minRangContrasted !== undefined &&
+    rangContrasted !== undefined &&
+    rangContrasted < state.minRangContrasted
+  ) {
     return false
   }
 
@@ -134,6 +157,7 @@ export function serializeFilterState(state: FilterState): string {
     showArchived: state.showArchived,
     showUndefinedDegre: state.showUndefinedDegre,
     maxRang: state.maxRang,
+    minRangContrasted: state.minRangContrasted,
     showParentChildLinks: state.showParentChildLinks,
     showEventHighlights: state.showEventHighlights,
   })
@@ -154,6 +178,7 @@ export function deserializeFilterState(json: string): FilterState | null {
       showArchived: parsed.showArchived ?? false,
       showUndefinedDegre: parsed.showUndefinedDegre ?? true,
       maxRang: parsed.maxRang,
+      minRangContrasted: parsed.minRangContrasted,
       showParentChildLinks: parsed.showParentChildLinks ?? false,
       showEventHighlights: parsed.showEventHighlights ?? true,
     }

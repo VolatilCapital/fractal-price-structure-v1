@@ -17,6 +17,7 @@ export interface FractalStats {
 const props = defineProps<{
   filterState: FilterState
   maxAvailableRang?: number
+  maxAvailableRangContrasted?: number
   stats?: FractalStats
 }>()
 
@@ -31,6 +32,7 @@ const emit = defineEmits<{
   setShowEventHighlights: [show: boolean]
   setDisplayMode: [mode: DisplayMode]
   setMaxRang: [maxRang: number | undefined]
+  setMinRangContrasted: [minRangContrasted: number | undefined]
 }>()
 
 // Available degre levels (0-5 typically)
@@ -226,6 +228,33 @@ function getDegreColor(degre: number): string {
       />
       <span class="text-caption" style="min-width: 32px">
         {{ filterState.maxRang ?? 'All' }}
+      </span>
+    </div>
+
+    <!-- Min rangContrasted filter (ADR-007) -->
+    <div class="text-caption text-grey mb-2 mt-3">
+      Rang contrasté minimum
+      <v-tooltip text="rangContrasted = profondeur d'imbrication par sub-structures de polarité opposée (corrections). Ne compte pas les extensions homopolarisées. Voir ADR-007.">
+        <template #activator="{ props: tipProps }">
+          <v-icon v-bind="tipProps" size="x-small" icon="mdi-information-outline" />
+        </template>
+      </v-tooltip>
+    </div>
+    <div class="d-flex align-center ga-2">
+      <v-slider
+        :model-value="filterState.minRangContrasted ?? 0"
+        @update:model-value="emit('setMinRangContrasted', $event === 0 ? undefined : $event as number)"
+        :min="0"
+        :max="maxAvailableRangContrasted ?? 13"
+        :step="1"
+        density="compact"
+        hide-details
+        thumb-label
+        color="primary"
+        data-testid="slider-min-rang-contrasted"
+      />
+      <span class="text-caption" style="min-width: 32px">
+        {{ filterState.minRangContrasted ?? '0' }}
       </span>
     </div>
 
