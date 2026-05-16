@@ -1,7 +1,7 @@
 # ADR-005 — Schéma JSON exporté (champs zombies `originIds`)
 
 ## État
-Proposed
+Accepted (2026-05-16) — Option C appliquée : remplacement par les champs réels (rang, rangContrasted, degre, currentReferenceLevel, parentStructureId, subStructureIds, breakingMoveId).
 
 ## Contexte
 
