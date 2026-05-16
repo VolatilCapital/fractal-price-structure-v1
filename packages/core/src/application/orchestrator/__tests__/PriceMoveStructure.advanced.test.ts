@@ -544,6 +544,32 @@ describe("PriceMoveStructure — advanced", () => {
       expect(validation.valid).toBe(true)
     })
 
+    it("should keep currentReferenceLevel consistent with priceRange after red-engulfing on Up (protocol §3.3 invariant)", () => {
+      // Establish an Up structure
+      structure.addCandle(createCandle({
+        openTime: 1000, closeTime: 2000,
+        open: 100, close: 110, low: 95, high: 115,
+      }))
+
+      // Red engulfing on the Up structure:
+      //   high=120 > 115 (extends directional bound)
+      //   low=85  < 95 (breaks reference level — was initialized to low=95)
+      structure.addCandle(createCandle({
+        openTime: 2000, closeTime: 3000,
+        open: 118, close: 90, low: 85, high: 120,
+      }))
+
+      // After engulfing handling, the Up target must be in Reference state, and
+      // its currentReferenceLevel must equal the opposite bound of the extending
+      // candle (its low = 85), maintaining the protocol §3.3 invariant
+      // "ref = opposite bound of last extending move" even post-terminate.
+      const referenceMoves = structure.getReferenceMoves()
+      const terminatedUp = referenceMoves.find(m => m.polarity === "up")
+      expect(terminatedUp).toBeDefined()
+      expect(terminatedUp?.priceRange.high).toBe(120) // extended to engulfing high
+      expect(terminatedUp?.currentReferenceLevel).toBe(85) // sync'd to engulfing low
+    })
+
     it("should NOT be engulfing when candidate breaks directional bound but NOT reference level", () => {
       // Establish an Up structure with reference level raised
       structure.addCandle(createCandle({

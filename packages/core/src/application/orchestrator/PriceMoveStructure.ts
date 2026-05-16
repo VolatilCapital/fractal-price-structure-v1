@@ -196,9 +196,15 @@ export class PriceMoveStructure {
       // For an Up target: high might have extended it momentarily before low broke it
       // For a Down target: high broke reference, then low extended
       if (target.polarity === Polarity.Up) {
-        // Extend the structure with the high before terminating
+        // Extend the structure with the high before terminating.
+        // Maintain protocol §3.3 invariant: currentReferenceLevel is the opposite
+        // bound of the last extending candidate. Even though target is terminated
+        // immediately below, the snapshot must remain consistent for observers
+        // (visualizer, stats) and for any future promotion logic that would
+        // re-read this state.
         target.priceRange = target.priceRange.extendWith(candidate.priceRange.high)
         target.timeRange = target.timeRange.extendWith(candidate.timeRange.end)
+        target.currentReferenceLevel = candidate.priceRange.low
         this.#logger.debug(
           `[ENGULFING] Processing RED on Up structure: Extended to ${candidate.priceRange.high}, then Low (${candidate.priceRange.low}) broke ref (${target.currentReferenceLevel})`
         )
