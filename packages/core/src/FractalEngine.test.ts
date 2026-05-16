@@ -176,6 +176,43 @@ describe("FractalEngine", () => {
     })
   })
 
+  describe("breakingMove + isImpulsion/isCorrection (ADR-004)", () => {
+    it("should expose .breakingMove with same value as legacy .correction getter", () => {
+      const e = new FractalEngine({ deterministic: true })
+      e.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 100, close: 110, high: 115, low: 95 }),
+        // Strong break candle: low=70 invalidates the Up
+        createCandle({ openTime: 2000, closeTime: 3000, open: 110, close: 80, high: 110, low: 70 }),
+      ])
+      const ref = e.getReferenceMoves().find(m => m.polarity === "up")
+      expect(ref).toBeDefined()
+      expect(ref?.breakingMove).toBeDefined()
+      // Legacy alias `.correction` returns the same reference
+      expect(ref?.correction).toBe(ref?.breakingMove)
+    })
+
+    it("isImpulsion()/isCorrection() should mirror parent-vs-self polarity", () => {
+      const e = new FractalEngine({ deterministic: true })
+      e.buildFromCandles([
+        createCandle({ openTime: 1000, closeTime: 2000, open: 100, close: 110, high: 115, low: 95 }),
+        createCandle({ openTime: 2000, closeTime: 3000, open: 110, close: 105, high: 112, low: 105 }),
+      ])
+      const all = e.getAllMoves()
+      for (const m of all) {
+        if (!m.parentStructure) {
+          expect(m.isImpulsion()).toBe(false)
+          expect(m.isCorrection()).toBe(false)
+        } else if (m.polarity === m.parentStructure.polarity) {
+          expect(m.isImpulsion()).toBe(true)
+          expect(m.isCorrection()).toBe(false)
+        } else {
+          expect(m.isImpulsion()).toBe(false)
+          expect(m.isCorrection()).toBe(true)
+        }
+      }
+    })
+  })
+
   describe("autoArchive option (ADR-001)", () => {
     it("should NOT auto-archive sub-structures by default", () => {
       const e = new FractalEngine({ deterministic: true })

@@ -230,7 +230,7 @@ export class PriceMoveStructure {
 
     // Terminate the target structure
     target.terminate(candidate.timeRange.start)
-    target.correction = candidate
+    target.breakingMove = candidate
     this.#growingMoves.delete(target)
 
     // The engulfing candle becomes a new root structure
@@ -299,7 +299,7 @@ export class PriceMoveStructure {
     this.#maybeAutoArchive(brokenStructure, ts)
 
     // Set the breaking move as the correction
-    brokenStructure.correction = breakingMove
+    brokenStructure.breakingMove = breakingMove
 
     // Check if parent structures should also be terminated
     let current = brokenStructure.parentStructure
@@ -310,7 +310,7 @@ export class PriceMoveStructure {
           `[CASCADE] Parent ${current.id.toString().slice(0, 8)} also broken`
         )
         current.terminate(ts)
-        current.correction = breakingMove
+        current.breakingMove = breakingMove
         this.#growingMoves.delete(current)
         this.#maybeAutoArchive(current, ts)
         current = current.parentStructure
@@ -872,7 +872,7 @@ export class PriceMoveStructure {
     move.subStructures = []
 
     // Clear correction reference
-    move.correction = undefined
+    move.breakingMove = undefined
 
     // Clear reference levels
     move.referenceLevels = []

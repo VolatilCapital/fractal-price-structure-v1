@@ -1,7 +1,7 @@
 # ADR-004 — Statut de "Impulsion / Correction" dans le protocole
 
 ## État
-Proposed
+Accepted (2026-05-16) — Option C appliquée : champ `correction` renommé en `breakingMove`, helpers `isImpulsion()` / `isCorrection()` ajoutés sur PriceMove. Compat preserved via getter/setter `correction`.
 
 ## Contexte
 

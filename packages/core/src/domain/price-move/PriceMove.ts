@@ -53,8 +53,18 @@ export class PriceMove {
   /** Niveaux de référence (pivots) créés par cette structure */
   public referenceLevels: ReferenceLevel[] = []
 
-  /** Structure de correction opposée créée lors de la cassure */
-  public correction?: PriceMove
+  /**
+   * Le mouvement qui a cassé / terminé cette structure (ADR-004).
+   *
+   * Quand cette structure passe Growing → Reference suite à une cassure, ce
+   * champ pointe vers le candidate (PriceMove) qui a déclenché la
+   * terminaison. C'est lui qui devient typiquement une nouvelle impulsion
+   * dans le sens opposé.
+   *
+   * Anciennement nommé `correction` — voir le getter/setter déprécié en bas
+   * de classe pour la rétro-compatibilité.
+   */
+  public breakingMove?: PriceMove
 
   /**
    * Niveau de référence actuel pour la détection d'invalidation.
@@ -419,6 +429,41 @@ export class PriceMove {
 
   public set confirmedOrigins(_value: PriceMove[]) {
     // No-op for backward compatibility
+  }
+
+  /**
+   * @deprecated Renommé en `breakingMove` (ADR-004) pour lever l'ambiguïté
+   * avec la terminologie trading "correction". Conservé en getter/setter
+   * de back-compat.
+   */
+  public get correction(): PriceMove | undefined {
+    return this.breakingMove
+  }
+
+  public set correction(value: PriceMove | undefined) {
+    this.breakingMove = value
+  }
+
+  // ─────────────────────────────────────────── Impulsion / Correction (ADR-004) ──
+  /**
+   * Lecture analytique (couche dérivée, ADR-004) — vrai SI le mouvement
+   * est dans le sens du parent immédiat (un "élan" qui prolonge la
+   * dynamique parente). Pour les racines (pas de parent), retourne false
+   * par défaut.
+   */
+  public isImpulsion(): boolean {
+    if (!this.parentStructure) return false
+    return this.parentStructure.polarity === this.polarity
+  }
+
+  /**
+   * Lecture analytique (couche dérivée, ADR-004) — vrai SI le mouvement
+   * est opposé au parent immédiat (une "respiration" ou correction interne).
+   * Pour les racines (pas de parent), retourne false par défaut.
+   */
+  public isCorrection(): boolean {
+    if (!this.parentStructure) return false
+    return this.parentStructure.polarity !== this.polarity
   }
 
   /**
