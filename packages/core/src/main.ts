@@ -32,7 +32,7 @@ async function main() {
     builder.build(candles)
 
     // Récupération des racines (sans parent)
-    const roots = structure.getAllMoves().filter(m => !m.englobingMove)
+    const roots = structure.getAllMoves().filter(m => !m.parentStructure)
 
     // 🌳 Affichage des racines
     console.log("\n🌳 Arbre fractal des PriceMoves (racines uniquement)\n")
@@ -42,15 +42,15 @@ async function main() {
 
     // 🌲 Profondeur fractale
     function getDepth(move: PriceMove): number {
-      if (move.childMoves.length === 0) return 1
-      return 1 + Math.max(...move.childMoves.map(getDepth))
+      if (move.subStructures.length === 0) return 1
+      return 1 + Math.max(...move.subStructures.map(getDepth))
     }
 
     const maxDepth = Math.max(...roots.map(getDepth))
     console.log(`\n🌲 Profondeur fractale maximale : ${maxDepth}\n`)
 
     const all = structure.getAllMoves()
-    const withChildren = all.filter(m => m.childMoves.length > 0)
+    const withChildren = all.filter(m => m.subStructures.length > 0)
     console.log(`🔢 Moves avec enfants internes : ${withChildren.length} / ${all.length}`)
 
     // 🌐 Couches fractales récursives

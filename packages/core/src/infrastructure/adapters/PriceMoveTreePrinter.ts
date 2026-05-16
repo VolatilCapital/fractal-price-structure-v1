@@ -13,7 +13,7 @@ export class PriceMoveTreePrinter {
       `${indent}${status} ${move.id.toString()} | ${move.polarity} | ${move.priceRange.toString()} | ${start} → ${end}`,
     );
 
-    for (const child of move.childMoves) {
+    for (const child of move.subStructures) {
       PriceMoveTreePrinter.print(child, level + 1);
     }
   }

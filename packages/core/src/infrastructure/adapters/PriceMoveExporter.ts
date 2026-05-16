@@ -16,7 +16,7 @@ export class PriceMoveExporter {
       polarity: move.polarity,
       priceRange: { low: move.priceRange.low, high: move.priceRange.high },
       state: move.state,
-      children: move.childMoves.map(PriceMoveExporter.toJSON),
+      children: move.subStructures.map(PriceMoveExporter.toJSON),
     };
   }
 }

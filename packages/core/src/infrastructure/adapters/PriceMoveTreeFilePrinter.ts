@@ -24,7 +24,7 @@ export class PriceMoveTreeFilePrinter {
     console.log(line);
     PriceMoveTreeFilePrinter.#buffer.push(line);
 
-    for (const child of move.childMoves) {
+    for (const child of move.subStructures) {
       PriceMoveTreeFilePrinter.print(child, level + 1);
     }
 

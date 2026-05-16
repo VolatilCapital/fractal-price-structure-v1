@@ -115,8 +115,8 @@ export function filterMoves(moves: PriceMove[], filterState: FilterState): Price
       }
     }
 
-    // Filter sub-structures (moves with englobingMove)
-    if (!filterState.showSubStructures && move.englobingMove) {
+    // Filter sub-structures (moves with a parent structure)
+    if (!filterState.showSubStructures && move.parentStructure) {
       return false
     }
 
@@ -543,10 +543,10 @@ export function prepareParentChildLinks(
   const links: ParentChildLink[] = []
 
   for (const child of moves) {
-    if (!child.englobingMove) continue
+    if (!child.parentStructure) continue
     if (child.timeRange.start > cursorTime) continue
 
-    const parent = child.englobingMove
+    const parent = child.parentStructure
     if (parent.timeRange.start > cursorTime) continue
 
     const childMidTime = (child.timeRange.start + Math.min(child.timeRange.end, cursorTime)) / 2
