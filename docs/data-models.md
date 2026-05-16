@@ -1,277 +1,293 @@
 # Data Models
 
-> **Technical Reference**: See [Protocole de Construction](./protocole-construction.md) for the authoritative specification of fractal construction rules and state transitions.
+> **Authority**: This document describes the runtime data model as implemented in `packages/core/src/`. For the construction rules that govern how these structures evolve, see [protocole-construction.md](./protocole-construction.md).
 
-## Domain Entities
+---
 
-### PriceMove (Aggregate Root)
+## Overview
 
-The central entity representing a directional price movement.
+The core package exposes a small, focused domain model centered on the `PriceMove` entity. Everything else — value objects, ports, state enums, factories — exists to support it.
 
-**Location**: `src/domain/price-move/PriceMove.ts`
-
-```typescript
-class PriceMove {
-  // Identity
-  readonly id: PriceMoveId
-
-  // Core properties
-  timeRange: TimeRange      // Start/end timestamps (milliseconds)
-  priceRange: PriceRange    // Low/high price bounds
-  polarity: Polarity        // Direction: Up | Down
-  state: PriceMoveState     // Lifecycle: Growing | Reference | Archived
-
-  // Hierarchical relationships
-  origin: PriceMove[]           // Initial source moves
-  confirmedOrigins: PriceMove[] // Moves that extended this one
-  childMoves: PriceMove[]       // Internal nested moves
-  englobingMove?: PriceMove     // Parent enclosing move
-}
+```
+Candle  ──►  PriceMoveFactory  ──►  PriceMove (Growing)  ──►  Reference  ──►  Archived
+                                       │
+                                       ├── subStructures: PriceMove[]
+                                       ├── parentStructure?: PriceMove
+                                       ├── referenceLevels: ReferenceLevel[]
+                                       └── correction?: PriceMove
 ```
 
-**Key Methods**:
-- `tryExtendWith(candidate)`: Attempt to extend, terminate, or attach as child
-- `isGrowing()`: Check if move can still be extended
-- `isReference()`: Check if move is terminated but serves as reference level
-- `isArchived()`: Check if move is no longer relevant
+---
 
-### Candle (Interface)
+## Entity: `PriceMove`
 
-OHLCV candlestick data from Binance.
+Source: `packages/core/src/domain/price-move/PriceMove.ts`
 
-**Location**: `src/shared/Candle.ts` (and duplicate in `src/domain/candle/Candle.ts`)
+A `PriceMove` is a directional, mutable price excursion bounded in time and price. It is the only aggregate root in the model.
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `PriceMoveId` | Stable identifier (UUID or deterministic index). Readonly. |
+| `polarity` | `Polarity` | `"up"` or `"down"`. Direction of the excursion. |
+| `state` | `PriceMoveState` | Lifecycle state: `"growing"`, `"reference"`, or `"archived"`. |
+| `priceRange` | `PriceRange` | `{ low, high }` — extended over time as the move grows. |
+| `timeRange` | `TimeRange` | `{ start, end }` — extended over time as the move grows. |
+| `rang` | `number` | Bottom-up complexity index. `rang(leaf) = 0`, `rang(parent) = max(children.rang) + 1`. |
+| `degre?` | `number` | Top-down hierarchy index, assigned at termination. Roots = 0. |
+| `currentReferenceLevel` | `number` | Dynamic invalidation threshold (protocole §3.3). Opposite bound of the last extending sub-move. |
+| `referenceLevels` | `ReferenceLevel[]` | History of pivots created during extensions. |
+| `subStructures` | `PriceMove[]` | Nested moves contained within this move. |
+| `parentStructure?` | `PriceMove` | The englobing move, if any. |
+| `correction?` | `PriceMove` | The move that broke (terminated) this one. |
+| `terminatedAt?` | `number` | Unix ms — set on `Growing → Reference` transition. |
+| `archivedAt?` | `number` | Unix ms — set on `Reference → Archived` transition. |
+
+### `rang` vs `degre`
+
+Two distinct hierarchy indices coexist:
+
+- **`rang`** — bottom-up, always defined. Tracks complexity: how deep the sub-structure tree is below this move.
+- **`degre`** — top-down, only defined post-termination. Tracks position from the root: a root structure has `degre = 0`, its terminated children have `degre = 1`, and so on. Recalculation is propagated to children whenever a parent terminates (`#propagateDegreToChildren`).
+
+### `currentReferenceLevel`
+
+Per protocole §3.3, invalidation is **not** checked against the structure's own boundary but against the opposite bound of the most recent extending sub-move. This field captures that running threshold and is updated every time `processCandidate` returns `"extended-boundary"`.
+
+### Key Methods
+
+| Method | Description |
+|--------|-------------|
+| `processCandidate(candidate)` | Returns `"extended-boundary"`, `"extended-internal"`, or `"broken"`. Mutates `priceRange`, `timeRange`, `currentReferenceLevel`, and `referenceLevels` on extension. |
+| `terminate(timestamp)` | `Growing → Reference`. Sets `terminatedAt`, computes `degre`, propagates to children. |
+| `archive(timestamp)` | `Reference → Archived`. Sets `archivedAt`. |
+| `addSubStructure(sub)` | Attaches a child, sets its `parentStructure`, recalculates `rang` (and propagates upward). |
+| `recalculateRang()` | Recomputes `rang` from children; bubbles up if changed. |
+| `wasActiveAt(timestamp)` | Point-in-time predicate used by `getStack`/`getMove`. |
+
+### Deprecated aliases (kept for backward compatibility)
+
+The following getters/setters exist purely to ease migration and should not be used in new code:
+
+- `generation` → use `rang`
+- `closedAt` → use `terminatedAt`
+- `childMoves` → use `subStructures`
+- `englobingMove` → use `parentStructure`
+- `origin` / `confirmedOrigins` → use `referenceLevels`
+- `isActive()` / `isClosed()` → use `isGrowing()` / `isReference()` / `isArchived()`
+- `tryExtendWith()` → use `processCandidate()`
+
+---
+
+## Enum: `PriceMoveState`
+
+Source: `packages/core/src/domain/price-move/PriceMoveState.ts`
 
 ```typescript
-interface Candle {
-  openTime: number   // Timestamp (ms)
-  closeTime: number  // Timestamp (ms)
-  open: number       // Opening price
-  high: number       // Highest price
-  low: number        // Lowest price
-  close: number      // Closing price
-  volume: number     // Trading volume
-}
+export const PriceMoveState = {
+  Growing: "growing",
+  Reference: "reference",
+  Archived: "archived",
+} as const;
 ```
 
-### FractalLayer (Interface)
+### Transitions (protocole §13.3)
 
-A level in the fractal hierarchy.
+```
+   ┌──────────┐   terminate()    ┌───────────┐   archive()    ┌──────────┐
+   │ Growing  │ ───────────────► │ Reference │ ─────────────► │ Archived │
+   └──────────┘                  └───────────┘                └──────────┘
+```
 
-**Location**: `src/domain/structure/FractalLayer.ts`
+- **Growing → Reference**: triggered by `processCandidate` returning `"broken"`, by cascade termination, or by engulfing-candle handling.
+- **Reference → Archived**: only via `PriceMoveStructure.archiveOrphanedStructures()`. **Not automatic** when a parent terminates — see Known Issues in [architecture.md](./architecture.md).
+- Transitions are **one-way**. No state regression is possible.
+
+---
+
+## Enum: `Polarity`
+
+Source: `packages/core/src/domain/price-move/Polarity.ts`
 
 ```typescript
-interface FractalLayer {
-  level: number       // Depth level (1, 2, 3...)
-  moves: PriceMove[]  // All moves at this level
-}
+export const Polarity = { Up: "up", Down: "down" } as const;
 ```
 
-## Value Objects
+String values are lowercase to match exporter output and visualizer expectations.
 
-### PriceRange
+---
 
-Represents price boundaries.
+## Value Object: `PriceRange`
 
-**Location**: `src/shared/PriceRange.ts`
+Source: `packages/core/src/shared/PriceRange.ts`
 
 ```typescript
 class PriceRange {
-  low: number   // Minimum price
-  high: number  // Maximum price
-
-  extendWith(price: number): PriceRange  // Create new range including price
-  contains(other: PriceRange): boolean   // Check if fully contains another
-  toString(): string                     // "[low → high]"
+  constructor(public low: number, public high: number) // throws if low > high
+  extendWith(price: number): PriceRange
+  contains(other: PriceRange): boolean
+  toString(): string
 }
 ```
 
-**Invariant**: `low <= high` (throws on construction if violated)
+All comparisons use the `Price` module (big.js-backed) to avoid floating-point errors.
 
-### TimeRange
+---
 
-Represents temporal boundaries.
+## Value Object: `TimeRange`
 
-**Location**: `src/shared/TimeRange.ts`
+Source: `packages/core/src/shared/TimeRange.ts`
 
 ```typescript
 class TimeRange {
-  readonly start: number  // Start timestamp (ms)
-  readonly end: number    // End timestamp (ms)
-
-  includes(timestamp: number): boolean   // Check if timestamp within range
-  extendWith(timestamp: number): TimeRange // Create new range including time
-  duration(): number                     // End - start in milliseconds
-  toString(): string                     // "[start → end]"
+  constructor(public readonly start: number, public readonly end: number) // throws if start > end
+  includes(timestamp: number): boolean
+  extendWith(timestamp: number): TimeRange
+  duration(): number
 }
 ```
 
-**Invariant**: `start <= end` (throws on construction if violated)
+Timestamps are Unix milliseconds.
 
-### PriceMoveId
+---
 
-Unique identifier for PriceMove entities.
+## Module: `Price`
 
-**Location**: `src/domain/price-move/PriceMoveId.ts`
+Source: `packages/core/src/shared/Price.ts`
+
+Stateless comparison/arithmetic helpers backed by `big.js`. Used everywhere a price comparison is needed, in place of native `>`/`<`/`===`.
 
 ```typescript
-class PriceMoveId {
-  private readonly value: string  // UUID v4
-
-  static create(): PriceMoveId    // Factory method
-  toString(): string              // Get string representation
-}
+Price.gt(a, b) / Price.gte(a, b) / Price.lt(a, b) / Price.lte(a, b) / Price.eq(a, b)
+Price.min(a, b) / Price.max(a, b) / Price.add(a, b) / Price.sub(a, b)
 ```
 
-## Enumerations
+---
 
-### Polarity
+## Interface: `ReferenceLevel`
 
-Direction of price movement.
-
-**Location**: `src/domain/price-move/Polarity.ts`
+Source: `packages/core/src/domain/price-move/ReferenceLevel.ts`
 
 ```typescript
-enum Polarity {
-  Up = "up",     // Bullish (close >= open)
-  Down = "down"  // Bearish (close < open)
+interface ReferenceLevel {
+  price: number
+  timestamp: number
+  index: number      // ordinal within the move's referenceLevels[]
+  move: PriceMove    // the extending move that created this level
 }
 ```
 
-### PriceMoveState
+A `ReferenceLevel` is appended each time the host `PriceMove` accepts a boundary extension. Together they form the support/resistance history (H0, H1, … for Up moves; L0, L1, … for Down moves).
 
-Lifecycle state of a PriceMove. See [Protocole de Construction](./protocole-construction.md#13-les-trois-états-dune-structure) for detailed state transitions.
+---
 
-**Location**: `src/domain/price-move/PriceMoveState.ts`
+## Interface: `Candle`
+
+Source: `packages/core/src/domain/candle/Candle.ts` (single source of truth)
 
 ```typescript
-enum PriceMoveState {
-  Growing = "growing",      // Active, can be extended
-  Reference = "reference",  // Terminated, serves as reference level
-  Archived = "archived"     // No longer relevant, can be freed
+interface Candle {
+  readonly openTime: number    // Unix ms
+  readonly closeTime: number   // Unix ms
+  readonly open: number
+  readonly high: number
+  readonly low: number
+  readonly close: number
+  readonly volume: number
 }
 ```
 
-## Repository Interfaces
+Helpers exported from `domain/candle/index.ts`:
+- `isCandle(obj): obj is Candle` — type guard
+- `validateCandle(obj): { valid, errors }` — logical consistency check (OHLC ordering, timestamps, non-negative volume, finite numbers)
+- `CandleFactory` / `InvalidCandleError`
 
-### PriceMoveRepository
+> Note: `packages/core/src/shared/Candle.ts` is a deprecated re-export kept for backward compatibility.
 
-**Location**: `src/domain/structure/PriceMoveRepository.ts`
+---
+
+## Interface: `FractalLayer`
+
+Source: `packages/core/src/domain/structure/FractalLayer.ts`
+
+```typescript
+interface FractalLayer {
+  level: number      // rang level
+  moves: PriceMove[] // all moves with this rang
+}
+```
+
+Produced by `PriceMoveStructure.getLayers()` / `getLayer(level)`.
+
+---
+
+## Port: `PriceMoveRepository`
+
+Source: `packages/core/src/application/ports/PriceMoveRepository.ts`
 
 ```typescript
 interface PriceMoveRepository {
   save(priceMove: PriceMove): void
   findById(id: PriceMoveId): PriceMove | undefined
   findAll(): PriceMove[]
-  findActive(): PriceMove[]
+  findByState(state: PriceMoveState): PriceMove[]
+  findGrowing(): PriceMove[]
+  findReference(): PriceMove[]
+  findArchived(): PriceMove[]
+  removeArchived(): number
   clear(): void
 }
 ```
 
-**Implementation**: `InMemoryPriceMoveRepository` (Map-based)
+The implementation lives in infrastructure (`InMemoryPriceMoveRepository`). A factory port (`PriceMoveRepositoryFactory`) is also defined for dependency-injection scenarios.
 
-### CandleRepository
+---
 
-**Location**: `src/domain/candle/CandleRepository.ts`
+## Port: `CandleRepository`
 
-```typescript
-interface CandleRepository {
-  getCandles(symbol: string, interval: string, limit: number): Promise<Candle[]>
-}
-```
+Source: `packages/core/src/application/ports/CandleRepository.ts` (re-exported from `domain/candle/index.ts`).
 
-**Implementation**: `CachedCandleRepository` (File cache + Binance API)
+Defines how candles are fetched (used by `FetchCandlesUseCase`, implemented by `CachedCandleRepository` + `BinanceCandleApi`).
 
-## Domain Services
+---
 
-### PriceMoveStructure
+## JSON Export Formats
 
-Aggregate manager handling PriceMove lifecycle.
+### `PriceMoveExporter.toJSON(move)` — recursive tree
 
-**Location**: `src/domain/structure/PriceMoveStructure.ts`
-
-```typescript
-class PriceMoveStructure {
-  private activeMoves: Set<PriceMove>
-
-  add(priceMove: PriceMove): void  // Add and process move
-  getActiveMoves(): PriceMove[]    // Get all active moves
-  getAllMoves(): PriceMove[]       // Get all moves
-}
-```
-
-### PriceMoveFactory
-
-Creates PriceMoves from Candles.
-
-**Location**: `src/domain/price-move/PriceMoveFactory.ts`
-
-```typescript
-class PriceMoveFactory {
-  static fromCandle(candle: Candle): PriceMove
-}
-```
-
-### PriceMoveRules
-
-Domain rules for move extension/invalidation.
-
-**Location**: `src/domain/price-move/PriceMoveRules.ts`
-
-```typescript
-class PriceMoveRules {
-  static canExtendWith(current: PriceMove, candidate: PriceMove): boolean
-  static isInvalidatedBy(current: PriceMove, candidate: PriceMove): boolean
-}
-```
-
-⚠️ **Note**: `isInvalidatedBy` currently only checks state, not actual boundary violations.
-
-## Data Relationships
-
-```
-┌─────────────┐
-│   Candle    │ (Input data)
-└──────┬──────┘
-       │ PriceMoveFactory.fromCandle()
-       ▼
-┌─────────────────────────────────────────────────────┐
-│                    PriceMove                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │ PriceMoveId │  │ PriceRange  │  │ TimeRange   │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-│  ┌─────────────┐  ┌─────────────┐                  │
-│  │ Polarity    │  │ State       │                  │
-│  └─────────────┘  └─────────────┘                  │
-│                                                     │
-│  Relationships:                                     │
-│  • englobingMove → PriceMove (parent)              │
-│  • childMoves[] → PriceMove[] (children)           │
-│  • confirmedOrigins[] → PriceMove[] (extensions)   │
-└─────────────────────────────────────────────────────┘
-       │
-       │ buildRecursiveFractalRoots()
-       ▼
-┌─────────────────┐
-│  FractalLayer   │ (Output structure)
-│  • level        │
-│  • moves[]      │
-└─────────────────┘
-```
-
-## Export Format (JSON)
-
-Each fractal layer is exported as:
+Source: `packages/core/src/infrastructure/adapters/PriceMoveExporter.ts`
 
 ```json
-[
-  {
-    "id": "uuid-string",
-    "polarity": "up" | "down",
-    "state": "active" | "closed",
-    "priceRange": { "low": 50000, "high": 51000 },
-    "timeRange": { "start": 1704067200000, "end": 1704153600000 },
-    "originIds": ["uuid-1", "uuid-2"],
-    "confirmedOriginIds": ["uuid-3"]
-  }
-]
+{
+  "id": "uuid-string",
+  "polarity": "up",
+  "priceRange": { "low": 42000.0, "high": 42500.0 },
+  "state": "growing",
+  "children": [ /* recursively the same shape */ ]
+}
 ```
+
+### `FractalLayerExporter.exportLayersToJson(layers, baseDir)` — per-layer dump
+
+Source: `packages/core/src/infrastructure/exporters/FractalLayerExporter.ts`
+
+Writes one file per layer to `<baseDir>/fractal-layers/layer-<level>.json`. Each entry:
+
+```json
+{
+  "id": "uuid",
+  "polarity": "up",
+  "state": "growing",
+  "priceRange": { "low": 42000.0, "high": 42500.0 },
+  "timeRange": { "start": 1704067200000, "end": 1704067500000 },
+  "originIds": [],
+  "confirmedOriginIds": ["uuid1", "uuid2"]
+}
+```
+
+> **Note**: `originIds` and `confirmedOriginIds` are produced via the deprecated `origin` / `confirmedOrigins` getters. `originIds` is always `[]` (the underlying field was removed). `confirmedOriginIds` maps to `referenceLevels[].move.id`. This export shape is preserved for backward compatibility — new consumers should read `referenceLevels` directly.
+
+---
+
+*Last updated: 2026-05-16 — after DDD refactor + dead-code purge.*

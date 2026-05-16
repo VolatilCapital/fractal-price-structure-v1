@@ -10,18 +10,20 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Type** | Monolith (single cohesive codebase) |
-| **Language** | TypeScript 5.9.3 |
-| **Runtime** | Node.js (ES Modules) |
+| **Type** | pnpm monorepo (`packages/core` + `packages/visualizer`) |
+| **Language** | TypeScript 5.9.x |
+| **Runtime** | Node.js (ES Modules, NodeNext resolution) |
 | **Architecture** | Clean/Hexagonal (DDD) |
-| **Data Source** | Binance REST API |
+| **Data Source** | Binance REST API + JSON fixtures |
+| **Tests** | Vitest — 357 tests in core (all passing) |
 
 ### Quick Reference
 
-- **Entry Point**: `src/main.ts`
-- **Tech Stack**: TypeScript, Node.js, axios, luxon, big.js
+- **Library Entry Point**: `packages/core/src/index.ts` (re-exports `FractalEngine`)
+- **CLI Entry Point**: `packages/core/src/main.ts`
+- **Tech Stack**: TypeScript, Node.js, axios, luxon, big.js, Vue 3, Observable Plot, Vitest, Biome
 - **Architecture Pattern**: Clean Architecture with Domain-Driven Design
-- **Primary Domain Entity**: `PriceMove`
+- **Primary Domain Entity**: `PriceMove` (states: Growing / Reference / Archived)
 
 ---
 
@@ -86,18 +88,21 @@ After running, check:
 ## Architecture Summary
 
 ```
-src/
-├── domain/           # Business logic (PriceMove, PriceMoveStructure)
-├── application/      # Use cases (BuildPriceMovesFromCandles, etc.)
-├── infrastructure/   # External adapters (Binance API, repositories)
-└── shared/           # Cross-cutting value objects
+packages/core/src/
+├── FractalEngine.ts      # Facade (public entry)
+├── domain/               # PriceMove, Polarity, PriceMoveState, Candle, FractalLayer
+├── application/          # PriceMoveStructure (orchestrator), ports, use cases
+├── infrastructure/       # Binance API, in-memory repo, exporters, console logger
+└── shared/               # Price, PriceRange, TimeRange (big.js)
 ```
 
 ### Key Domain Concepts
 
-1. **PriceMove**: Directional price movement (Up/Down)
-2. **Extension Logic**: How moves grow or close based on price action
-3. **Fractal Layers**: Hierarchical nesting of price movements
+1. **PriceMove**: Directional price movement (Up/Down) with three lifecycle states
+2. **PriceMoveState**: `Growing → Reference → Archived` (one-way transitions)
+3. **Extension Logic**: 3-outcome `processCandidate` — `extended-boundary` / `extended-internal` / `broken`
+4. **Reference Levels**: Per-move pivot history; invalidation checks against `currentReferenceLevel` (protocole §3.3)
+5. **Fractal Layers**: `rang`-indexed bottom-up grouping; `degre` is the top-down counterpart
 
 ---
 
@@ -105,21 +110,32 @@ src/
 
 | Severity | Issue |
 |----------|-------|
-| 🔴 High | No test suite configured |
-| 🔴 High | Infrastructure dependency in domain layer |
-| 🟡 Medium | Duplicate Candle interface |
-| 🟡 Medium | Console.log in domain code |
+| 🔴 High | `pnpm build` is broken — `tsc` compiles `*.test.ts` which contain pre-existing strict-mode errors. Tests pass via Vitest. Fix: exclude tests from build tsconfig. |
+| 🔴 High | Legacy `/src/` directory at repo root is still on disk but unwired. Candidate for deletion. |
+| 🟡 Medium | `Reference → Archived` transition is not automatic on parent termination — requires explicit `archiveOrphanedStructures()` call. |
+| 🟡 Medium | Promotion mechanism (protocole §12.4) is described in the spec but not implemented in `PriceMoveStructure`. |
+| 🟡 Medium | `FractalLayerExporter` still reads deprecated `origin` / `confirmedOrigins` getters (the former is always `[]`). Migrate to `referenceLevels`. |
+| 🟢 Low | `docs/validation-protocole.md` lists spec-vs-code drift that needs arbitration. |
+| 🟢 Low | `CandleRepository` port is re-exported from `domain/candle/index.ts` (technical layer leak, benign). |
+
+### Resolved since the previous audit
+
+- Vitest installed and 357 tests passing in core.
+- `PriceMoveStructure` moved from domain to `application/orchestrator/`.
+- `shared/Candle.ts` reduced to a deprecated re-export of `domain/candle/Candle.ts` — single source of truth.
+- `Logger` interface threaded through; no `console.log` left in domain code.
 
 ---
 
 ## Next Steps for Development
 
-1. **Add Vitest** for unit testing
-2. **Fix architecture violations** (inject logger)
-3. **Remove duplicate Candle** definition
-4. **Make configuration external** (CLI args or config file)
+1. Fix the build (exclude `**/*.test.ts` from `tsconfig.json` or add `tsconfig.build.json`).
+2. Decide and act on the legacy `/src/` directory at repo root.
+3. Migrate `FractalLayerExporter` away from the deprecated `origin` / `confirmedOrigins` getters.
+4. Arbitrate the spec-vs-code drift items in `validation-protocole.md`.
+5. Implement protocole §12.4 promotion, or document its absence as a deliberate scope cut.
+6. Consider auto-archiving children when a parent terminates (or document the manual workflow).
 
 ---
 
-*Documentation generated: 2026-01-16*
-*Scan level: Exhaustive (all source files read)*
+*Last updated: 2026-05-16 — after DDD refactor + dead-code purge.*
