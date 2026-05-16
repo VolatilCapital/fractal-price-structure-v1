@@ -24,6 +24,32 @@ import { FractalEngine } from "../packages/core/src/FractalEngine.js"
 import type { Candle } from "../packages/core/src/domain/candle/Candle.js"
 import type { PriceMove } from "../packages/core/src/domain/price-move/PriceMove.js"
 
+// ──────────────────────────────────────────── rangContrasted (read-only) ──
+// Ne compte que les sub-structures de polarité OPPOSÉE (cf. ADR-007).
+// Recalculé à chaque étape (Map locale, sans mutation de PriceMove).
+function computeRangContrasted(moves: PriceMove[]): Map<PriceMove, number> {
+  const cache = new Map<PriceMove, number>()
+  function rec(m: PriceMove): number {
+    const c = cache.get(m)
+    if (c !== undefined) return c
+    if (m.subStructures.length === 0) {
+      cache.set(m, 0)
+      return 0
+    }
+    const opp = m.subStructures.filter((s) => s.polarity !== m.polarity)
+    let v: number
+    if (opp.length === 0) {
+      v = Math.max(...m.subStructures.map(rec))
+    } else {
+      v = Math.max(...opp.map(rec)) + 1
+    }
+    cache.set(m, v)
+    return v
+  }
+  for (const m of moves) rec(m)
+  return cache
+}
+
 // ───────────────────────────────────────────────────────────── Setup ──────
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -214,6 +240,7 @@ function candleMarks(candles: Candle[], scale: Scale): string {
 
 function moveRects(moves: PriceMove[], scale: Scale): string {
   const parts: string[] = []
+  const rangCMap = computeRangContrasted(moves)
 
   // tri par rang croissant → on dessine d'abord les petits (les grands se
   // superposent par-dessus avec des contours plus visibles)
@@ -244,8 +271,11 @@ function moveRects(moves: PriceMove[], scale: Scale): string {
 
     // label en haut à gauche du rectangle
     const labelY = y - 2 < MARGIN.top + 10 ? y + 12 : y - 2
+    const rC = rangCMap.get(m) ?? 0
+    // Si rC < r, on souligne la différence en orange (= inflation du rang)
+    const labelColor = rC < m.rang ? "#d84315" : stroke
     parts.push(
-      `<text x="${x + 3}" y="${labelY}" fill="${stroke}" font-weight="600">r=${m.rang} ${shortId(m)}</text>`
+      `<text x="${x + 3}" y="${labelY}" fill="${labelColor}" font-weight="600">r=${m.rang} rC=${rC} ${shortId(m)}</text>`
     )
   }
 
@@ -407,7 +437,10 @@ function renderIndexHtml(totalSteps: number): string {
   • Rectangles superposés = <strong>PriceMove</strong>s, dimensionnés en <code>priceRange × timeRange</code>.<br/>
   • Couleur de contour : vert <em>growing</em>, orange <em>reference</em>, gris <em>archived</em>.<br/>
   • Remplissage léger : bleu si <em>up</em>, rouge si <em>down</em>.<br/>
-  • Étiquette de chaque rectangle : <code>r=&lt;rang&gt; &lt;id8&gt;</code>.<br/>
+  • Étiquette de chaque rectangle : <code>r=&lt;rang&gt; rC=&lt;rangContrasted&gt; &lt;id8&gt;</code>.<br/>
+  &nbsp;&nbsp;&nbsp;– <strong>r</strong> (rang) : profondeur actuelle (toutes sub-structures comptées).<br/>
+  &nbsp;&nbsp;&nbsp;– <strong>rC</strong> (rangContrasted, ADR-007) : profondeur fractale "vraie" (uniquement les sub-structures de polarité opposée).<br/>
+  &nbsp;&nbsp;&nbsp;– <span style="color:#d84315;font-weight:600">label orange</span> si rC &lt; r : c'est exactement là où le rang actuel "gonfle" sans vraie imbrication fractale.<br/>
   • Ligne pointillée violette : <code>currentReferenceLevel</code> du PriceMove de rang max.
 </div>
 ${cards.join("\n")}

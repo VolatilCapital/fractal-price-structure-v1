@@ -40,20 +40,20 @@
 <line x1="812.5001875001042" y1="449.2865636147634" x2="812.5001875001042" y2="523.1272294887094" stroke="#ef5350" stroke-width="1"/>
 <rect x="772.0001650000917" y="503.86444708682285" width="81.000045000025" height="16.052318668215037" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
 <rect x="475.000225000125" y="378.6563614744176" width="134.9996249997917" height="141.26040428062026" fill="#1976d2" fill-opacity="0.07" stroke="#ef6c00" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="478.000225000125" y="376.6563614744176" fill="#ef6c00" font-weight="600">r=0 00000003</text>
+<text x="478.000225000125" y="376.6563614744176" fill="#ef6c00" font-weight="600">r=0 rC=0 00000003</text>
 <rect x="745.0003750002084" y="449.2865636147634" width="134.99962499979165" height="73.84066587394602" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="748.0003750002084" y="447.2865636147634" fill="#2e7d32" font-weight="600">r=0 00000005</text>
+<text x="748.0003750002084" y="447.2865636147634" fill="#2e7d32" font-weight="600">r=0 rC=0 00000005</text>
 <rect x="610.0003000001667" y="397.9191438763755" width="134.99962499979165" height="134.83947681327726" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="613.0003000001667" y="395.9191438763755" fill="#2e7d32" font-weight="600">r=1 00000004</text>
+<text x="613.0003000001667" y="395.9191438763755" fill="#d84315" font-weight="600">r=1 rC=0 00000004</text>
 <rect x="340.00015000008335" y="340.1307966706445" width="404.999774999875" height="192.62782401900824" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="343.00015000008335" y="338.1307966706445" fill="#2e7d32" font-weight="600">r=2 00000002</text>
+<text x="343.00015000008335" y="338.1307966706445" fill="#d84315" font-weight="600">r=2 rC=1 00000002</text>
 <rect x="205.00007500004168" y="259.86920332935546" width="269.9996999998333" height="224.73246135558082" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="208.00007500004168" y="257.86920332935546" fill="#2e7d32" font-weight="600">r=3 00000001</text>
+<text x="208.00007500004168" y="257.86920332935546" fill="#d84315" font-weight="600">r=3 rC=1 00000001</text>
 <rect x="70" y="67.24137931034733" width="269.99969999983335" height="321.0463733650136" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="73" y="65.24137931034733" fill="#2e7d32" font-weight="600">r=4 00000000</text>
+<text x="73" y="65.24137931034733" fill="#d84315" font-weight="600">r=4 rC=1 00000000</text>
 <line x1="70" y1="259.86920332935546" x2="880" y2="259.86920332935546" stroke="#7b1fa2" stroke-width="1.2" stroke-dasharray="6 4"/>
 <text x="876" y="255.86920332935546" text-anchor="end" fill="#7b1fa2" font-weight="600">ref top r=4 : 1.14504</text>
-<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 6/8</text>
+<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 6/12</text>
 <text x="900" y="52" fill="#444">Bougie #5 @ 01:25:00</text>
 <text x="900" y="66" fill="#444" font-size="10">O=1.14428 H=1.14445</text>
 <text x="900" y="78" fill="#444" font-size="10">L=1.14422 C=1.14423</text>

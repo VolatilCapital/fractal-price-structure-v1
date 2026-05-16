@@ -28,14 +28,14 @@
 <line x1="745.0003000003333" y1="371.618037135257" x2="745.0003000003333" y2="532.758620689625" stroke="#ef5350" stroke-width="1"/>
 <rect x="664.0002100002332" y="418.1697612731661" width="162.0001800002" height="64.4562334217631" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
 <rect x="610.0006000006667" y="371.618037135257" width="269.99939999933326" height="161.140583554368" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="613.0006000006667" y="369.618037135257" fill="#2e7d32" font-weight="600">r=0 00000002</text>
+<text x="613.0006000006667" y="369.618037135257" fill="#2e7d32" font-weight="600">r=0 rC=0 00000002</text>
 <rect x="340.00030000033337" y="282.09549071614595" width="539.9996999996666" height="250.66312997347904" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="343.00030000033337" y="280.09549071614595" fill="#2e7d32" font-weight="600">r=1 00000001</text>
+<text x="343.00030000033337" y="280.09549071614595" fill="#d84315" font-weight="600">r=1 rC=0 00000001</text>
 <rect x="70" y="67.24137931037501" width="539.9996999996667" height="358.090185676285" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="73" y="65.24137931037501" fill="#2e7d32" font-weight="600">r=2 00000000</text>
+<text x="73" y="65.24137931037501" fill="#d84315" font-weight="600">r=2 rC=0 00000000</text>
 <line x1="70" y1="282.09549071614595" x2="880" y2="282.09549071614595" stroke="#7b1fa2" stroke-width="1.2" stroke-dasharray="6 4"/>
 <text x="876" y="278.09549071614595" text-anchor="end" fill="#7b1fa2" font-weight="600">ref top r=2 : 1.14504</text>
-<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 3/8</text>
+<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 3/12</text>
 <text x="900" y="52" fill="#444">Bougie #2 @ 01:10:00</text>
 <text x="900" y="66" fill="#444" font-size="10">O=1.14466 H=1.14479</text>
 <text x="900" y="78" fill="#444" font-size="10">L=1.14434 C=1.14448</text>

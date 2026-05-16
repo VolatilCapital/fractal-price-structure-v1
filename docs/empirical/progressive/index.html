@@ -17,14 +17,17 @@
 </head>
 <body>
 <h1>Construction progressive de la structure fractale</h1>
-<p class="intro">Fixture : <code>eurusd-5m.json</code> · 8 bougies · construction <em>from scratch</em> à chaque étape via <code>FractalEngine.buildFromCandles</code>.</p>
+<p class="intro">Fixture : <code>eurusd-5m.json</code> · 12 bougies · construction <em>from scratch</em> à chaque étape via <code>FractalEngine.buildFromCandles</code>.</p>
 <div class="legend">
   <strong>Comment lire chaque SVG :</strong><br/>
   • Chandeliers compacts au centre (vert = up, rouge = down).<br/>
   • Rectangles superposés = <strong>PriceMove</strong>s, dimensionnés en <code>priceRange × timeRange</code>.<br/>
   • Couleur de contour : vert <em>growing</em>, orange <em>reference</em>, gris <em>archived</em>.<br/>
   • Remplissage léger : bleu si <em>up</em>, rouge si <em>down</em>.<br/>
-  • Étiquette de chaque rectangle : <code>r=&lt;rang&gt; &lt;id8&gt;</code>.<br/>
+  • Étiquette de chaque rectangle : <code>r=&lt;rang&gt; rC=&lt;rangContrasted&gt; &lt;id8&gt;</code>.<br/>
+  &nbsp;&nbsp;&nbsp;– <strong>r</strong> (rang) : profondeur actuelle (toutes sub-structures comptées).<br/>
+  &nbsp;&nbsp;&nbsp;– <strong>rC</strong> (rangContrasted, ADR-007) : profondeur fractale "vraie" (uniquement les sub-structures de polarité opposée).<br/>
+  &nbsp;&nbsp;&nbsp;– <span style="color:#d84315;font-weight:600">label orange</span> si rC &lt; r : c'est exactement là où le rang actuel "gonfle" sans vraie imbrication fractale.<br/>
   • Ligne pointillée violette : <code>currentReferenceLevel</code> du PriceMove de rang max.
 </div>
 
@@ -66,6 +69,26 @@
     <section class="step">
       <h2>Étape 8 <span class="muted">— 8 bougies ingérées</span></h2>
       <img src="step-08.svg" alt="step-08.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 9 <span class="muted">— 9 bougies ingérées</span></h2>
+      <img src="step-09.svg" alt="step-09.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 10 <span class="muted">— 10 bougies ingérées</span></h2>
+      <img src="step-10.svg" alt="step-10.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 11 <span class="muted">— 11 bougies ingérées</span></h2>
+      <img src="step-11.svg" alt="step-11.svg" loading="lazy"/>
+    </section>
+
+    <section class="step">
+      <h2>Étape 12 <span class="muted">— 12 bougies ingérées</span></h2>
+      <img src="step-12.svg" alt="step-12.svg" loading="lazy"/>
     </section>
 </body>
 </html>

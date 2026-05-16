@@ -24,12 +24,12 @@
 <line x1="677.5003375005624" y1="346.5517241379239" x2="677.5003375005624" y2="532.7586206896195" stroke="#ef5350" stroke-width="1"/>
 <rect x="556.0001350002249" y="355.8620689655707" width="243.000405000675" height="167.58620689650542" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
 <rect x="475.000675001125" y="346.5517241379239" width="404.999324998875" height="186.20689655169565" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="478.000675001125" y="344.5517241379239" fill="#2e7d32" font-weight="600">r=0 00000001</text>
+<text x="478.000675001125" y="344.5517241379239" fill="#2e7d32" font-weight="600">r=0 rC=0 00000001</text>
 <rect x="70" y="67.24137931038047" width="810" height="465.51724137923907" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="73" y="65.24137931038047" fill="#2e7d32" font-weight="600">r=1 00000000</text>
+<text x="73" y="65.24137931038047" fill="#d84315" font-weight="600">r=1 rC=0 00000000</text>
 <line x1="70" y1="346.5517241379239" x2="880" y2="346.5517241379239" stroke="#7b1fa2" stroke-width="1.2" stroke-dasharray="6 4"/>
 <text x="876" y="342.5517241379239" text-anchor="end" fill="#7b1fa2" font-weight="600">ref top r=1 : 1.14504</text>
-<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 2/8</text>
+<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 2/12</text>
 <text x="900" y="52" fill="#444">Bougie #1 @ 01:05:00</text>
 <text x="900" y="66" fill="#444" font-size="10">O=1.14502 H=1.14504</text>
 <text x="900" y="78" fill="#444" font-size="10">L=1.14464 C=1.14466</text>

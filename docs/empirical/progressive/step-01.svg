@@ -20,10 +20,10 @@
 <line x1="475" y1="67.24137931038047" x2="475" y2="532.7586206896195" stroke="#ef5350" stroke-width="1"/>
 <rect x="231.9991899973" y="180.29556650249617" width="486.0016200054" height="285.9605911329463" fill="#ef5350" stroke="#ef5350" stroke-width="0.5"/>
 <rect x="70" y="67.24137931038047" width="810" height="465.51724137923907" fill="#c62828" fill-opacity="0.07" stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="none"/>
-<text x="73" y="65.24137931038047" fill="#2e7d32" font-weight="600">r=0 00000000</text>
+<text x="73" y="65.24137931038047" fill="#2e7d32" font-weight="600">r=0 rC=0 00000000</text>
 <line x1="70" y1="67.24137931038047" x2="880" y2="67.24137931038047" stroke="#7b1fa2" stroke-width="1.2" stroke-dasharray="6 4"/>
 <text x="876" y="63.24137931038047" text-anchor="end" fill="#7b1fa2" font-weight="600">ref top r=0 : 1.14564</text>
-<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 1/8</text>
+<text x="900" y="34" font-size="13" font-weight="700" fill="#222">Étape 1/12</text>
 <text x="900" y="52" fill="#444">Bougie #0 @ 01:00:00</text>
 <text x="900" y="66" fill="#444" font-size="10">O=1.14547 H=1.14564</text>
 <text x="900" y="78" fill="#444" font-size="10">L=1.14494 C=1.14504</text>
