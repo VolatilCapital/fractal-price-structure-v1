@@ -17,7 +17,7 @@ Ces ADRs ont été produits par l'audit BMAD du 2026-05-16. Tant qu'ils sont en 
 | [ADR-003](./ADR-003-noise-filtering.md) | Filtrage du bruit / définition d'un mouvement significatif | Proposed |
 | [ADR-004](./ADR-004-impulsion-correction-terminology.md) | Statut de "Impulsion / Correction" dans le protocole | Proposed |
 | [ADR-005](./ADR-005-export-json-schema.md) | Schéma JSON exporté (champs `originIds` zombies) | Proposed |
-| [ADR-006](./ADR-006-legacy-src-root.md) | Sort du dossier `/src/` racine pré-monorepo | Proposed |
+| [ADR-006](./ADR-006-legacy-src-root.md) | Sort du dossier `/src/` racine pré-monorepo | **Accepted** |
 | [ADR-007](./ADR-007-rang-formula.md) | Formule du `rang` : compter ou non les extensions de même polarité | Proposed |
 
 ## Convention

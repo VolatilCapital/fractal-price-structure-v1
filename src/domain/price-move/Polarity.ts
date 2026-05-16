@@ -1,1 +1,0 @@
-export enum Polarity { Up = "up", Down = "down" }

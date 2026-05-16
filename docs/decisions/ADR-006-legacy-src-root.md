@@ -1,7 +1,7 @@
 # ADR-006 — Sort du dossier `/src/` racine pré-monorepo
 
 ## État
-Proposed
+Accepted (2026-05-16) — Option D appliquée.
 
 ## Contexte
 
