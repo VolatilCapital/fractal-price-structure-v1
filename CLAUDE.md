@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-> **V1 — ARCHIVÉ.** Ce dépôt est figé. Le développement actif continue sur [fractal-price-structure](https://github.com/VolatilCapital/fractal-price-structure) (V2, algo PriceBlock).
-
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview

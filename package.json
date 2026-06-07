@@ -1,5 +1,5 @@
 {
-  "name": "fractal-price-structure-v1",
+  "name": "fractal-price-structure",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -27,7 +27,7 @@
   ],
   "author": "",
   "license": "ISC",
-  "description": "V1 — Analyse fractale de structures de prix (archivé). Algo PriceMove / FractalEngine.",
+  "description": "A TypeScript library for building generation-based fractal price structures from candlestick data",
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",
     "@playwright/test": "^1.58.2",
