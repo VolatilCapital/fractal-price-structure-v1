@@ -20,9 +20,9 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import { resolve, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
-import { FractalEngine } from "../packages/core/src/FractalEngine.js"
-import type { Candle } from "../packages/core/src/domain/candle/Candle.js"
-import type { PriceMove } from "../packages/core/src/domain/price-move/PriceMove.js"
+import { FractalEngine } from "../packages/core-v1/src/FractalEngine.js"
+import type { Candle } from "../packages/core-v1/src/domain/candle/Candle.js"
+import type { PriceMove } from "../packages/core-v1/src/domain/price-move/PriceMove.js"
 
 // ──────────────────────────────────────────── rangContrasted (read-only) ──
 // Ne compte que les sub-structures de polarité OPPOSÉE (cf. ADR-007).
@@ -454,7 +454,7 @@ ${cards.join("\n")}
 function main(): void {
   const fixturePath = resolve(
     REPO_ROOT,
-    "packages/core/src/__fixtures__/eurusd-5m.json"
+    "packages/core-v1/src/__fixtures__/eurusd-5m.json"
   )
   const fixture: FixtureFile = JSON.parse(readFileSync(fixturePath, "utf-8"))
   const candles = fixture.candles.slice(0, N)

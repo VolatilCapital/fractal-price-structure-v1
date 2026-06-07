@@ -12,9 +12,9 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import { resolve, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
-import { FractalEngine } from "../packages/core/src/FractalEngine.js"
-import type { Candle } from "../packages/core/src/domain/candle/Candle.js"
-import type { PriceMove } from "../packages/core/src/domain/price-move/PriceMove.js"
+import { FractalEngine } from "../packages/core-v1/src/FractalEngine.js"
+import type { Candle } from "../packages/core-v1/src/domain/candle/Candle.js"
+import type { PriceMove } from "../packages/core-v1/src/domain/price-move/PriceMove.js"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, "..")
@@ -103,8 +103,8 @@ function trace(fixturePath: string): string {
 }
 
 const fixtures = [
-  "packages/core/src/__fixtures__/eurusd-5m.json",
-  "packages/core/src/__fixtures__/btcusdt-1d.json",
+  "packages/core-v1/src/__fixtures__/eurusd-5m.json",
+  "packages/core-v1/src/__fixtures__/btcusdt-1d.json",
 ]
 
 let output = `# Trace de moves à rang max — annexe à \`docs/empirical/rang-distribution.md\`\n\n`
