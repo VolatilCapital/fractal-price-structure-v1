@@ -1,4 +1,8 @@
-# Fractal Price Structure
+# Fractal Price Structure — V1 (archivé)
+
+> **⚠️ Ce dépôt est archivé.** Le développement actif continue sur **[fractal-price-structure](https://github.com/VolatilCapital/fractal-price-structure)** (V2, algo PriceBlock).
+>
+> V1 utilise l'algo **PriceMove / FractalEngine** (rang, polarité, cascades). V2 est une refonte complète avec une approche différente.
 
 A TypeScript library for building rang-based fractal price structures from candlestick data.
 
@@ -12,8 +16,8 @@ This library converts candlestick (OHLCV) data into a hierarchical fractal struc
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/fractal-price-structure.git
-cd fractal-price-structure
+git clone https://github.com/VolatilCapital/fractal-price-structure-v1.git
+cd fractal-price-structure-v1
 
 # Install dependencies
 pnpm install
@@ -238,7 +242,7 @@ pnpm format
 
 ```bash
 # Run the debug visualizer
-pnpm --filter @fractal-price-structure/visualizer dev
+pnpm visualizer:dev
 ```
 
 ## Architecture Decisions
